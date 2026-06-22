@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
+  
+  --color-entlaq-red: #da291c;
+  --color-entlaq-dark: #1f2937;
+  --color-entlaq-darker: #111827;
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl;
+  }
+  
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-lg hover:bg-white/10 transition-all duration-300;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-white/20 rounded-full;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-white/30;
+  }
+}
+
+body {
+  @apply bg-entlaq-darker text-white;
+}
+
+@media print {
+  /* Hide background content completely */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Show only the invoice/receipt container */
+  #printable-invoice, #printable-invoice *,
+  #printable-receipt, #printable-receipt * {
+    visibility: visible;
+  }
+  
+  #printable-invoice,
+  #printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    background: white !important;
+    color: black !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 20px !important;
+    margin: 0 !important;
+  }
+  
+  /* Print-friendly color overrides */
+  #printable-invoice h3,
+  #printable-invoice h4,
+  #printable-invoice p,
+  #printable-invoice span,
+  #printable-invoice td,
+  #printable-invoice th {
+    color: black !important;
+  }
+
+  /* Table borders in print */
+  #printable-invoice .border,
+  #printable-invoice td,
+  #printable-invoice th {
+    border: 1px solid #475569 !important; /* slate-600 */
+  }
+
+  #printable-invoice table th {
+    background-color: #f1f5f9 !important; /* slate-100 */
+    color: black !important;
+  }
+  
+  /* Hide all buttons & control headers */
+  .no-print {
+    display: none !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}

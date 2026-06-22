@@ -1,0 +1,73 @@
+{
+  "name": "pos-app",
+  "version": "0.1.0",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "next dev",
+    "electron-dev": "electron .",
+    "build": "node scripts/build.js",
+    "package": "npm run build && electron-builder",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "build": {
+    "appId": "com.alentlaq.pos",
+    "productName": "AlEntlaqPOS",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "out/**/*",
+      "src/generated/client/**/*",
+      "node_modules/**/*",
+      "package.json",
+      "prisma/dev.db"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/src/generated/client/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "prisma/dev.db",
+        "to": "prisma/dev.db"
+      }
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0",
+    "lucide-react": "^1.21.0",
+    "next": "16.2.6",
+    "qrcode": "^1.5.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwindcss-rtl": "^0.9.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "electron": "^42.4.1",
+    "electron-builder": "^26.15.3",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "prisma": "^5.0.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "pnpm": {
+    "approvedBuilds": [
+      "@prisma/client",
+      "@prisma/engines",
+      "electron-winstaller",
+      "prisma",
+      "sharp"
+    ]
+  }
+}

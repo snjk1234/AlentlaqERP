@@ -1,0 +1,119 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  name      String
+  password  String
+  role      String   // "ADMIN" | "CASHIER"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  code          String   @unique // كود الصنف (مثال: 3020)
+  barcode       String?  @unique // الباركود للبحث السريع باللمس أو القارئ
+  name          String   // اسم المنتج (مثال: مواسير UPVC)
+  type          String   // "PIPE" | "HOSE" | "ACCESSORY"
+  gauge         String?  // السمك/الفئة (Light, Medium, Heavy, Extra Heavy)
+  size          String   // المقاس (مثال: 20 mm)
+  color         String?  // اللون
+  length        String?  // الطول (مثال: 45 m)
+  weight        String?  // الوزن (مثال: 5.050 kg)
+  costPrice     Float    @default(0) // سعر التكلفة الفعلي للإنتاج (سعر الشراء)
+  markup        Float    @default(1.3) // نسبة الربح المضاعف (يضرب في سعر التكلفة ليعطي سعر البيع)
+  price         Float    // السعر الأساسي للبيع
+  taxRate       Float    @default(0.14) // ضريبة القيمة المضافة (14% أو 15%)
+  stockQty      Int      @default(0) // كمية المخزون الحالي
+  minStockQty   Int      @default(10) // التنبيه باللون الأحمر عند الوصول لهذا الحد (الحد الأدنى)
+  maxStockQty   Int      @default(1000) // الحد الأقصى للمخزون
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  orderItems    OrderItem[]
+}
+
+model Category {
+  id    String @id @default(cuid())
+  name  String @unique
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  invoiceNumber String      @unique // رقم الفاتورة/عرض السعر التسلسلي
+  isQuotation   Boolean     @default(false) // تحديد إذا كان عرض سعر أو فاتورة نهائية
+  customerName  String?     // اسم العميل/الشركة (مثال: المقاولون العرب)
+  customerId    String?
+  customer      Customer?   @relation(fields: [customerId], references: [id])
+  totalAmount   Float       // المجموع قبل الضريبة
+  taxAmount     Float       // قيمة الضريبة
+  netAmount     Float       // الإجمالي الصافي شامل الضريبة
+  qrCode        String?     // رمز الاستجابة السريعة المشفر
+  status        String      @default("COMPLETED") // "COMPLETED" | "DRAFT" | "CANCELLED"
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  items         OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Customer {
+  id             String   @id @default(cuid())
+  name           String   @unique // اسم العميل/الشركة
+  location       String?  // الموقع
+  buildingsCount Int      @default(0) // عدد العماير
+  cr             String?  // السجل التجاري
+  trn            String?  // الرقم الضريبي للعميل
+  customerType   String   @default("CASH") // طبيعة العميل: "CASH" (نقدي) | "CREDIT" (آجل)
+  phone          String?  // رقم التلفون
+  discount       Float    @default(0) // نسبة الخصم
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  orders         Order[]
+  payments       Payment[]
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Float
+  taxAmount Float
+  total     Float
+}
+
+model Bank {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  accountNumber String?
+  balance       Float     @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  payments      Payment[]
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id])
+  bankId      String
+  bank        Bank     @relation(fields: [bankId], references: [id])
+  amount      Float
+  reference   String?
+  date        DateTime @default(now())
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
