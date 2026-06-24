@@ -462,10 +462,11 @@ export default function POSDashboard() {
     ? { id: 'CASH', name: 'عميل نقدي', trn: null }
     : customers.find(c => c.id === selectedCustomerId);
 
-  // Handle Checkout (Invoice or Quotation)
-  const handleCheckout = async (isQuotation: boolean) => {
   // Helper to generate a unique bill number for purchase invoices
   const generateBillNumber = () => `INV-${Date.now()}`;
+
+  // Handle Checkout (Invoice or Quotation)
+  const handleCheckout = async (isQuotation: boolean) => {
     if (cart.length === 0) return;
     setSubmitting(true);
 
