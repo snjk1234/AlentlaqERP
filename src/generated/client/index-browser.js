@@ -197,6 +197,54 @@ exports.Prisma.PaymentScalarFieldEnum = {
   bankId: 'bankId',
   amount: 'amount',
   reference: 'reference',
+  receiptNumber: 'receiptNumber',
+  date: 'date',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SupplierScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  phone: 'phone',
+  address: 'address',
+  cr: 'cr',
+  trn: 'trn',
+  balance: 'balance',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PurchaseOrderScalarFieldEnum = {
+  id: 'id',
+  billNumber: 'billNumber',
+  supplierId: 'supplierId',
+  totalAmount: 'totalAmount',
+  taxAmount: 'taxAmount',
+  netAmount: 'netAmount',
+  date: 'date',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PurchaseOrderItemScalarFieldEnum = {
+  id: 'id',
+  purchaseOrderId: 'purchaseOrderId',
+  productId: 'productId',
+  quantity: 'quantity',
+  unitCost: 'unitCost',
+  taxAmount: 'taxAmount',
+  total: 'total'
+};
+
+exports.Prisma.ExpensePaymentScalarFieldEnum = {
+  id: 'id',
+  expenseNumber: 'expenseNumber',
+  supplierId: 'supplierId',
+  bankId: 'bankId',
+  amount: 'amount',
+  reference: 'reference',
   date: 'date',
   notes: 'notes',
   createdAt: 'createdAt',
@@ -227,7 +275,11 @@ exports.Prisma.ModelName = {
   Customer: 'Customer',
   OrderItem: 'OrderItem',
   Bank: 'Bank',
-  Payment: 'Payment'
+  Payment: 'Payment',
+  Supplier: 'Supplier',
+  PurchaseOrder: 'PurchaseOrder',
+  PurchaseOrderItem: 'PurchaseOrderItem',
+  ExpensePayment: 'ExpensePayment'
 };
 
 /**

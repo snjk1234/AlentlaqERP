@@ -40,6 +40,7 @@ model Product {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   orderItems    OrderItem[]
+  purchaseItems PurchaseOrderItem[]
 }
 
 model Category {
@@ -95,25 +96,82 @@ model OrderItem {
 }
 
 model Bank {
-  id            String    @id @default(cuid())
-  name          String    @unique
+  id            String           @id @default(cuid())
+  name          String           @unique
   accountNumber String?
-  balance       Float     @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  balance       Float            @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
   payments      Payment[]
+  expenses      ExpensePayment[]
 }
 
 model Payment {
-  id          String   @id @default(cuid())
-  customerId  String
-  customer    Customer @relation(fields: [customerId], references: [id])
-  bankId      String
-  bank        Bank     @relation(fields: [bankId], references: [id])
-  amount      Float
-  reference   String?
-  date        DateTime @default(now())
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  bankId        String
+  bank          Bank     @relation(fields: [bankId], references: [id])
+  amount        Float
+  reference     String?
+  receiptNumber String?  // رقم تسلسلي للمقبوضات
+  date          DateTime @default(now())
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Supplier {
+  id             String           @id @default(cuid())
+  name           String           @unique // اسم المورد
+  phone          String?          // رقم الهاتف
+  address        String?          // العنوان
+  cr             String?          // السجل التجاري
+  trn            String?          // الرقم الضريبي
+  balance        Float            @default(0) // مديونية المورد (الرصيد المتبقي له)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  purchaseOrders PurchaseOrder[]
+  expenses       ExpensePayment[]
+}
+
+model PurchaseOrder {
+  id            String              @id @default(cuid())
+  billNumber    String              @unique // رقم فاتورة المشتريات/التوريد
+  supplierId    String
+  supplier      Supplier            @relation(fields: [supplierId], references: [id])
+  totalAmount   Float               // الإجمالي قبل الضريبة
+  taxAmount     Float               // قيمة الضريبة
+  netAmount     Float               // الإجمالي الصافي شامل الضريبة
+  date          DateTime            @default(now())
+  items         PurchaseOrderItem[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id])
+  quantity        Int           // الكمية الواردة
+  unitCost        Float         // سعر التكلفة للوحدة
+  taxAmount       Float
+  total           Float
+}
+
+model ExpensePayment {
+  id            String   @id @default(cuid())
+  expenseNumber String   @unique // رقم سند الصرف التسلسلي (مثال: EXP-2026-0001)
+  supplierId    String
+  supplier      Supplier @relation(fields: [supplierId], references: [id])
+  bankId        String
+  bank          Bank     @relation(fields: [bankId], references: [id])
+  amount        Float    // قيمة المبلغ المصروف
+  reference     String?
+  date          DateTime @default(now())
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

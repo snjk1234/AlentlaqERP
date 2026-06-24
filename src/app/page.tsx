@@ -3,7 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { 
-  ShoppingCartIcon, 
+  ShoppingCartIcon,
+  TruckIcon,
+  ShoppingBagIcon,
+  ReceiptIcon, 
   SearchIcon, 
   Trash2Icon, 
   PauseCircleIcon,
@@ -95,10 +98,36 @@ export default function POSDashboard() {
   const [paymentForm, setPaymentForm] = useState({ customerId: '', amount: '', bankId: '', reference: '', notes: '' });
   const [bankForm, setBankForm] = useState({ name: '', accountNumber: '', balance: '' });
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+  const [isEditingBank, setIsEditingBank] = useState(false);
 
   
+  // Suppliers, Purchases and Expenses states
+  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [purchases, setPurchases] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [supplierSearch, setSupplierSearch] = useState('');
+  const [bankSearch, setBankSearch] = useState('');
+  const [paymentSearch, setPaymentSearch] = useState('');
+  const [invoiceSearch, setInvoiceSearch] = useState('');
+  const [purchaseSearch, setPurchaseSearch] = useState('');
+  const [expenseSearch, setExpenseSearch] = useState('');
+  
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [isEditingSupplier, setIsEditingSupplier] = useState(false);
+  const [supplierForm, setSupplierForm] = useState({ id: '', name: '', phone: '', address: '', cr: '', trn: '', balance: '0' });
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [purchaseForm, setPurchaseForm] = useState<any>({ billNumber: '', supplierId: '', items: [] });
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [expenseForm, setExpenseForm] = useState({ supplierId: '', bankId: '', amount: '', notes: '', reference: '' });
+  const [showExpenseReceiptModal, setShowExpenseReceiptModal] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<any>(null);
+  const [showSupplierHistoryModal, setShowSupplierHistoryModal] = useState(false);
+  const [selectedHistorySupplier, setSelectedHistorySupplier] = useState<any>(null);
+  const [showPurchaseDetailModal, setShowPurchaseDetailModal] = useState(false);
+  const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
+
   // Navigation active tab
-  const [activeTab, setActiveTab] = useState<'POS' | 'CUSTOMERS' | 'INVENTORY' | 'BANKS' | 'PAYMENTS' | 'INVOICES'>('POS');
+  const [activeTab, setActiveTab] = useState<'POS' | 'CUSTOMERS' | 'INVENTORY' | 'BANKS' | 'PAYMENTS' | 'INVOICES' | 'SUPPLIERS' | 'PURCHASES' | 'EXPENSES'>('POS');
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
   
@@ -260,6 +289,27 @@ export default function POSDashboard() {
     }
   };
 
+  const fetchSuppliers = () => {
+    fetch('/api/suppliers')
+      .then(res => res.json())
+      .then(data => setSuppliers(Array.isArray(data) ? data : []))
+      .catch(console.error);
+  };
+
+  const fetchPurchases = () => {
+    fetch('/api/purchases')
+      .then(res => res.json())
+      .then(data => setPurchases(Array.isArray(data) ? data : []))
+      .catch(console.error);
+  };
+
+  const fetchExpenses = () => {
+    fetch('/api/expenses')
+      .then(res => res.json())
+      .then(data => setExpenses(Array.isArray(data) ? data : []))
+      .catch(console.error);
+  };
+
   useEffect(() => {
     if (isMounted) {
       fetchProducts();
@@ -267,6 +317,9 @@ export default function POSDashboard() {
       fetchBanks();
       fetchPayments();
       fetchInvoices();
+      fetchSuppliers();
+      fetchPurchases();
+      fetchExpenses();
     }
   }, [isMounted]);
 
@@ -279,6 +332,9 @@ export default function POSDashboard() {
       fetchBanks();
       fetchPayments();
       fetchInvoices();
+      fetchSuppliers();
+      fetchPurchases();
+      fetchExpenses();
     }, 5000);
     return () => clearInterval(interval);
   }, [isMounted]);
@@ -390,15 +446,15 @@ export default function POSDashboard() {
   const total = subtotal + totalTax;
 
   // Filter products by type and search query
-  const filteredProducts = products.filter(p => {
+  const filteredProducts = (Array.isArray(products) ? products : []).filter(p => {
     const matchesCategory = activeCategory === 'ALL' || p.type === activeCategory;
-    const matchesSearch = p.name.includes(searchQuery) || p.code.includes(searchQuery);
+    const matchesSearch = (p.name || '').includes(searchQuery) || (p.code || '').includes(searchQuery);
     return matchesCategory && matchesSearch;
   });
 
   // Filter customers by search query
-  const filteredCustomers = customers.filter(c => {
-    const matchesSearch = c.name.includes(customerSearch) || (c.trn && c.trn.includes(customerSearch));
+  const filteredCustomers = (Array.isArray(customers) ? customers : []).filter(c => {
+    const matchesSearch = (c.name || '').includes(customerSearch) || (c.trn && c.trn.includes(customerSearch));
     return matchesSearch;
   });
 
@@ -408,6 +464,8 @@ export default function POSDashboard() {
 
   // Handle Checkout (Invoice or Quotation)
   const handleCheckout = async (isQuotation: boolean) => {
+  // Helper to generate a unique bill number for purchase invoices
+  const generateBillNumber = () => `INV-${Date.now()}`;
     if (cart.length === 0) return;
     setSubmitting(true);
 
@@ -487,15 +545,17 @@ export default function POSDashboard() {
         setShowCustomerModal(false);
         fetchCustomers();
       } else {
-        // Browser fallback
-        if (isEditingCustomer) {
-          setCustomers(prev => prev.map(c => c.id === customerForm.id ? { ...c, ...formattedData } : c));
-        } else {
-          const newCust = { ...formattedData, id: 'cust-' + Date.now(), orders: [] };
-          setCustomers(prev => [...prev, newCust]);
-          if (activeTab === 'POS') {
-            setSelectedCustomerId(newCust.id);
-          }
+        // Browser fallback: Make actual fetch call to DB!
+        const response = await fetch('/api/customers', {
+          method: isEditingCustomer ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formattedData)
+        });
+        const saved = await response.json();
+        if (!response.ok) throw new Error(saved.error || 'Failed to save customer');
+        fetchCustomers();
+        if (activeTab === 'POS' && !isEditingCustomer && saved && saved.id) {
+          setSelectedCustomerId(saved.id);
         }
         setShowCustomerModal(false);
       }
@@ -532,13 +592,15 @@ export default function POSDashboard() {
         setShowProductFormModal(false);
         fetchProducts();
       } else {
-        // Browser fallback
-        if (isEditingProduct) {
-          setProducts(prev => prev.map(p => p.id === productForm.id ? { ...p, ...formattedData } : p));
-        } else {
-          const newProd = { ...formattedData, id: 'prod-' + Date.now() };
-          setProducts(prev => [...prev, newProd]);
-        }
+        // Browser fallback: Make actual fetch call to DB!
+        const response = await fetch('/api/products', {
+          method: isEditingProduct ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formattedData)
+        });
+        const saved = await response.json();
+        if (!response.ok) throw new Error(saved.error || 'Failed to save product');
+        fetchProducts();
         setShowProductFormModal(false);
       }
     } catch (err: any) {
@@ -622,6 +684,91 @@ export default function POSDashboard() {
     }
   };
 
+  
+  const handleSaveSupplier = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supplierForm.name) {
+      alert("يرجى إدخال اسم المورد!");
+      return;
+    }
+    setSubmitting(true);
+    const data = {
+      ...supplierForm,
+      balance: parseFloat(supplierForm.balance) || 0
+    };
+    try {
+      const response = await fetch('/api/suppliers', {
+        method: isEditingSupplier ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const saved = await response.json();
+      if (!response.ok) throw new Error(saved.error || 'Failed to save supplier');
+      fetchSuppliers();
+      setShowSupplierModal(false);
+    } catch (err: any) {
+      alert(`خطأ أثناء حفظ المورد: ${err.message}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSavePurchase = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!purchaseForm.billNumber || !purchaseForm.supplierId || purchaseForm.items.length === 0) {
+      alert("يرجى ملء جميع الحقول وإضافة منتج واحد على الأقل!");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const response = await fetch('/api/purchases', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(purchaseForm)
+      });
+      const saved = await response.json();
+      if (!response.ok) throw new Error(saved.error || 'Failed to save purchase order');
+      fetchPurchases();
+      fetchProducts();
+      fetchSuppliers();
+      setShowPurchaseModal(false);
+      setPurchaseForm({ billNumber: '', supplierId: '', items: [] });
+    } catch (err: any) {
+      alert(`خطأ أثناء حفظ فاتورة الشراء: ${err.message}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSaveExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!expenseForm.supplierId || !expenseForm.bankId || !expenseForm.amount) {
+      alert("يرجى ملء جميع الحقول المطلوبة!");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const response = await fetch('/api/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(expenseForm)
+      });
+      const saved = await response.json();
+      if (!response.ok) throw new Error(saved.error || 'Failed to save expense payment');
+      fetchExpenses();
+      fetchBanks();
+      fetchSuppliers();
+      setSelectedExpense(saved);
+      setShowExpenseReceiptModal(true);
+      setShowExpenseModal(false);
+      setExpenseForm({ supplierId: '', bankId: '', amount: '', notes: '', reference: '' });
+    } catch (err: any) {
+      alert(`خطأ أثناء حفظ سند الصرف: ${err.message}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleQuickStockAdjust = async (product: any, delta: number) => {
     const newQty = product.stockQty + delta;
     if (newQty < 0) return;
@@ -630,7 +777,16 @@ export default function POSDashboard() {
       if (typeof window !== 'undefined' && (window as any).electronAPI) {
         await (window as any).electronAPI.updateProduct({ id: product.id, stockQty: newQty });
       } else {
-        setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stockQty: newQty } : p));
+        // Browser fallback: Make actual PUT call to DB!
+        const response = await fetch('/api/products', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: product.id, stockQty: newQty })
+        });
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to adjust stock');
+        }
       }
       fetchProducts();
     } catch (err: any) {
@@ -647,7 +803,7 @@ export default function POSDashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-entlaq-darker text-slate-100 font-sans overflow-hidden selection:bg-red-500 selection:text-white pt-10">
+    <div className="flex h-screen bg-entlaq-darker text-slate-100 font-sans overflow-hidden selection:bg-red-500 selection:text-white pt-10" dir="rtl">
       
       {/* Custom Titlebar (Window Controls) */}
       <div 
@@ -691,13 +847,8 @@ export default function POSDashboard() {
       <div className="w-56 glass-panel border-l border-white/10 flex flex-col p-3 space-y-3.5 m-1.5 rounded-xl z-10 shrink-0 no-print">
         {/* Brand Logo & Name */}
         <div className="flex items-center gap-3 pb-6 border-b border-white/5">
-          <div className="relative w-12 h-12 flex items-center justify-center bg-white/5 rounded-xl border border-white/10 shadow-lg p-2 group hover:border-red-500/30 transition-all duration-300">
-            <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(218,41,28,0.3)]" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M50 15 C35 38 18 62 18 82" stroke="#da291c" strokeWidth="12" strokeLinecap="round" />
-              <path d="M50 15 L80 82" stroke="#da291c" strokeWidth="12" strokeLinecap="round" />
-              <path d="M10 58 C38 52 62 52 90 58" stroke="#da291c" strokeWidth="8" strokeLinecap="round" />
-              <path d="M22 68 C45 62 65 62 82 68" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" opacity="0.8" />
-            </svg>
+          <div className="relative w-12 h-12 flex items-center justify-center bg-white/5 rounded-xl border border-white/10 shadow-lg p-1 group hover:border-red-500/30 transition-all duration-300">
+            <img src="/images/logo.png" alt="الإنطلاق" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="text-lg font-black text-white tracking-wide">الإنطــلاق</h1>
@@ -748,8 +899,32 @@ export default function POSDashboard() {
           </button>
   
         
+          
           <button 
-            onClick={() => setActiveTab('INVOICES')}
+            onClick={() => setActiveTab('SUPPLIERS')}
+            className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'SUPPLIERS' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+          >
+            <TruckIcon className="h-5 w-5" />
+            <span>إدارة الموردين</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('PURCHASES')}
+            className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'PURCHASES' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+          >
+            <ShoppingBagIcon className="h-5 w-5" />
+            <span>فاتورة مشتريات (وارد)</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('EXPENSES')}
+            className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'EXPENSES' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+          >
+            <ReceiptIcon className="h-5 w-5" />
+            <span>سندات الصرف (مصروف)</span>
+          </button>
+  
+          <button onClick={() => setActiveTab('INVOICES')}
             className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'INVOICES' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
           >
             <FileTextIcon className="h-5 w-5" />
@@ -765,7 +940,7 @@ export default function POSDashboard() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden" dir="rtl">
         
         {/* TAB 1: POS DASHBOARD */}
         {activeTab === 'POS' && (
@@ -1440,48 +1615,360 @@ export default function POSDashboard() {
           </div>
         )}
 
-      </div>
-
       
 
-        {/* TAB 4: BANKS */}
-        {activeTab === 'BANKS' && (
-          <div className="flex-1 p-6 overflow-y-auto custom-scrollbar no-print">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <BuildingIcon className="text-entlaq-red" />
-                إدارة البنوك والخزائن
-              </h2>
-              <button
-                onClick={() => { setIsBankModalOpen(true); setBankForm({ name: '', accountNumber: '', balance: '0' }); }}
-                className="bg-entlaq-red text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition-colors flex items-center gap-2 cursor-pointer shadow-lg shadow-red-500/10"
+        
+        {/* TAB 7: SUPPLIERS */}
+        {activeTab === 'SUPPLIERS' && (
+          <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+            <div>
+              <h2 className="text-xl font-bold text-white">إدارة الموردين</h2>
+              <p className="text-xs text-slate-400 mt-0.5">إدارة بيانات الموردين ومتابعة فواتير الشراء المستلمة والمدفوعات الصادرة لهم</p>
+            </div>
+
+            <div className="flex gap-3 items-center max-w-xl">
+              <div className="relative group flex-1">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+                  <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+                </div>
+                <input 
+                  type="text" 
+                  value={supplierSearch}
+                  onChange={(e) => setSupplierSearch(e.target.value)}
+                  placeholder="ابحث عن المورد بالاسم أو الرقم الضريبي..." 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+                />
+              </div>
+              <button 
+                onClick={() => {
+                  setSupplierForm({ id: '', name: '', phone: '', address: '', cr: '', trn: '', balance: '0' });
+                  setIsEditingSupplier(false);
+                  setShowSupplierModal(true);
+                }}
+                className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
               >
-                <PlusIcon size={18} />
-                إضافة بنك / خزينة
+                <PlusIcon className="w-4 h-4" />
+                <span>إضافة مورد جديد</span>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pb-10 custom-scrollbar pr-2">
+              {suppliers.filter(s => (s.name || '').includes(supplierSearch) || (s.trn && s.trn.includes(supplierSearch))).length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
+                  <TruckIcon className="h-16 w-16 text-slate-600 animate-pulse" />
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-300">لا يوجد موردين متطابقين</h3>
+                    <p className="text-sm text-slate-500 mt-1">أضف مورد جديد لبدء تسجيل الفواتير وسندات الصرف باسمه</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {suppliers.filter(s => (s.name || '').includes(supplierSearch) || (s.trn && s.trn.includes(supplierSearch))).map((sup) => {
+                    const totalPurchased = sup.purchaseOrders ? sup.purchaseOrders.reduce((sum: number, o: any) => sum + o.netAmount, 0) : 0;
+                    const totalPaid = sup.expenses ? sup.expenses.reduce((sum: number, p: any) => sum + p.amount, 0) : 0;
+                    const remainingDebt = sup.balance;
+                    return (
+                      <div key={sup.id} className="glass-card rounded-xl p-3 flex flex-col justify-between border border-white/5 hover:border-red-500/20 transition-all duration-300 text-right" dir="rtl">
+                        <div>
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h3 className="text-[15px] font-bold text-white leading-snug">{sup.name}</h3>
+                              <p className="text-[10px] text-slate-400 mt-1">مورد معتمد</p>
+                            </div>
+                            <button 
+                              onClick={() => {
+                                setSupplierForm({
+                                  id: sup.id,
+                                  name: sup.name,
+                                  phone: sup.phone || '',
+                                  address: sup.address || '',
+                                  cr: sup.cr || '',
+                                  trn: sup.trn || '',
+                                  balance: sup.balance.toString()
+                                });
+                                setIsEditingSupplier(true);
+                                setShowSupplierModal(true);
+                              }}
+                              className="bg-white/5 text-slate-400 p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                            >
+                              <PencilIcon className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs text-slate-300 mb-2 border-t border-white/5 pt-2 font-semibold">
+                            {sup.phone && <p>📱 <span className="text-white font-mono font-bold">{sup.phone}</span></p>}
+                            {sup.address && <p>📍 <span className="text-white">{sup.address}</span></p>}
+                            {sup.cr && <p>📜 سجل: <span className="text-white font-mono font-bold">{sup.cr}</span></p>}
+                            {sup.trn && <p className="col-span-2">📋 ضريبي: <span className="text-white font-mono font-bold text-xs">{sup.trn}</span></p>}
+                          </div>
+                        </div>
+
+                        <div className="border-t border-white/5 pt-2">
+                          <div className="grid grid-cols-2 gap-2 mb-2">
+                            <div className="bg-black/25 px-2 py-1 rounded-lg text-center">
+                              <span className="text-[10px] text-slate-400 block font-bold">فواتير التوريد</span>
+                              <span className="text-sm font-black text-red-400 font-mono">{totalPurchased.toFixed(2)} ج.م</span>
+                            </div>
+                            <div className="bg-black/25 px-2 py-1 rounded-lg text-center">
+                              <span className="text-[10px] text-slate-400 block font-bold">المبالغ المصروفة</span>
+                              <span className="text-sm font-black text-emerald-400 font-mono">{totalPaid.toFixed(2)} ج.م</span>
+                            </div>
+                            <div className="col-span-2 bg-black/25 px-2 py-2 rounded-lg text-center border border-white/5">
+                              <span className="text-[10px] text-slate-400 block font-bold">الرصيد المتبقي له (المديونية)</span>
+                              <span className={`text-base font-black font-mono ${remainingDebt > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                                {remainingDebt.toFixed(2)} ج.م
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setSelectedHistorySupplier(sup);
+                                setShowSupplierHistoryModal(true);
+                              }}
+                              className="col-span-2 bg-white/5 text-slate-300 p-2 rounded-lg hover:bg-white/10 hover:text-white transition-colors cursor-pointer text-xs font-bold mt-1 shadow-md shadow-black/20"
+                            >
+                              كشف حساب المورد / تفاصيل
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 8: PURCHASES */}
+        {activeTab === 'PURCHASES' && (
+          <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+            <div>
+              <h2 className="text-xl font-bold text-white">فواتير المشتريات والوارد للمخزن</h2>
+              <p className="text-xs text-slate-400 mt-0.5">تسجيل الكميات والمنتجات الواردة من الموردين وتنزيلها تلقائياً للمخزن</p>
+            </div>
+
+            <div className="flex gap-3 items-center max-w-xl">
+              <div className="relative group flex-1">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+                  <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+                </div>
+                <input 
+                  type="text" 
+                  value={purchaseSearch}
+                  onChange={(e) => setPurchaseSearch(e.target.value)}
+                  placeholder="ابحث برقم الفاتورة أو اسم المورد..." 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+                />
+              </div>
+              <button 
+                onClick={() => {
+                  setPurchaseForm({ billNumber: generateBillNumber(), supplierId: '', items: [] });
+                  setShowPurchaseModal(true);
+                }}
+                className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+              >
+                <PlusIcon className="w-4 h-4" />
+                <span>تسجيل فاتورة شراء</span>
               </button>
             </div>
             
-            <div className="grid grid-cols-3 gap-6">
-              {banks.map(bank => (
-                <div key={bank.id} className="glass-panel p-5 rounded-2xl flex flex-col gap-4 border border-white/5 bg-white/5">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-bold text-white">{bank.name}</h3>
-                      <p className="text-xs text-slate-400 font-mono mt-1">{bank.accountNumber || 'لا يوجد رقم حساب'}</p>
-                    </div>
-                    <div className="bg-white/10 p-2 rounded-lg">
-                      <BuildingIcon className="text-slate-400" size={20} />
-                    </div>
-                  </div>
-                  <div className="mt-2 pt-4 border-t border-white/10">
-                    <span className="text-xs text-slate-400 block mb-1">الرصيد الحالي</span>
-                    <span className="text-2xl font-bold text-emerald-400 font-mono" dir="ltr">{bank.balance.toFixed(2)} ج.م</span>
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex-1 overflow-y-auto custom-scrollbar">
+              <table className="w-full text-right text-sm">
+                <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
+                  <tr>
+                    <th className="p-4 font-bold">رقم الفاتورة</th>
+                    <th className="p-4 font-bold">التاريخ</th>
+                    <th className="p-4 font-bold">المورد</th>
+                    <th className="p-4 font-bold">الإجمالي قبل الضريبة</th>
+                    <th className="p-4 font-bold">الضريبة (14%)</th>
+                    <th className="p-4 font-bold">الصافي شامل الضريبة</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/50">
+                  {purchases.filter(p => (p.billNumber || '').includes(purchaseSearch) || (p.supplier?.name || '').includes(purchaseSearch)).map(purchase => (
+                      <tr key={purchase.id} className="hover:bg-white/5 transition-colors cursor-pointer" onClick={() => { setSelectedPurchase(purchase); setShowPurchaseDetailModal(true); }}>
+                        <td className="p-4 font-mono text-slate-300 font-bold">{purchase.billNumber}</td>
+                        <td className="p-4 text-slate-300 font-mono text-xs">{new Date(purchase.date).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+                        <td className="p-4 font-bold text-white">{purchase.supplier?.name || 'غير معروف'}</td>
+                        <td className="p-4 font-mono text-slate-300">{purchase.totalAmount.toFixed(2)} ج.م</td>
+                        <td className="p-4 font-mono text-slate-400">{purchase.taxAmount.toFixed(2)} ج.م</td>
+                        <td className="p-4 font-mono font-bold text-emerald-400" dir="ltr">{purchase.netAmount.toFixed(2)} ج.م</td>
+                      </tr>
+                  ))}
+                  {purchases.filter(p => (p.billNumber || '').includes(purchaseSearch) || (p.supplier?.name || '').includes(purchaseSearch)).length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="p-10 text-center text-slate-500 font-bold">لا توجد فواتير مشتريات مسجلة</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 9: EXPENSES */}
+        {activeTab === 'EXPENSES' && (
+          <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+            <div>
+              <h2 className="text-xl font-bold text-white">سندات الصرف للموردين</h2>
+              <p className="text-xs text-slate-400 mt-0.5">تسجيل ومتابعة سندات الصرف للموردين والخصم الفوري من البنوك والخزائن</p>
+            </div>
+
+            <div className="flex gap-3 items-center max-w-xl">
+              <div className="relative group flex-1">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+                  <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+                </div>
+                <input 
+                  type="text" 
+                  value={expenseSearch}
+                  onChange={(e) => setExpenseSearch(e.target.value)}
+                  placeholder="ابحث برقم السند أو اسم المورد..." 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+                />
+              </div>
+              <button 
+                onClick={() => {
+                  setExpenseForm({ supplierId: '', bankId: '', amount: '', notes: '', reference: '' });
+                  setShowExpenseModal(true);
+                }}
+                className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+              >
+                <PlusIcon className="w-4 h-4" />
+                <span>إصدار سند صرف</span>
+              </button>
+            </div>
+            
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex-1 overflow-y-auto custom-scrollbar">
+              <table className="w-full text-right text-sm">
+                <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
+                  <tr>
+                    <th className="p-4 font-bold">رقم السند</th>
+                    <th className="p-4 font-bold">التاريخ</th>
+                    <th className="p-4 font-bold">المستلم (المورد)</th>
+                    <th className="p-4 font-bold">المخصوم من (الخزينة)</th>
+                    <th className="p-4 font-bold">البيان</th>
+                    <th className="p-4 font-bold">المبلغ المصروف</th>
+                    <th className="p-4 font-bold text-center">طباعة</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/50">
+                  {expenses.filter(e => (e.expenseNumber || '').includes(expenseSearch) || (e.supplier?.name || '').includes(expenseSearch)).map(expense => (
+                    <tr key={expense.id} className="hover:bg-white/5 transition-colors">
+                      <td className="p-4 font-mono text-slate-300 font-bold">{expense.expenseNumber}</td>
+                      <td className="p-4 text-slate-300 font-mono text-xs">{new Date(expense.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+                      <td className="p-4 font-bold text-white">{expense.supplier?.name || 'غير معروف'}</td>
+                      <td className="p-4 text-slate-300">{expense.bank?.name || 'غير معروف'}</td>
+                      <td className="p-4 text-slate-400 text-xs">{expense.notes || '-'}</td>
+                      <td className="p-4 font-mono font-bold text-red-400" dir="ltr">{expense.amount.toFixed(2)} ج.م</td>
+                      <td className="p-4 text-center">
+                        <button 
+                          onClick={() => { setSelectedExpense(expense); setShowExpenseReceiptModal(true); }}
+                          className="text-slate-400 hover:text-white bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border border-white/5 hover:bg-white/10"
+                        >
+                          <PrinterIcon size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {expenses.filter(e => (e.expenseNumber || '').includes(expenseSearch) || (e.supplier?.name || '').includes(expenseSearch)).length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="p-10 text-center text-slate-500 font-bold">لا توجد سندات صرف مسجلة</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+  
+
+        {/* TAB 4: BANKS */}
+        {activeTab === 'BANKS' && (
+          <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+            <div>
+              <h2 className="text-xl font-bold text-white">إدارة البنوك والخزائن</h2>
+              <p className="text-xs text-slate-400 mt-0.5">إدارة الحسابات البنكية والنقدية ومتابعة الأرصدة والعمليات المالية</p>
+            </div>
+
+            <div className="flex gap-3 items-center max-w-xl">
+              <div className="relative group flex-1">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+                  <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+                </div>
+                <input 
+                  type="text" 
+                  value={bankSearch}
+                  onChange={(e) => setBankSearch(e.target.value)}
+                  placeholder="ابحث عن بنك أو خزينة بالاسم..." 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+                />
+              </div>
+              <button 
+                onClick={() => { setIsBankModalOpen(true); setBankForm({ name: '', accountNumber: '', balance: '0' }); }}
+                className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+              >
+                <PlusIcon className="w-4 h-4" />
+                <span>إضافة بنك / خزينة</span>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pb-10 custom-scrollbar pr-2">
+              {banks.filter(b => (b.name || '').includes(bankSearch)).length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
+                  <BuildingIcon className="h-16 w-16 text-slate-600 animate-pulse" />
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-300">لا توجد حسابات متطابقة</h3>
+                    <p className="text-sm text-slate-500 mt-1">أضف بنك أو خزينة جديدة لبدء العمليات المالية</p>
                   </div>
                 </div>
-              ))}
-              {banks.length === 0 && (
-                <div className="col-span-3 text-center py-10 text-slate-500">
-                  لا توجد بنوك أو خزائن مسجلة
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {banks.filter(b => (b.name || '').includes(bankSearch)).map((bank) => (
+                    <div key={bank.id} className="glass-card rounded-xl p-3 flex flex-col justify-between border border-white/5 hover:border-red-500/20 transition-all duration-300 text-right" dir="rtl">
+                      <div>
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h3 className="text-[15px] font-bold text-white leading-snug">{bank.name}</h3>
+                            <p className="text-[10px] text-slate-400 mt-1">حساب مالي</p>
+                          </div>
+                          <div className="bg-white/5 text-slate-400 p-1.5 rounded-lg border border-white/5">
+                            <BuildingIcon className="w-3.5 h-3.5" />
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-center mt-2">
+                          <button
+                            onClick={() => {
+                              setBankForm({
+                                id: bank.id,
+                                name: bank.name,
+                                accountNumber: bank.accountNumber || '',
+                                balance: bank.balance.toString()
+                              });
+                              setIsEditingBank(true);
+                              setIsBankModalOpen(true);
+                            }}
+                            className="bg-white/5 text-slate-400 p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                          >
+                            <PencilIcon className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 gap-x-2 gap-y-1 text-xs text-slate-300 mb-2 border-t border-white/5 pt-2 font-semibold">
+                          <p>📜 رقم الحساب: <span className="text-white font-mono font-bold">{bank.accountNumber || 'لا يوجد'}</span></p>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-white/5 pt-2">
+                        <div className="bg-black/25 px-2 py-2 rounded-lg text-center border border-white/5">
+                          <span className="text-[10px] text-slate-400 block font-bold">الرصيد الحالي</span>
+                          <span className="text-base font-black font-mono text-emerald-400">
+                            {bank.balance.toFixed(2)} ج.م
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -1490,22 +1977,35 @@ export default function POSDashboard() {
 
         {/* TAB 5: PAYMENTS */}
         {activeTab === 'PAYMENTS' && (
-          <div className="flex-1 p-6 overflow-y-auto custom-scrollbar no-print">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <BanknoteIcon className="text-entlaq-red" />
-                سداد / دفعات العملاء
-              </h2>
-              <button
+          <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+            <div>
+              <h2 className="text-xl font-bold text-white">سداد ودفعات العملاء</h2>
+              <p className="text-xs text-slate-400 mt-0.5">متابعة سجل المقبوضات وإصدار سندات القبض والدفعات من العملاء</p>
+            </div>
+
+            <div className="flex gap-3 items-center max-w-xl">
+              <div className="relative group flex-1">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+                  <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+                </div>
+                <input 
+                  type="text" 
+                  value={paymentSearch}
+                  onChange={(e) => setPaymentSearch(e.target.value)}
+                  placeholder="ابحث برقم السند أو اسم العميل..." 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+                />
+              </div>
+              <button 
                 onClick={() => { setIsPaymentModalOpen(true); setPaymentForm({ customerId: '', bankId: '', amount: '', notes: '', reference: '' }); }}
-                className="bg-entlaq-red text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition-colors flex items-center gap-2 cursor-pointer shadow-lg shadow-red-500/10"
+                className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
               >
-                <PlusIcon size={18} />
-                سند قبض جديد
+                <PlusIcon className="w-4 h-4" />
+                <span>سند قبض جديد</span>
               </button>
             </div>
             
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex-1 overflow-y-auto custom-scrollbar">
               <table className="w-full text-right text-sm">
                 <thead>
                   <tr className="bg-slate-950 text-slate-400 border-b border-slate-800">
@@ -1518,9 +2018,9 @@ export default function POSDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/50">
-                  {payments.map(payment => (
+                  {payments.filter(p => (p.customer?.name || '').includes(paymentSearch) || (p.receiptNumber && p.receiptNumber.includes(paymentSearch))).map(payment => (
                     <tr key={payment.id} className="hover:bg-white/5 transition-colors">
-                      <td className="p-4 font-mono text-slate-300">#{payment.receiptNumber || payment.id.substring(0,6)}</td>
+                      <td className="p-4 font-mono text-slate-300 font-bold">{payment.receiptNumber ? `REC-${payment.receiptNumber}` : `REC-${payment.id.substring(0,6).toUpperCase()}`}</td>
                       <td className="p-4 text-slate-300 font-mono text-xs">{new Date(payment.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
                       <td className="p-4 font-bold text-white">{payment.customer?.name || 'غير معروف'}</td>
                       <td className="p-4 text-slate-300">{payment.bank?.name || 'غير معروف'}</td>
@@ -1535,7 +2035,7 @@ export default function POSDashboard() {
                       </td>
                     </tr>
                   ))}
-                  {payments.length === 0 && (
+                  {payments.filter(p => (p.customer?.name || '').includes(paymentSearch) || (p.receiptNumber && p.receiptNumber.includes(paymentSearch))).length === 0 && (
                     <tr>
                       <td colSpan={6} className="p-10 text-center text-slate-500 font-bold">لا توجد سندات قبض مسجلة</td>
                     </tr>
@@ -1550,15 +2050,28 @@ export default function POSDashboard() {
       
         {/* TAB 6: INVOICES */}
         {activeTab === 'INVOICES' && (
-          <div className="flex-1 p-6 overflow-y-auto custom-scrollbar no-print">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <FileTextIcon className="text-entlaq-red" />
-                الفواتير وعروض الأسعار
-              </h2>
+          <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+            <div>
+              <h2 className="text-xl font-bold text-white">الفواتير وعروض الأسعار</h2>
+              <p className="text-xs text-slate-400 mt-0.5">مراجعة وإعادة طباعة فواتير المبيعات وعروض الأسعار الصادرة للمؤسسات والأفراد</p>
+            </div>
+
+            <div className="flex gap-3 items-center max-w-xl">
+              <div className="relative group flex-1">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+                  <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+                </div>
+                <input 
+                  type="text" 
+                  value={invoiceSearch}
+                  onChange={(e) => setInvoiceSearch(e.target.value)}
+                  placeholder="ابحث برقم الفاتورة أو اسم العميل..." 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+                />
+              </div>
             </div>
             
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex-1 overflow-y-auto custom-scrollbar">
               <table className="w-full text-right text-sm">
                 <thead>
                   <tr className="bg-slate-950 text-slate-400 border-b border-slate-800">
@@ -1571,7 +2084,7 @@ export default function POSDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/50">
-                  {invoices.map(inv => (
+                  {invoices.filter(inv => (inv.invoiceNumber || '').includes(invoiceSearch) || (inv.customerName || '').includes(invoiceSearch) || (inv.customer?.name || '').includes(invoiceSearch)).map(inv => (
                     <tr key={inv.id} className="hover:bg-white/5 transition-colors">
                       <td className="p-4 font-mono text-slate-300 font-bold">{inv.invoiceNumber}</td>
                       <td className="p-4 text-slate-300 font-mono text-xs">{new Date(inv.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
@@ -1602,7 +2115,7 @@ export default function POSDashboard() {
                       </td>
                     </tr>
                   ))}
-                  {invoices.length === 0 && (
+                  {invoices.filter(inv => (inv.invoiceNumber || '').includes(invoiceSearch) || (inv.customerName || '').includes(invoiceSearch) || (inv.customer?.name || '').includes(invoiceSearch)).length === 0 && (
                     <tr>
                       <td colSpan={6} className="p-10 text-center text-slate-500 font-bold">لا توجد فواتير مسجلة</td>
                     </tr>
@@ -1613,6 +2126,8 @@ export default function POSDashboard() {
           </div>
         )}
   
+
+      </div>
 
       {/* MODAL 1: INVOICE & QUOTATION PRINT MODAL */}
       {showModal && invoice && (
@@ -1637,23 +2152,18 @@ export default function POSDashboard() {
             </div>
 
             {/* Modal Body (Printable Area) */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar text-slate-300">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-white text-black">
               
               {/* Printed Letterhead / Logo */}
-              <div className="flex justify-between items-center border-b border-slate-700 pb-6">
+              <div className="flex justify-between items-center border-b border-gray-300 pb-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 flex items-center justify-center bg-white/5 rounded-xl border border-white/10 p-2">
-                    <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M50 15 C35 38 18 62 18 82" stroke="#da291c" strokeWidth="12" strokeLinecap="round" />
-                      <path d="M50 15 L80 82" stroke="#da291c" strokeWidth="12" strokeLinecap="round" />
-                      <path d="M10 58 C38 52 62 52 90 58" stroke="#da291c" strokeWidth="8" strokeLinecap="round" />
-                      <path d="M22 68 C45 62 65 62 82 68" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" opacity="0.8" />
-                    </svg>
+                  <div className="w-16 h-16 flex items-center justify-center bg-gray-50 rounded-xl border border-gray-200 p-1">
+                    <img src="/images/logo.png" alt="الإنطلاق" className="w-full h-full object-contain" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white tracking-wide">شركة الإنطلاق</h2>
-                    <p className="text-xs text-slate-400">لتصنيع وتوريد خراطيم ومواسير الكهرباء</p>
-                    <p className="text-[10px] text-slate-500">العاشر من رمضان - المنطقة الصناعية الثالثة</p>
+                    <h2 className="text-xl font-bold text-black tracking-wide">شركة الإنطلاق</h2>
+                    <p className="text-xs text-gray-500">لتصنيع وتوريد خراطيم ومواسير الكهرباء</p>
+                    <p className="text-[10px] text-gray-400">العاشر من رمضان - المنطقة الصناعية الثالثة</p>
                   </div>
                 </div>
                 <div className="text-left text-sm">
@@ -1666,43 +2176,43 @@ export default function POSDashboard() {
               </div>
 
               {/* Vendor & Customer Info */}
-              <div className="grid grid-cols-2 gap-6 text-sm bg-slate-950/20 p-4 rounded-md border border-slate-800">
+              <div className="grid grid-cols-2 gap-6 text-sm bg-gray-50 p-4 rounded-md border border-gray-200">
                 <div>
-                  <h4 className="font-bold text-slate-400 mb-1 text-xs">بيانات المورد (البائع)</h4>
-                  <p className="font-bold text-white">مصنع الانطلاق للصناعات البلاستيكية</p>
-                  <p className="text-xs text-slate-400 mt-0.5">الرقم الضريبي: 310122345600003</p>
-                  <p className="text-xs text-slate-400">السجل التجاري: 12056-أ</p>
+                  <h4 className="font-bold text-gray-500 mb-1 text-xs">بيانات المورد (البائع)</h4>
+                  <p className="font-bold text-black">مصنع الانطلاق للصناعات البلاستيكية</p>
+                  <p className="text-xs text-gray-500 mt-0.5">الرقم الضريبي: 310122345600003</p>
+                  <p className="text-xs text-gray-500">السجل التجاري: 12056-أ</p>
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-400 mb-1 text-xs">بيانات العميل (المشتري)</h4>
-                  <p className="font-bold text-white">{invoice.customerName}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">النشاط: مقاولات وتوريدات كهربائية</p>
-                  <p className="text-xs text-slate-400">حالة الدفع: نقدي</p>
+                  <h4 className="font-bold text-gray-500 mb-1 text-xs">بيانات العميل (المشتري)</h4>
+                  <p className="font-bold text-black">{invoice.customerName}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">النشاط: مقاولات وتوريدات كهربائية</p>
+                  <p className="text-xs text-gray-500">حالة الدفع: نقدي</p>
                 </div>
               </div>
 
               {/* Items List - Outlined grid styled table as requested */}
-              <div className="border border-slate-700 rounded-md overflow-hidden bg-slate-950/20">
+              <div className="border border-gray-200 rounded-md overflow-hidden bg-gray-50/50">
                 <table className="w-full text-right border-collapse text-sm">
                   <thead>
-                    <tr className="bg-slate-950 text-slate-300 font-bold border-b border-slate-700">
-                      <th className="p-3 border-l border-slate-700">الصنف</th>
-                      <th className="p-3 border-l border-slate-700">الكود</th>
-                      <th className="p-3 border-l border-slate-700">الكمية</th>
-                      <th className="p-3 border-l border-slate-700">سعر الوحدة</th>
-                      <th className="p-3 border-l border-slate-700">الضريبة</th>
+                    <tr className="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
+                      <th className="p-3 border-l border-gray-200">الصنف</th>
+                      <th className="p-3 border-l border-gray-200">الكود</th>
+                      <th className="p-3 border-l border-gray-200">الكمية</th>
+                      <th className="p-3 border-l border-gray-200">سعر الوحدة</th>
+                      <th className="p-3 border-l border-gray-200">الضريبة</th>
                       <th className="p-3">الإجمالي</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-700 bg-slate-900/40">
+                  <tbody className="divide-y divide-gray-200 bg-white">
                     {invoice.items && invoice.items.map((item: any, idx: number) => (
-                      <tr key={idx} className="hover:bg-white/5 transition-colors border-b border-slate-700/60 last:border-b-0">
-                        <td className="p-3 border-l border-slate-700 font-bold text-white">{item.product.name} ({item.product.size})</td>
-                        <td className="p-3 border-l border-slate-700 font-mono text-xs">{item.product.code}</td>
-                        <td className="p-3 border-l border-slate-700 font-mono">{item.quantity}</td>
-                        <td className="p-3 border-l border-slate-700 font-mono">{item.unitPrice.toFixed(2)} ج.م</td>
-                        <td className="p-3 border-l border-slate-700 font-mono">{item.taxAmount.toFixed(2)} ج.م</td>
-                        <td className="p-3 font-mono font-bold text-white">{item.total.toFixed(2)} ج.م</td>
+                      <tr key={idx} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
+                        <td className="p-3 border-l border-gray-200 font-bold text-black">{item.product.name} ({item.product.size})</td>
+                        <td className="p-3 border-l border-gray-200 font-mono text-xs text-gray-600">{item.product.code}</td>
+                        <td className="p-3 border-l border-gray-200 font-mono text-black">{item.quantity}</td>
+                        <td className="p-3 border-l border-gray-200 font-mono text-black">{item.unitPrice.toFixed(2)} ج.م</td>
+                        <td className="p-3 border-l border-gray-200 font-mono text-black">{item.taxAmount.toFixed(2)} ج.م</td>
+                        <td className="p-3 font-mono font-bold text-black">{item.total.toFixed(2)} ج.م</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1710,45 +2220,45 @@ export default function POSDashboard() {
               </div>
 
               {/* Totals & QR Code */}
-              <div className="flex justify-between items-center pt-4 border-t border-slate-700">
+              <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                 
                 {/* ZATCA compliant QR Code (Offline-ready) */}
-                <div className="bg-white p-3 rounded-md flex flex-col items-center justify-center shadow-lg border border-slate-300">
+                <div className="bg-white p-3 rounded-md flex flex-col items-center justify-center shadow-lg border border-gray-200">
                   {qrCodeUrl ? (
                     <img src={qrCodeUrl} alt="ZATCA E-Invoicing QR Code" className="w-32 h-32" />
                   ) : (
-                    <div className="w-32 h-32 border border-slate-300 rounded flex items-center justify-center text-[10px] text-slate-500 font-bold text-center">
+                    <div className="w-32 h-32 border border-gray-200 rounded flex items-center justify-center text-[10px] text-gray-500 font-bold text-center">
                       عرض سعر<br/>(لا يحتاج رمز QR)
                     </div>
                   )}
                 </div>
 
                 {/* Summaries */}
-                <div className="w-72 space-y-3 bg-slate-950/40 p-5 rounded-md border border-slate-700">
-                  <div className="flex justify-between text-xs text-slate-400 font-mono">
+                <div className="w-72 space-y-3 bg-gray-50 p-5 rounded-md border border-gray-200">
+                  <div className="flex justify-between text-xs text-gray-600 font-mono">
                     <span>الإجمالي (غير شامل الضريبة)</span>
                     <span>{invoice.totalAmount.toFixed(2)} ج.م</span>
                   </div>
-                  <div className="flex justify-between text-xs text-slate-400 font-mono">
+                  <div className="flex justify-between text-xs text-gray-600 font-mono">
                     <span>ضريبة القيمة المضافة (14%)</span>
                     <span>{invoice.taxAmount.toFixed(2)} ج.م</span>
                   </div>
-                  <div className="h-px bg-slate-700 w-full"></div>
+                  <div className="h-px bg-gray-200 w-full"></div>
                   <div className="flex justify-between items-end">
-                    <span className="text-sm font-bold text-white">الإجمالي المستحق</span>
-                    <span className="text-2xl font-black text-emerald-400 font-mono">
-                      {invoice.netAmount.toFixed(2)} <span className="text-xs font-normal text-emerald-500">ج.م</span>
+                    <span className="text-sm font-bold text-black">الإجمالي المستحق</span>
+                    <span className="text-2xl font-black text-red-600 font-mono">
+                      {invoice.netAmount.toFixed(2)} <span className="text-xs font-normal text-red-500">ج.م</span>
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* Thank you note & Contacts */}
-              <div className="pt-6 border-t border-slate-700 flex flex-col items-center text-center space-y-3">
-                <p className="text-sm font-bold text-white tracking-wide">
+              <div className="pt-6 border-t border-gray-200 flex flex-col items-center text-center space-y-3">
+                <p className="text-sm font-bold text-black tracking-wide">
                   💚 شكراً لتعاملكم مع مصنع الانطلاق ونتطلع لخدمتكم دائماً!
                 </p>
-                <div className="flex justify-center gap-6 text-xs text-slate-400 font-mono">
+                <div className="flex justify-center gap-6 text-xs text-gray-500 font-mono">
                   <span>هاتف: 01030099400 / 01021683030</span>
                   <span>|</span>
                   <span>إيميل: info@al-entlaq.com</span>
@@ -1882,9 +2392,9 @@ export default function POSDashboard() {
       {/* MODAL 3: CUSTOMER FORM MODAL */}
       {showCustomerModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             
-            <div className="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+            <div className="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-bold text-white">
                   {isEditingCustomer ? 'تعديل بيانات العميل' : 'إضافة عميل جديد'}
@@ -1899,96 +2409,96 @@ export default function POSDashboard() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveCustomer} className="p-6 space-y-4 overflow-y-auto custom-scrollbar text-right" dir="rtl">
+            <form onSubmit={handleSaveCustomer} className="p-4 space-y-3 overflow-y-auto custom-scrollbar text-right" dir="rtl">
               <div className="space-y-1">
-                <label className="text-xs text-slate-400 block font-bold">اسم العميل / الشركة *</label>
+                <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">اسم العميل / الشركة *</label>
                 <input 
                   type="text"
                   required
                   value={customerForm.name}
                   onChange={(e) => setCustomerForm(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="مثال: شركة المقاولون العرب"
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">رقم التلفون</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">رقم التلفون</label>
                   <input 
                     type="text"
                     value={customerForm.phone}
                     onChange={(e) => setCustomerForm(prev => ({ ...prev, phone: e.target.value }))}
                     placeholder="مثال: 01021683030"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">الموقع</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الموقع</label>
                   <input 
                     type="text"
                     value={customerForm.location}
                     onChange={(e) => setCustomerForm(prev => ({ ...prev, location: e.target.value }))}
                     placeholder="مثال: القاهرة - مدينة نصر"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">عدد العماير</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">عدد العماير</label>
                   <input 
                     type="number"
                     value={customerForm.buildingsCount}
                     onChange={(e) => setCustomerForm(prev => ({ ...prev, buildingsCount: e.target.value }))}
                     placeholder="مثال: 5"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">السجل التجاري</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">السجل التجاري</label>
                   <input 
                     type="text"
                     value={customerForm.cr}
                     onChange={(e) => setCustomerForm(prev => ({ ...prev, cr: e.target.value }))}
                     placeholder="مثال: 1010123456"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">الرقم الضريبي</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الرقم الضريبي</label>
                   <input 
                     type="text"
                     value={customerForm.trn}
                     onChange={(e) => setCustomerForm(prev => ({ ...prev, trn: e.target.value }))}
                     placeholder="مثال: 310122345600003"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">طبيعة العميل</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">طبيعة العميل</label>
                   <select 
                     value={customerForm.customerType}
                     onChange={(e) => setCustomerForm(prev => ({ ...prev, customerType: e.target.value }))}
-                    className="w-full bg-slate-900 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs font-bold"
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs font-bold"
                   >
                     <option value="CASH">نقدي</option>
                     <option value="CREDIT">آجل</option>
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">نسبة الخصم (%)</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">نسبة الخصم (%)</label>
                   <input 
                     type="number"
                     step="0.1"
                     value={customerForm.discount}
                     onChange={(e) => setCustomerForm(prev => ({ ...prev, discount: e.target.value }))}
                     placeholder="مثال: 10"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs"
                   />
                 </div>
               </div>
@@ -1996,14 +2506,14 @@ export default function POSDashboard() {
               <div className="pt-4 border-t border-slate-800 flex gap-3">
                 <button 
                   type="submit"
-                  className="flex-1 bg-entlaq-red text-white py-3 rounded-2xl font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10"
+                  className="flex-1 bg-entlaq-red text-white py-2 rounded-lg font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10"
                 >
                   حفظ البيانات
                 </button>
                 <button 
                   type="button"
                   onClick={() => setShowCustomerModal(false)}
-                  className="bg-white/5 text-slate-300 px-6 py-3 rounded-2xl font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
+                  className="bg-white/5 text-slate-300 px-6 py-2 rounded-lg font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
                 >
                   إلغاء
                 </button>
@@ -2016,9 +2526,9 @@ export default function POSDashboard() {
         {/* MODAL 4: PRODUCT FORM MODAL */}
       {showProductFormModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-xl rounded-xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             
-            <div className="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+            <div className="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-bold text-white">
                   {isEditingProduct ? 'تعديل بيانات الصنف' : 'إضافة صنف جديد بالمخزن'}
@@ -2033,50 +2543,50 @@ export default function POSDashboard() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveProduct} className="p-6 space-y-4 overflow-y-auto custom-scrollbar text-right" dir="rtl">
+            <form onSubmit={handleSaveProduct} className="p-4 space-y-3 overflow-y-auto custom-scrollbar text-right" dir="rtl">
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">كود الصنف *</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">كود الصنف *</label>
                   <input 
                     type="text"
                     required
                     value={productForm.code}
                     onChange={(e) => setProductForm(prev => ({ ...prev, code: e.target.value }))}
                     placeholder="مثال: 3020"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">الباركود (اختياري)</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الباركود (اختياري)</label>
                   <input 
                     type="text"
                     value={productForm.barcode}
                     onChange={(e) => setProductForm(prev => ({ ...prev, barcode: e.target.value }))}
                     placeholder="مثال: 6221234567890"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">اسم المنتج *</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">اسم المنتج *</label>
                   <input 
                     type="text"
                     required
                     value={productForm.name}
                     onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="مثال: ماسورة كهرباء UPVC"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">النوع *</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">النوع *</label>
                   <select 
                     value={productForm.type}
                     onChange={(e) => setProductForm(prev => ({ ...prev, type: e.target.value }))}
-                    className="w-full bg-slate-900 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   >
                     <option value="PIPE">مواسير UPVC</option>
                     <option value="HOSE">خراطيم حريق</option>
@@ -2087,54 +2597,54 @@ export default function POSDashboard() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">المقاس *</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">المقاس *</label>
                   <input 
                     type="text"
                     required
                     value={productForm.size}
                     onChange={(e) => setProductForm(prev => ({ ...prev, size: e.target.value }))}
                     placeholder="مثال: 20 mm"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block">اللون</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1">اللون</label>
                   <input 
                     type="text"
                     value={productForm.color}
                     onChange={(e) => setProductForm(prev => ({ ...prev, color: e.target.value }))}
                     placeholder="مثال: أبيض"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">الطول</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الطول</label>
                   <input 
                     type="text"
                     value={productForm.length}
                     onChange={(e) => setProductForm(prev => ({ ...prev, length: e.target.value }))}
                     placeholder="مثال: 45 m"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">الوزن</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الوزن</label>
                   <input 
                     type="text"
                     value={productForm.weight}
                     onChange={(e) => setProductForm(prev => ({ ...prev, weight: e.target.value }))}
                     placeholder="مثال: 5.050 kg"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">سعر الشراء (التكلفة) *</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">سعر الشراء (التكلفة) *</label>
                   <input 
                     type="number"
                     step="0.01"
@@ -2152,11 +2662,11 @@ export default function POSDashboard() {
                       });
                     }}
                     placeholder="سعر التكلفة"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">النسبة *</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">النسبة *</label>
                   <input 
                     type="number"
                     step="0.01"
@@ -2174,11 +2684,11 @@ export default function POSDashboard() {
                       });
                     }}
                     placeholder="مثال: 30"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">سعر البيع *</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">سعر البيع *</label>
                   <input 
                     type="number"
                     step="0.01"
@@ -2186,43 +2696,43 @@ export default function POSDashboard() {
                     value={productForm.price}
                     onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
                     placeholder="سعر البيع النهائي"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">الكمية الحالية *</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الكمية الحالية *</label>
                   <input 
                     type="number"
                     required
                     value={productForm.stockQty}
                     onChange={(e) => setProductForm(prev => ({ ...prev, stockQty: e.target.value }))}
                     placeholder="الكمية"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">الحد الأدنى *</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الحد الأدنى *</label>
                   <input 
                     type="number"
                     required
                     value={productForm.minStockQty}
                     onChange={(e) => setProductForm(prev => ({ ...prev, minStockQty: e.target.value }))}
                     placeholder="حد التنبيه"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block font-bold">الحد الأقصى *</label>
+                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الحد الأقصى *</label>
                   <input 
                     type="number"
                     required
                     value={productForm.maxStockQty}
                     onChange={(e) => setProductForm(prev => ({ ...prev, maxStockQty: e.target.value }))}
                     placeholder="الحد الأقصى"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   />
                 </div>
               </div>
@@ -2230,14 +2740,14 @@ export default function POSDashboard() {
               <div className="pt-4 border-t border-slate-800 flex gap-3">
                 <button 
                   type="submit"
-                  className="flex-1 bg-entlaq-red text-white py-3 rounded-2xl font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10"
+                  className="flex-1 bg-entlaq-red text-white py-2 rounded-lg font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10"
                 >
                   حفظ البيانات
                 </button>
                 <button 
                   type="button"
                   onClick={() => setShowProductFormModal(false)}
-                  className="bg-white/5 text-slate-300 px-6 py-3 rounded-2xl font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
+                  className="bg-white/5 text-slate-300 px-6 py-2 rounded-lg font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
                 >
                   إلغاء
                 </button>
@@ -2251,8 +2761,8 @@ export default function POSDashboard() {
     {/* MODAL 5: BANK FORM MODAL */}
       {isBankModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col">
-            <div className="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-xl overflow-hidden shadow-2xl flex flex-col">
+            <div className="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-bold text-white">إضافة بنك / خزينة</h3>
               </div>
@@ -2260,22 +2770,22 @@ export default function POSDashboard() {
                 <XIcon size={18} />
               </button>
             </div>
-            <form onSubmit={handleSaveBank} className="p-6 space-y-4" dir="rtl">
+            <form onSubmit={handleSaveBank} className="p-4 space-y-3" dir="rtl">
               <div className="space-y-1">
-                <label className="text-xs text-slate-400 block font-bold">اسم البنك / الخزينة *</label>
-                <input type="text" required value={bankForm.name} onChange={e => setBankForm({...bankForm, name: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50" placeholder="مثال: البنك الأهلي" />
+                <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">اسم البنك / الخزينة *</label>
+                <input type="text" required value={bankForm.name} onChange={e => setBankForm({...bankForm, name: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50" placeholder="مثال: البنك الأهلي" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-slate-400 block font-bold">رقم الحساب</label>
-                <input type="text" value={bankForm.accountNumber} onChange={e => setBankForm({...bankForm, accountNumber: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-mono text-left" placeholder="رقم الحساب البنكي" dir="ltr" />
+                <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">رقم الحساب</label>
+                <input type="text" value={bankForm.accountNumber} onChange={e => setBankForm({...bankForm, accountNumber: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-mono text-left" placeholder="رقم الحساب البنكي" dir="ltr" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-slate-400 block font-bold">الرصيد الافتتاحي *</label>
-                <input type="number" step="0.01" required value={bankForm.balance} onChange={e => setBankForm({...bankForm, balance: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-mono" />
+                <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الرصيد الافتتاحي *</label>
+                <input type="number" step="0.01" required value={bankForm.balance} onChange={e => setBankForm({...bankForm, balance: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-mono" />
               </div>
               <div className="pt-4 border-t border-slate-800 flex gap-3">
-                <button type="submit" disabled={submitting} className="flex-1 bg-entlaq-red text-white py-3 rounded-2xl font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10 disabled:opacity-50">حفظ</button>
-                <button type="button" onClick={() => setIsBankModalOpen(false)} className="bg-white/5 text-slate-300 px-6 py-3 rounded-2xl font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer">إلغاء</button>
+                <button type="submit" disabled={submitting} className="flex-1 bg-entlaq-red text-white py-2 rounded-lg font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10 disabled:opacity-50">حفظ</button>
+                <button type="button" onClick={() => setIsBankModalOpen(false)} className="bg-white/5 text-slate-300 px-6 py-2 rounded-lg font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer">إلغاء</button>
               </div>
             </form>
           </div>
@@ -2285,8 +2795,8 @@ export default function POSDashboard() {
       {/* MODAL 6: PAYMENT FORM MODAL */}
       {isPaymentModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col">
-            <div className="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-xl overflow-hidden shadow-2xl flex flex-col">
+            <div className="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-bold text-white">إصدار سند قبض جديد</h3>
               </div>
@@ -2294,10 +2804,10 @@ export default function POSDashboard() {
                 <XIcon size={18} />
               </button>
             </div>
-            <form onSubmit={handleSavePayment} className="p-6 space-y-4" dir="rtl">
+            <form onSubmit={handleSavePayment} className="p-4 space-y-3" dir="rtl">
               <div className="space-y-1">
-                <label className="text-xs text-slate-400 block font-bold">العميل *</label>
-                <select required value={paymentForm.customerId} onChange={e => setPaymentForm({...paymentForm, customerId: e.target.value})} className="w-full bg-slate-900 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold">
+                <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">العميل *</label>
+                <select required value={paymentForm.customerId} onChange={e => setPaymentForm({...paymentForm, customerId: e.target.value})} className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold">
                   <option value="">-- اختر العميل --</option>
                   {customers.filter(c => c.id !== 'CASH').map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
@@ -2305,8 +2815,8 @@ export default function POSDashboard() {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-slate-400 block font-bold">البنك / الخزينة *</label>
-                <select required value={paymentForm.bankId} onChange={e => setPaymentForm({...paymentForm, bankId: e.target.value})} className="w-full bg-slate-900 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold">
+                <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">البنك / الخزينة *</label>
+                <select required value={paymentForm.bankId} onChange={e => setPaymentForm({...paymentForm, bankId: e.target.value})} className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold">
                   <option value="">-- اختر البنك أو الخزينة --</option>
                   {banks.map(b => (
                     <option key={b.id} value={b.id}>{b.name} ({b.balance.toFixed(2)} ج.م)</option>
@@ -2314,18 +2824,18 @@ export default function POSDashboard() {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-slate-400 block font-bold">المبلغ المدفوع *</label>
-                <input type="number" step="0.01" required value={paymentForm.amount} onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-mono text-xl text-emerald-400" placeholder="0.00" />
+                <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">المبلغ المدفوع *</label>
+                <input type="number" step="0.01" required value={paymentForm.amount} onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-mono text-xl text-emerald-400" placeholder="0.00" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-slate-400 block font-bold">ملاحظات / رقم الشيك</label>
-                <input type="text" value={paymentForm.notes} onChange={e => setPaymentForm({...paymentForm, notes: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50" placeholder="مثال: دفعة تحت الحساب بشيك رقم..." />
+                <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">ملاحظات / رقم الشيك</label>
+                <input type="text" value={paymentForm.notes} onChange={e => setPaymentForm({...paymentForm, notes: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50" placeholder="مثال: دفعة تحت الحساب بشيك رقم..." />
               </div>
               <div className="pt-4 border-t border-slate-800 flex gap-3">
-                <button type="submit" disabled={submitting} className="flex-1 bg-entlaq-red text-white py-3 rounded-2xl font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10 disabled:opacity-50">
+                <button type="submit" disabled={submitting} className="flex-1 bg-entlaq-red text-white py-2 rounded-lg font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10 disabled:opacity-50">
                   حفظ وإصدار السند
                 </button>
-                <button type="button" onClick={() => setIsPaymentModalOpen(false)} className="bg-white/5 text-slate-300 px-6 py-3 rounded-2xl font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer">إلغاء</button>
+                <button type="button" onClick={() => setIsPaymentModalOpen(false)} className="bg-white/5 text-slate-300 px-6 py-2 rounded-lg font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer">إلغاء</button>
               </div>
             </form>
           </div>
@@ -2357,17 +2867,13 @@ export default function POSDashboard() {
                   <p className="text-[10px]">العاشر من رمضان - المنطقة الصناعية الثالثة</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-14 h-14 mx-auto mb-1 border-2 border-black rounded-lg flex items-center justify-center p-1">
-                     <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M50 15 C35 38 18 62 18 82" stroke="#000" strokeWidth="12" strokeLinecap="round" />
-                      <path d="M50 15 L80 82" stroke="#000" strokeWidth="12" strokeLinecap="round" />
-                      <path d="M10 58 C38 52 62 52 90 58" stroke="#000" strokeWidth="8" strokeLinecap="round" />
-                    </svg>
+                  <div className="w-14 h-14 mx-auto mb-1 border border-gray-300 rounded-lg flex items-center justify-center p-1 bg-gray-50">
+                    <img src="/images/logo.png" alt="الإنطلاق" className="w-full h-full object-contain" />
                   </div>
                 </div>
                 <div className="text-left" dir="rtl">
                   <h2 className="text-lg font-bold border-2 border-black px-4 py-1 rounded-md inline-block">سند قبض (Receipt)</h2>
-                  <p className="text-xs mt-2 font-mono">رقم: #{selectedReceipt.receiptNumber || selectedReceipt.id.substring(0,6)}</p>
+                  <p className="text-xs mt-2 font-mono">رقم السند: {selectedReceipt.receiptNumber ? `REC-${selectedReceipt.receiptNumber}` : `REC-${selectedReceipt.id.substring(0,6).toUpperCase()}`}</p>
                   <p className="text-xs font-mono">التاريخ: {new Date(selectedReceipt.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
                 </div>
               </div>
@@ -2419,7 +2925,7 @@ export default function POSDashboard() {
                 <div className="flex justify-between items-start mb-4" dir="rtl">
                   <div>
                     <h3 className="font-bold text-base">كعب سند القبض - يٌسلم للعميل بعد التوقيع</h3>
-                    <p className="text-xs mt-1 font-mono">رقم: #{selectedReceipt.receiptNumber || selectedReceipt.id.substring(0,6)}</p>
+                    <p className="text-xs mt-1 font-mono">رقم السند: {selectedReceipt.receiptNumber ? `REC-${selectedReceipt.receiptNumber}` : `REC-${selectedReceipt.id.substring(0,6).toUpperCase()}`}</p>
                   </div>
                   <div className="text-left font-mono font-bold text-lg bg-gray-100 px-4 py-2 border border-gray-300">
                     {selectedReceipt.amount.toFixed(2)} ج.م
@@ -2532,7 +3038,7 @@ export default function POSDashboard() {
                       <tbody className="divide-y divide-slate-800/50">
                         {selectedHistoryCustomer.payments.map((p: any) => (
                           <tr key={p.id} className="hover:bg-white/5">
-                            <td className="p-3 font-mono font-bold text-white">#{p.receiptNumber || p.id.substring(0,6)}</td>
+                            <td className="p-3 font-mono font-bold text-white">{p.receiptNumber ? `REC-${p.receiptNumber}` : `REC-${p.id.substring(0,6).toUpperCase()}`}</td>
                             <td className="p-3 font-mono text-xs text-slate-300">{new Date(p.date).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit' })}</td>
                             <td className="p-3 font-bold text-slate-300">{p.bank?.name || 'بنك'}</td>
                             <td className="p-3 text-slate-400 text-xs">{p.notes || '-'}</td>
@@ -2561,6 +3067,483 @@ export default function POSDashboard() {
         </div>
       )}
   
+
+      {/* MODAL 9: SUPPLIER FORM MODAL */}
+      {showSupplierModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-bold text-white">
+                  {isEditingSupplier ? 'تعديل بيانات المورد' : 'إضافة مورد جديد'}
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">أدخل بيانات المورد لتسجيل فواتير الشراء وسندات الصرف</p>
+              </div>
+              <button onClick={() => setShowSupplierModal(false)} className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                <XIcon size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveSupplier} className="p-4 space-y-3 overflow-y-auto custom-scrollbar text-right" dir="rtl">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-300 block mb-1">اسم المورد / الشركة *</label>
+                <input
+                  type="text"
+                  required
+                  value={supplierForm.name}
+                  onChange={(e) => setSupplierForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="مثال: شركة النيل للبتروكيماويات"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-300 block mb-1">رقم التلفون</label>
+                  <input
+                    type="text"
+                    value={supplierForm.phone}
+                    onChange={(e) => setSupplierForm(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="مثال: 01021683030"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-300 block mb-1">العنوان</label>
+                  <input
+                    type="text"
+                    value={supplierForm.address}
+                    onChange={(e) => setSupplierForm(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder="مثال: القاهرة - العبور"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-300 block mb-1">السجل التجاري</label>
+                  <input
+                    type="text"
+                    value={supplierForm.cr}
+                    onChange={(e) => setSupplierForm(prev => ({ ...prev, cr: e.target.value }))}
+                    placeholder="رقم السجل التجاري"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-300 block mb-1">الرقم الضريبي</label>
+                  <input
+                    type="text"
+                    value={supplierForm.trn}
+                    onChange={(e) => setSupplierForm(prev => ({ ...prev, trn: e.target.value }))}
+                    placeholder="الرقم الضريبي للمورد"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-slate-300 block mb-1">الرصيد الافتتاحي (مديونية)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={supplierForm.balance}
+                  onChange={(e) => setSupplierForm(prev => ({ ...prev, balance: e.target.value }))}
+                  placeholder="0.00"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-mono"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-800 flex gap-3">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 bg-entlaq-red text-white py-2 rounded-lg font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10 disabled:opacity-50"
+                >
+                  {submitting ? <Loader2Icon size={16} className="animate-spin" /> : null}
+                  حفظ البيانات
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSupplierModal(false)}
+                  className="bg-white/5 text-slate-300 px-6 py-2 rounded-lg font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 10: PURCHASE (فاتورة مشتريات) FORM MODAL */}
+      {showPurchaseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+            <div className="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-bold text-white flex gap-2 items-center">
+                  <ShoppingBagIcon className="text-orange-400" size={18} />
+                  إنشاء فاتورة مشتريات جديدة
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">سيتم تحديث المخزون تلقائياً عند حفظ الفاتورة</p>
+              </div>
+              <button onClick={() => setShowPurchaseModal(false)} className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                <XIcon size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePurchase} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-4 space-y-3 overflow-y-auto custom-scrollbar text-right flex-1" dir="rtl">
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs text-slate-300 block mb-1">رقم فاتورة التوريد *</label>
+                    <input
+                      type="text"
+                      required
+                      value={purchaseForm.billNumber}
+                      onChange={(e) => setPurchaseForm((prev: any) => ({ ...prev, billNumber: e.target.value }))}
+                      placeholder="مثال: INV-2024-001"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-slate-300 block mb-1">المورد *</label>
+                    <select
+                      required
+                      value={purchaseForm.supplierId}
+                      onChange={(e) => setPurchaseForm((prev: any) => ({ ...prev, supplierId: e.target.value }))}
+                      className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/50 font-bold"
+                    >
+                      <option value="">-- اختر المورد --</option>
+                      {suppliers.map((s: any) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Items section */}
+                <div className="border border-white/10 rounded-xl overflow-hidden">
+                  <div className="bg-slate-950 px-4 py-2 flex justify-between items-center">
+                    <h4 className="text-sm font-bold text-slate-300">أصناف الفاتورة</h4>
+                    <button
+                      type="button"
+                      onClick={() => setPurchaseForm((prev: any) => ({
+                        ...prev,
+                        items: [...prev.items, { productId: '', quantity: '1', unitCost: '' }]
+                      }))}
+                      className="text-xs bg-orange-500/20 text-orange-400 border border-orange-500/30 px-3 py-1 rounded-lg hover:bg-orange-500/30 transition-all cursor-pointer flex items-center gap-1 font-bold"
+                    >
+                      <PlusIcon size={12} /> إضافة صنف
+                    </button>
+                  </div>
+                  <div className="p-3 space-y-2">
+                    {purchaseForm.items.length === 0 && (
+                      <p className="text-center text-slate-500 text-xs py-4">اضغط على "إضافة صنف" لبدء إدخال أصناف الفاتورة</p>
+                    )}
+                    {purchaseForm.items.map((item: any, idx: number) => (
+                      <div key={idx} className="grid grid-cols-[1fr_80px_100px_36px] gap-2 items-center">
+                        <select
+                          value={item.productId}
+                          onChange={(e) => {
+                            const newItems = [...purchaseForm.items];
+                            const prod = products.find((p: any) => p.id === e.target.value);
+                            newItems[idx] = { ...newItems[idx], productId: e.target.value, unitCost: prod?.costPrice?.toString() || '' };
+                            setPurchaseForm((prev: any) => ({ ...prev, items: newItems }));
+                          }}
+                          className="bg-slate-950 border border-white/10 rounded-lg py-1.5 px-2 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                        >
+                          <option value="">-- اختر الصنف --</option>
+                          {products.map((p: any) => (
+                            <option key={p.id} value={p.id}>{p.name} ({p.size}) - {p.code}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const newItems = [...purchaseForm.items];
+                            newItems[idx] = { ...newItems[idx], quantity: e.target.value };
+                            setPurchaseForm((prev: any) => ({ ...prev, items: newItems }));
+                          }}
+                          placeholder="الكمية"
+                          className="bg-white/5 border border-white/10 rounded-lg py-1.5 px-2 text-slate-200 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-orange-500/50 text-center"
+                        />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={item.unitCost}
+                          onChange={(e) => {
+                            const newItems = [...purchaseForm.items];
+                            newItems[idx] = { ...newItems[idx], unitCost: e.target.value };
+                            setPurchaseForm((prev: any) => ({ ...prev, items: newItems }));
+                          }}
+                          placeholder="سعر التكلفة"
+                          className="bg-white/5 border border-white/10 rounded-lg py-1.5 px-2 text-slate-200 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newItems = purchaseForm.items.filter((_: any, i: number) => i !== idx);
+                            setPurchaseForm((prev: any) => ({ ...prev, items: newItems }));
+                          }}
+                          className="bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg p-1.5 hover:bg-red-500/20 transition-all cursor-pointer"
+                        >
+                          <Trash2Icon size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Summary */}
+                {purchaseForm.items.length > 0 && (
+                  <div className="bg-slate-950 border border-white/10 rounded-xl p-3 text-sm font-mono">
+                    <div className="flex justify-between text-slate-400">
+                      <span>عدد الأصناف:</span>
+                      <span className="text-white font-bold">{purchaseForm.items.length} صنف</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400 mt-1">
+                      <span>إجمالي الكميات:</span>
+                      <span className="text-white font-bold">
+                        {purchaseForm.items.reduce((sum: number, i: any) => sum + (Number(i.quantity) || 0), 0)} وحدة
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-orange-400 mt-1 border-t border-white/5 pt-1">
+                      <span>إجمالي التكلفة (بدون ضريبة):</span>
+                      <span className="font-bold">
+                        {purchaseForm.items.reduce((sum: number, i: any) => sum + ((Number(i.quantity) || 0) * (Number(i.unitCost) || 0)), 0).toFixed(2)} ج.م
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 border-t border-slate-800 flex gap-3">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-bold flex gap-2 items-center justify-center hover:bg-orange-600 transition-all cursor-pointer shadow-lg shadow-orange-500/10 disabled:opacity-50"
+                >
+                  {submitting ? <Loader2Icon size={16} className="animate-spin" /> : <CheckCircle2Icon size={16} />}
+                  حفظ الفاتورة وتحديث المخزون
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowPurchaseModal(false); setPurchaseForm({ billNumber: '', supplierId: '', items: [] }); }}
+                  className="bg-white/5 text-slate-300 px-6 py-2 rounded-lg font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 11: EXPENSE PAYMENT (سند صرف مورد) FORM MODAL */}
+      {showExpenseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-xl overflow-hidden shadow-2xl flex flex-col">
+            <div className="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-bold text-white flex gap-2 items-center">
+                  <BanknoteIcon className="text-purple-400" size={18} />
+                  إصدار سند صرف مورد
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">سيتم خصم المبلغ من الخزينة وتخفيض رصيد المورد</p>
+              </div>
+              <button onClick={() => setShowExpenseModal(false)} className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                <XIcon size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleSaveExpense} className="p-4 space-y-3" dir="rtl">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-300 block mb-1">المورد *</label>
+                <select
+                  required
+                  value={expenseForm.supplierId}
+                  onChange={(e) => setExpenseForm(prev => ({ ...prev, supplierId: e.target.value }))}
+                  className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500/50 font-bold"
+                >
+                  <option value="">-- اختر المورد --</option>
+                  {suppliers.map((s: any) => (
+                    <option key={s.id} value={s.id}>{s.name} (مديونية: {Number(s.balance).toFixed(2)} ج.م)</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-300 block mb-1">البنك / الخزينة *</label>
+                <select
+                  required
+                  value={expenseForm.bankId}
+                  onChange={(e) => setExpenseForm(prev => ({ ...prev, bankId: e.target.value }))}
+                  className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500/50 font-bold"
+                >
+                  <option value="">-- اختر البنك أو الخزينة --</option>
+                  {banks.map((b: any) => (
+                    <option key={b.id} value={b.id}>{b.name} (رصيد: {b.balance.toFixed(2)} ج.م)</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-300 block mb-1">المبلغ المدفوع *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  value={expenseForm.amount}
+                  onChange={(e) => setExpenseForm(prev => ({ ...prev, amount: e.target.value }))}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 font-mono text-xl text-purple-400"
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-300 block mb-1">رقم الشيك / المرجع</label>
+                <input
+                  type="text"
+                  value={expenseForm.reference}
+                  onChange={(e) => setExpenseForm(prev => ({ ...prev, reference: e.target.value }))}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 font-mono"
+                  placeholder="مثال: شيك رقم 12345"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-300 block mb-1">البيان / الملاحظات</label>
+                <input
+                  type="text"
+                  value={expenseForm.notes}
+                  onChange={(e) => setExpenseForm(prev => ({ ...prev, notes: e.target.value }))}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  placeholder="مثال: دفعة تحت الحساب للمورد"
+                />
+              </div>
+              <div className="pt-4 border-t border-slate-800 flex gap-3">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 bg-purple-600 text-white py-2 rounded-lg font-bold flex gap-2 items-center justify-center hover:bg-purple-700 transition-all cursor-pointer shadow-lg shadow-purple-500/10 disabled:opacity-50"
+                >
+                  {submitting ? <Loader2Icon size={16} className="animate-spin" /> : <BanknoteIcon size={16} />}
+                  إصدار سند الصرف
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowExpenseModal(false)}
+                  className="bg-white/5 text-slate-300 px-6 py-2 rounded-lg font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 12: EXPENSE RECEIPT PRINT MODAL (سند صرف مورد - طباعة) */}
+      {showExpenseReceiptModal && selectedExpense && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in">
+          <div id="printable-expense-receipt" className="bg-white text-black w-full max-w-2xl rounded-md shadow-2xl flex flex-col max-h-[95vh] relative print:max-h-none print:shadow-none print:bg-white">
+            <div className="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center no-print text-white rounded-t-md">
+              <h3 className="text-lg font-bold flex items-center gap-2"><PrinterIcon size={20} className="text-purple-400" /> طباعة سند الصرف</h3>
+              <div className="flex gap-2">
+                <button onClick={() => window.print()} className="bg-purple-600 px-5 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-purple-700 transition-colors cursor-pointer">
+                  طباعة السند
+                </button>
+                <button onClick={() => setShowExpenseReceiptModal(false)} className="bg-white/10 p-2 rounded-lg hover:bg-white/20 transition-colors cursor-pointer"><XIcon size={20} /></button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8 font-sans print:p-0 print:overflow-visible">
+              {/* Receipt Header */}
+              <div className="flex justify-between items-center border-b-2 border-black pb-4 mb-6">
+                <div className="text-right">
+                  <h1 className="text-2xl font-black mb-1 tracking-wide">شركة الإنطلاق</h1>
+                  <p className="text-xs font-bold">لتصنيع وتوريد خراطيم ومواسير الكهرباء</p>
+                  <p className="text-[10px]">العاشر من رمضان - المنطقة الصناعية الثالثة</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-14 h-14 mx-auto mb-1 border border-gray-300 rounded-lg flex items-center justify-center p-1 bg-gray-50">
+                    <img src="/images/logo.png" alt="الإنطلاق" className="w-full h-full object-contain" />
+                  </div>
+                </div>
+                <div className="text-left" dir="rtl">
+                  <h2 className="text-lg font-bold border-2 border-black px-4 py-1 rounded-md inline-block">سند صرف (Payment Voucher)</h2>
+                  <p className="text-xs mt-2 font-mono">رقم السند: {selectedExpense.expenseNumber}</p>
+                  <p className="text-xs font-mono">التاريخ: {new Date(selectedExpense.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
+                </div>
+              </div>
+
+              {/* Receipt Body */}
+              <div className="space-y-6 text-right leading-loose text-base" dir="rtl">
+                <div className="flex gap-2 items-center">
+                  <span className="font-bold w-36 shrink-0">صُرف إلى / دُفع لـ:</span>
+                  <span className="flex-1 border-b border-dashed border-black pb-1 font-bold text-lg">{selectedExpense.supplier?.name}</span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-bold w-36 shrink-0">مبلغ وقدره:</span>
+                  <span className="flex-1 border-b border-dashed border-black pb-1 font-mono font-bold bg-gray-100/50 px-2 text-center text-xl tracking-wider">
+                    {Number(selectedExpense.amount).toFixed(2)} ج.م
+                  </span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-bold w-36 shrink-0">وذلك عن:</span>
+                  <span className="flex-1 border-b border-dashed border-black pb-1">{selectedExpense.notes || 'سداد دفعة للمورد'}</span>
+                </div>
+                {selectedExpense.reference && (
+                  <div className="flex gap-2 items-center">
+                    <span className="font-bold w-36 shrink-0">رقم الشيك / المرجع:</span>
+                    <span className="flex-1 border-b border-dashed border-black pb-1 font-mono">{selectedExpense.reference}</span>
+                  </div>
+                )}
+                <div className="flex gap-2 items-center">
+                  <span className="font-bold w-36 shrink-0">خزينة / بنك:</span>
+                  <span className="flex-1 border-b border-dashed border-black pb-1">{selectedExpense.bank?.name}</span>
+                </div>
+              </div>
+
+              {/* Signatures */}
+              <div className="flex justify-between mt-12 px-8 text-center text-sm font-bold" dir="rtl">
+                <div>
+                  <p className="mb-8">المدير المالي / المفوض بالصرف</p>
+                  <p className="border-t border-black pt-1 w-40">التوقيع</p>
+                </div>
+                <div>
+                  <p className="mb-8">المستلم (المورد)</p>
+                  <p className="border-t border-black pt-1 w-40">التوقيع</p>
+                </div>
+              </div>
+
+              {/* Stub */}
+              <div className="mt-16 pt-8 border-t-2 border-dashed border-gray-400 relative">
+                <div className="absolute top-[-11px] left-1/2 -translate-x-1/2 bg-white px-4 text-gray-500 text-xs flex gap-2 items-center">
+                  <span className="text-xl">✂️</span>
+                  القص هنا (كعب السند)
+                </div>
+                <div className="flex justify-between items-start mb-4" dir="rtl">
+                  <div>
+                    <h3 className="font-bold text-base">كعب سند الصرف - نسخة الشركة</h3>
+                    <p className="text-xs mt-1 font-mono">رقم السند: {selectedExpense.expenseNumber}</p>
+                  </div>
+                  <div className="text-left font-mono font-bold text-lg bg-gray-100 px-4 py-2 border border-gray-300">
+                    {Number(selectedExpense.amount).toFixed(2)} ج.م
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm mb-8" dir="rtl">
+                  <div><span className="font-bold">المورد:</span> {selectedExpense.supplier?.name}</div>
+                  <div><span className="font-bold font-mono">التاريخ:</span> {new Date(selectedExpense.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit' })}</div>
+                  <div className="col-span-2"><span className="font-bold">البيان:</span> {selectedExpense.notes || 'سداد دفعة للمورد'}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

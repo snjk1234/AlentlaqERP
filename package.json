@@ -22,7 +22,8 @@
       "src/generated/client/**/*",
       "node_modules/**/*",
       "package.json",
-      "prisma/dev.db"
+      "prisma/dev.db",
+      ".env"
     ],
     "asar": true,
     "asarUnpack": [
