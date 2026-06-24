@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
+  output: process.env.BUILD_TARGET === 'electron' ? 'export' : undefined,
   images: {
     unoptimized: true
   }

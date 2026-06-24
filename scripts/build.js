@@ -40,6 +40,7 @@ try {
   const result = spawnSync('npx', ['next', 'build'], {
     stdio: 'inherit',
     shell: true,
+    env: { ...process.env, BUILD_TARGET: 'electron' }
   });
 
   if (result.status !== 0) {
