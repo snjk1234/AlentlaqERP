@@ -96,7 +96,7 @@ export default function POSDashboard() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentCustomer, setPaymentCustomer] = useState<any>(null);
   const [paymentForm, setPaymentForm] = useState({ customerId: '', amount: '', bankId: '', reference: '', notes: '' });
-  const [bankForm, setBankForm] = useState({ name: '', accountNumber: '', balance: '' });
+  const [bankForm, setBankForm] = useState<{ id?: string; name: string; accountNumber: string; balance: string }>({ name: '', accountNumber: '', balance: '' });
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
   const [isEditingBank, setIsEditingBank] = useState(false);
 
