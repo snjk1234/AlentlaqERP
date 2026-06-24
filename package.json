@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "electron-dev": "electron .",
-    "build": "node scripts/build.js",
-    "package": "npm run build && electron-builder",
+    "build": "npx prisma generate && next build",
+    "build:electron": "node scripts/build.js",
+    "package": "npm run build:electron && electron-builder",
     "start": "next start",
     "lint": "eslint"
   },
