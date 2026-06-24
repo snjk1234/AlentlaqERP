@@ -201,7 +201,7 @@ export default function POSDashboard() {
     } else {
       fetch('/api/banks')
         .then(res => res.json())
-        .then(data => setBanks(data))
+        .then(data => setBanks(Array.isArray(data) ? data : []))
         .catch(console.error);
     }
   };
@@ -212,7 +212,7 @@ export default function POSDashboard() {
     } else {
       fetch('/api/payments')
         .then(res => res.json())
-        .then(data => setPayments(data))
+        .then(data => setPayments(Array.isArray(data) ? data : []))
         .catch(console.error);
     }
   };
@@ -223,7 +223,7 @@ export default function POSDashboard() {
     } else {
       fetch('/api/orders')
         .then(res => res.json())
-        .then(data => setInvoices(data))
+        .then(data => setInvoices(Array.isArray(data) ? data : []))
         .catch(console.error);
     }
   };
@@ -245,7 +245,7 @@ export default function POSDashboard() {
       fetch('/api/products')
         .then(res => res.json())
         .then(data => {
-          setProducts(data);
+          setProducts(Array.isArray(data) ? data : []);
           if (!isSilent) setLoading(false);
         })
         .catch(err => {
@@ -275,7 +275,7 @@ export default function POSDashboard() {
       fetch('/api/customers')
         .then(res => res.json())
         .then(data => {
-          setCustomers(data);
+          setCustomers(Array.isArray(data) ? data : []);
         })
         .catch(err => {
           console.error(err);
