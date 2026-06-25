@@ -325,6 +325,19 @@ export default function POSDashboard() {
     }
   }, [isMounted]);
 
+  // Clear all search queries when changing active tab
+  useEffect(() => {
+    setSearchQuery('');
+    setInventorySearchQuery('');
+    setCustomerSearch('');
+    setSupplierSearch('');
+    setPurchaseSearch('');
+    setExpenseSearch('');
+    setBankSearch('');
+    setPaymentSearch('');
+    setInvoiceSearch('');
+  }, [activeTab]);
+
   // Periodic background polling every 5 seconds for real-time online updates
   useEffect(() => {
     if (!isMounted) return;
@@ -975,8 +988,16 @@ export default function POSDashboard() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="ابحث عن منتج بالاسم أو الكود (مثال: 3020)..." 
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pr-12 pl-4 text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all shadow-lg"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pr-12 pl-10 text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all shadow-lg"
                   />
+                  {searchQuery && (
+                    <button 
+                      onClick={() => setSearchQuery('')}
+                      className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      <XIcon size={16} />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1292,8 +1313,16 @@ export default function POSDashboard() {
                   value={customerSearch}
                   onChange={(e) => setCustomerSearch(e.target.value)}
                   placeholder="ابحث عن العميل بالاسم أو الرقم الضريبي..." 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
                 />
+                {customerSearch && (
+                  <button 
+                    onClick={() => setCustomerSearch('')}
+                    className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <XIcon size={14} />
+                  </button>
+                )}
               </div>
               <button 
                 onClick={() => {
@@ -1444,8 +1473,16 @@ export default function POSDashboard() {
                     value={inventorySearchQuery}
                     onChange={(e) => setInventorySearchQuery(e.target.value)}
                     placeholder="ابحث عن منتج بالاسم أو الكود..." 
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
                   />
+                  {inventorySearchQuery && (
+                    <button 
+                      onClick={() => setInventorySearchQuery('')}
+                      className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      <XIcon size={14} />
+                    </button>
+                  )}
                 </div>
                 
                 <button 
@@ -1646,8 +1683,16 @@ export default function POSDashboard() {
                   value={supplierSearch}
                   onChange={(e) => setSupplierSearch(e.target.value)}
                   placeholder="ابحث عن المورد بالاسم أو الرقم الضريبي..." 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
                 />
+                {supplierSearch && (
+                  <button 
+                    onClick={() => setSupplierSearch('')}
+                    className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <XIcon size={14} />
+                  </button>
+                )}
               </div>
               <button 
                 onClick={() => {
@@ -1767,8 +1812,16 @@ export default function POSDashboard() {
                   value={purchaseSearch}
                   onChange={(e) => setPurchaseSearch(e.target.value)}
                   placeholder="ابحث برقم الفاتورة أو اسم المورد..." 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
                 />
+                {purchaseSearch && (
+                  <button 
+                    onClick={() => setPurchaseSearch('')}
+                    className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <XIcon size={14} />
+                  </button>
+                )}
               </div>
               <button 
                 onClick={() => {
@@ -1834,8 +1887,16 @@ export default function POSDashboard() {
                   value={expenseSearch}
                   onChange={(e) => setExpenseSearch(e.target.value)}
                   placeholder="ابحث برقم السند أو اسم المورد..." 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
                 />
+                {expenseSearch && (
+                  <button 
+                    onClick={() => setExpenseSearch('')}
+                    className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <XIcon size={14} />
+                  </button>
+                )}
               </div>
               <button 
                 onClick={() => {
@@ -1911,8 +1972,16 @@ export default function POSDashboard() {
                   value={bankSearch}
                   onChange={(e) => setBankSearch(e.target.value)}
                   placeholder="ابحث عن بنك أو خزينة بالاسم..." 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
                 />
+                {bankSearch && (
+                  <button 
+                    onClick={() => setBankSearch('')}
+                    className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <XIcon size={14} />
+                  </button>
+                )}
               </div>
               <button 
                 onClick={() => { setIsBankModalOpen(true); setBankForm({ name: '', accountNumber: '', balance: '0' }); }}
@@ -2003,8 +2072,16 @@ export default function POSDashboard() {
                   value={paymentSearch}
                   onChange={(e) => setPaymentSearch(e.target.value)}
                   placeholder="ابحث برقم السند أو اسم العميل..." 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
                 />
+                {paymentSearch && (
+                  <button 
+                    onClick={() => setPaymentSearch('')}
+                    className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <XIcon size={14} />
+                  </button>
+                )}
               </div>
               <button 
                 onClick={() => { setIsPaymentModalOpen(true); setPaymentForm({ customerId: '', bankId: '', amount: '', notes: '', reference: '' }); }}
@@ -2076,8 +2153,16 @@ export default function POSDashboard() {
                   value={invoiceSearch}
                   onChange={(e) => setInvoiceSearch(e.target.value)}
                   placeholder="ابحث برقم الفاتورة أو اسم العميل..." 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
                 />
+                {invoiceSearch && (
+                  <button 
+                    onClick={() => setInvoiceSearch('')}
+                    className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <XIcon size={14} />
+                  </button>
+                )}
               </div>
             </div>
             
