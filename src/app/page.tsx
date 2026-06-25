@@ -95,7 +95,7 @@ export default function POSDashboard() {
     if (!currentUser) return false;
     if (currentUser.role === 'ADMIN') return true;
     if (currentUser.role === 'CASHIER') {
-      return ['POS', 'CUSTOMERS', 'INVOICES'].includes(tab);
+      return ['POS', 'CUSTOMERS', 'INVOICES', 'PAYMENTS'].includes(tab);
     }
     if (currentUser.role === 'STOREKEEPER') {
       return ['INVENTORY', 'SUPPLIERS', 'PURCHASES'].includes(tab);
@@ -606,7 +606,7 @@ export default function POSDashboard() {
     : customers.find(c => c.id === selectedCustomerId);
 
   // Helper to generate a unique bill number for purchase invoices
-  const generateBillNumber = () => `INV-${Date.now()}`;
+  const generateBillNumber = () => `PUR-${Date.now()}`;
 
   // Handle Checkout (Invoice or Quotation)
   const handleCheckout = async (isQuotation: boolean) => {
@@ -1828,14 +1828,13 @@ export default function POSDashboard() {
                   onClick={() => {
                     setPrintTableData({
                       title: 'كشف جرد المخزون والأسعار الحالي',
-                      headers: ['م', 'كود الصنف', 'اسم المنتج', 'المقاس', 'اللون', 'سعر التكلفة', 'سعر البيع', 'المخزون الحالي'],
+                      headers: ['م', 'كود الصنف', 'اسم المنتج', 'المقاس', 'اللون', 'سعر البيع', 'المخزون الحالي'],
                       rows: filteredInventoryProducts.map((p, i) => [
                         i + 1,
                         p.code,
                         p.name,
                         p.size,
                         p.color || '-',
-                        `${p.costPrice.toFixed(2)} ج.م`,
                         `${p.price.toFixed(2)} ج.م`,
                         p.stockQty
                       ])
@@ -2278,31 +2277,22 @@ export default function POSDashboard() {
                     <th className="p-4 font-bold">المخصوم من (الخزينة)</th>
                     <th className="p-4 font-bold">البيان</th>
                     <th className="p-4 font-bold">المبلغ المصروف</th>
-                    <th className="p-4 font-bold text-center">طباعة</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/50">
                   {expenses.filter(e => (e.expenseNumber || '').includes(expenseSearch) || (e.supplier?.name || '').includes(expenseSearch)).map(expense => (
-                    <tr key={expense.id} className="hover:bg-white/5 transition-colors">
+                    <tr key={expense.id} className="hover:bg-white/5 transition-colors cursor-pointer" onClick={() => { setSelectedExpense(expense); setShowExpenseReceiptModal(true); }}>
                       <td className="p-4 font-mono text-slate-300 font-bold">{expense.expenseNumber}</td>
                       <td className="p-4 text-slate-300 font-mono text-xs">{new Date(expense.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
                       <td className="p-4 font-bold text-white">{expense.supplier?.name || 'غير معروف'}</td>
                       <td className="p-4 text-slate-300">{expense.bank?.name || 'غير معروف'}</td>
                       <td className="p-4 text-slate-400 text-xs">{expense.notes || '-'}</td>
                       <td className="p-4 font-mono font-bold text-red-400" dir="ltr">{expense.amount.toFixed(2)} ج.م</td>
-                      <td className="p-4 text-center">
-                        <button 
-                          onClick={() => { setSelectedExpense(expense); setShowExpenseReceiptModal(true); }}
-                          className="text-slate-400 hover:text-white bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border border-white/5 hover:bg-white/10"
-                        >
-                          <PrinterIcon size={16} />
-                        </button>
-                      </td>
                     </tr>
                   ))}
                   {expenses.filter(e => (e.expenseNumber || '').includes(expenseSearch) || (e.supplier?.name || '').includes(expenseSearch)).length === 0 && (
                     <tr>
-                      <td colSpan={7} className="p-10 text-center text-slate-500 font-bold">لا توجد سندات صرف مسجلة</td>
+                      <td colSpan={6} className="p-10 text-center text-slate-500 font-bold">لا توجد سندات صرف مسجلة</td>
                     </tr>
                   )}
                 </tbody>
@@ -2459,30 +2449,21 @@ export default function POSDashboard() {
                     <th className="p-4 font-bold">العميل</th>
                     <th className="p-4 font-bold">البنك/الخزينة</th>
                     <th className="p-4 font-bold">المبلغ</th>
-                    <th className="p-4 font-bold text-center">طباعة</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/50">
                   {payments.filter(p => (p.customer?.name || '').includes(paymentSearch) || (p.receiptNumber && p.receiptNumber.includes(paymentSearch))).map(payment => (
-                    <tr key={payment.id} className="hover:bg-white/5 transition-colors">
+                    <tr key={payment.id} className="hover:bg-white/5 transition-colors cursor-pointer" onClick={() => { setSelectedReceipt(payment); setShowReceiptModal(true); }}>
                       <td className="p-4 font-mono text-slate-300 font-bold">{payment.receiptNumber ? `REC-${payment.receiptNumber}` : `REC-${payment.id.substring(0,6).toUpperCase()}`}</td>
                       <td className="p-4 text-slate-300 font-mono text-xs">{new Date(payment.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
                       <td className="p-4 font-bold text-white">{payment.customer?.name || 'غير معروف'}</td>
                       <td className="p-4 text-slate-300">{payment.bank?.name || 'غير معروف'}</td>
                       <td className="p-4 font-mono font-bold text-emerald-400" dir="ltr">{payment.amount.toFixed(2)} ج.م</td>
-                      <td className="p-4 text-center">
-                        <button 
-                          onClick={() => { setSelectedReceipt(payment); setShowReceiptModal(true); }}
-                          className="text-slate-400 hover:text-white bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border border-white/5 hover:bg-white/10"
-                        >
-                          <PrinterIcon size={16} />
-                        </button>
-                      </td>
                     </tr>
                   ))}
                   {payments.filter(p => (p.customer?.name || '').includes(paymentSearch) || (p.receiptNumber && p.receiptNumber.includes(paymentSearch))).length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-10 text-center text-slate-500 font-bold">لا توجد سندات قبض مسجلة</td>
+                      <td colSpan={5} className="p-10 text-center text-slate-500 font-bold">لا توجد سندات قبض مسجلة</td>
                     </tr>
                   )}
                 </tbody>
@@ -2533,12 +2514,21 @@ export default function POSDashboard() {
                     <th className="p-4 font-bold">العميل</th>
                     <th className="p-4 font-bold">النوع</th>
                     <th className="p-4 font-bold">الإجمالي</th>
-                    <th className="p-4 font-bold text-center">إجراءات</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/50">
                   {invoices.filter(inv => (inv.invoiceNumber || '').includes(invoiceSearch) || (inv.customerName || '').includes(invoiceSearch) || (inv.customer?.name || '').includes(invoiceSearch)).map(inv => (
-                    <tr key={inv.id} className="hover:bg-white/5 transition-colors">
+                    <tr key={inv.id} className="hover:bg-white/5 transition-colors cursor-pointer" onClick={() => {
+                      setInvoice(inv);
+                      if (inv.qrCode) {
+                        QRCode.toDataURL(inv.qrCode, { width: 160, margin: 1 })
+                          .then(url => setQrCodeUrl(url))
+                          .catch(err => console.error(err));
+                      } else {
+                        setQrCodeUrl('');
+                      }
+                      setShowModal(true);
+                    }}>
                       <td className="p-4 font-mono text-slate-300 font-bold">{inv.invoiceNumber}</td>
                       <td className="p-4 text-slate-300 font-mono text-xs">{new Date(inv.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
                       <td className="p-4 font-bold text-white">{inv.customer?.name || inv.customerName || 'عميل نقدي'}</td>
@@ -2548,29 +2538,11 @@ export default function POSDashboard() {
                         </span>
                       </td>
                       <td className="p-4 font-mono font-bold text-white" dir="ltr">{inv.netAmount.toFixed(2)} ج.م</td>
-                      <td className="p-4 text-center">
-                        <button 
-                          onClick={() => {
-                            setInvoice(inv);
-                            if (inv.qrCode) {
-                              QRCode.toDataURL(inv.qrCode, { width: 160, margin: 1 })
-                                .then(url => setQrCodeUrl(url))
-                                .catch(err => console.error(err));
-                            } else {
-                              setQrCodeUrl('');
-                            }
-                            setShowModal(true);
-                          }}
-                          className="text-slate-400 hover:text-white bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border border-white/5 hover:bg-white/10"
-                        >
-                          <PrinterIcon size={16} />
-                        </button>
-                      </td>
                     </tr>
                   ))}
                   {invoices.filter(inv => (inv.invoiceNumber || '').includes(invoiceSearch) || (inv.customerName || '').includes(invoiceSearch) || (inv.customer?.name || '').includes(invoiceSearch)).length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-10 text-center text-slate-500 font-bold">لا توجد فواتير مسجلة</td>
+                      <td colSpan={5} className="p-10 text-center text-slate-500 font-bold">لا توجد فواتير مسجلة</td>
                     </tr>
                   )}
                 </tbody>
@@ -3249,10 +3221,10 @@ export default function POSDashboard() {
                       type="number"
                       step="0.01"
                       required
+                      disabled
                       value={productForm.price}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
                       placeholder="سعر البيع النهائي"
-                      className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                      className="w-full bg-white/5 disabled:bg-slate-950/40 disabled:text-slate-400 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none font-bold"
                     />
                   </div>
                 </div>
@@ -3515,7 +3487,7 @@ export default function POSDashboard() {
     
       {/* MODAL 8: CUSTOMER HISTORY MODAL */}
       {showCustomerHistoryModal && selectedHistoryCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in">
           <div id="printable-statement" className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] print:max-h-none print:shadow-none print:bg-white print:border-none print:w-full">
             <div className="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
               <div>
@@ -3635,7 +3607,7 @@ export default function POSDashboard() {
   
       {/* MODAL 8.5: SUPPLIER HISTORY MODAL */}
       {showSupplierHistoryModal && selectedHistorySupplier && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in">
           <div id="printable-statement" className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] print:max-h-none print:shadow-none print:bg-white print:border-none print:w-full">
             <div className="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
               <div>
@@ -3673,6 +3645,7 @@ export default function POSDashboard() {
                           <th className="p-3">الإجمالي قبل الضريبة</th>
                           <th className="p-3">قيمة الضريبة</th>
                           <th className="p-3">الإجمالي الصافي</th>
+                          <th className="p-3 text-center no-print">طباعة</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/50">
@@ -3683,6 +3656,15 @@ export default function POSDashboard() {
                             <td className="p-3 font-mono text-slate-300">{ord.totalAmount.toFixed(2)} ج.م</td>
                             <td className="p-3 font-mono text-slate-400">{ord.taxAmount.toFixed(2)} ج.م</td>
                             <td className="p-3 font-mono text-purple-400 font-bold">{ord.netAmount.toFixed(2)} ج.م</td>
+                            <td className="p-3 text-center no-print">
+                              <button 
+                                onClick={() => {
+                                  setSelectedPurchase({ ...ord, supplier: selectedHistorySupplier });
+                                  setShowPurchaseDetailModal(true);
+                                }}
+                                className="text-slate-400 hover:text-white bg-white/5 p-1.5 rounded-lg transition-colors cursor-pointer"
+                              ><PrinterIcon size={14} /></button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -3876,10 +3858,9 @@ export default function POSDashboard() {
                     <input
                       type="text"
                       required
+                      disabled
                       value={purchaseForm.billNumber}
-                      onChange={(e) => setPurchaseForm((prev: any) => ({ ...prev, billNumber: e.target.value }))}
-                      placeholder="مثال: INV-2024-001"
-                      className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 font-mono"
+                      className="w-full bg-white/5 disabled:bg-slate-950/40 disabled:text-slate-400 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none font-mono font-bold"
                     />
                   </div>
                   <div className="space-y-1">

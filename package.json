@@ -15,7 +15,7 @@
     "appId": "com.alentlaq.pos",
     "productName": "AlEntlaqPOS",
     "directories": {
-      "output": "dist"
+      "output": "dist-new"
     },
     "files": [
       "electron/**/*",
