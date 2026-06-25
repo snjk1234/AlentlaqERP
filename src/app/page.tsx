@@ -134,6 +134,8 @@ export default function POSDashboard() {
   // Search & Filter states
   const [activeCategory, setActiveCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [inventorySearchQuery, setInventorySearchQuery] = useState('');
+  const [inventoryCategory, setInventoryCategory] = useState('ALL');
   const [customerSearch, setCustomerSearch] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState('CASH');
   
@@ -449,6 +451,13 @@ export default function POSDashboard() {
   const filteredProducts = (Array.isArray(products) ? products : []).filter(p => {
     const matchesCategory = activeCategory === 'ALL' || p.type === activeCategory;
     const matchesSearch = (p.name || '').includes(searchQuery) || (p.code || '').includes(searchQuery);
+    return matchesCategory && matchesSearch;
+  });
+
+  // Filter products by type and search query for Inventory tab
+  const filteredInventoryProducts = (Array.isArray(products) ? products : []).filter(p => {
+    const matchesCategory = inventoryCategory === 'ALL' || p.type === inventoryCategory;
+    const matchesSearch = (p.name || '').includes(inventorySearchQuery) || (p.code || '').includes(inventorySearchQuery);
     return matchesCategory && matchesSearch;
   });
 
@@ -1432,8 +1441,8 @@ export default function POSDashboard() {
                   </div>
                   <input 
                     type="text" 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={inventorySearchQuery}
+                    onChange={(e) => setInventorySearchQuery(e.target.value)}
                     placeholder="ابحث عن منتج بالاسم أو الكود..." 
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
                   />
@@ -1472,26 +1481,26 @@ export default function POSDashboard() {
               {/* Categories Navigation */}
               <div className="flex gap-2 w-full md:w-auto overflow-x-auto py-1">
                 <button 
-                  onClick={() => setActiveCategory('ALL')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${activeCategory === 'ALL' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+                  onClick={() => setInventoryCategory('ALL')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${inventoryCategory === 'ALL' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
                 >
                   الكل
                 </button>
                 <button 
-                  onClick={() => setActiveCategory('PIPE')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${activeCategory === 'PIPE' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+                  onClick={() => setInventoryCategory('PIPE')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${inventoryCategory === 'PIPE' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
                 >
                   مواسير UPVC
                 </button>
                 <button 
-                  onClick={() => setActiveCategory('HOSE')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${activeCategory === 'HOSE' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+                  onClick={() => setInventoryCategory('HOSE')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${inventoryCategory === 'HOSE' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
                 >
                   خراطيم حريق
                 </button>
                 <button 
-                  onClick={() => setActiveCategory('ACCESSORY')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${activeCategory === 'ACCESSORY' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+                  onClick={() => setInventoryCategory('ACCESSORY')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${inventoryCategory === 'ACCESSORY' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
                 >
                   إكسسوارات وبواطات
                 </button>
@@ -1500,7 +1509,7 @@ export default function POSDashboard() {
 
             {/* Products Bento Cards Grid */}
             <div className="flex-1 overflow-y-auto pb-10 custom-scrollbar pr-2">
-              {filteredProducts.length === 0 ? (
+              {filteredInventoryProducts.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
                   <PackageIcon className="h-16 w-16 text-slate-600" />
                   <div>
@@ -1510,7 +1519,7 @@ export default function POSDashboard() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-                  {filteredProducts.map((p) => {
+                  {filteredInventoryProducts.map((p) => {
                     const isLowStock = p.stockQty <= p.minStockQty;
                     const isOutOfStock = p.stockQty <= 0;
                     return (
