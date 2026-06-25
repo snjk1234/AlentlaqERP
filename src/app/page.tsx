@@ -2610,13 +2610,26 @@ export default function POSDashboard() {
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs text-slate-400 block mb-1 mb-1">اللون</label>
-                  <input 
-                    type="text"
-                    value={productForm.color}
+                  <select 
+                    value={productForm.color || ''}
                     onChange={(e) => setProductForm(prev => ({ ...prev, color: e.target.value }))}
-                    placeholder="مثال: أبيض"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
-                  />
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                  >
+                    <option value="">بدون لون</option>
+                    <option value="أبيض">أبيض</option>
+                    <option value="أسود">أسود</option>
+                    <option value="رمادي">رمادي</option>
+                    <option value="رصاصي">رصاصي</option>
+                    <option value="شفاف">شفاف</option>
+                    <option value="أحمر">أحمر</option>
+                    <option value="أزرق">أزرق</option>
+                    <option value="أزرق داكن">أزرق داكن</option>
+                    <option value="أخضر">أخضر</option>
+                    <option value="أخضر داكن">أخضر داكن</option>
+                    <option value="أصفر">أصفر</option>
+                    <option value="برتقالي">برتقالي</option>
+                    <option value="بني">بني</option>
+                  </select>
                 </div>
               </div>
 
@@ -3068,6 +3081,104 @@ export default function POSDashboard() {
         </div>
       )}
   
+      {/* MODAL 8.5: SUPPLIER HISTORY MODAL */}
+      {showSupplierHistoryModal && selectedHistorySupplier && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-bold text-white flex gap-2 items-center">
+                  <FileTextIcon className="text-purple-400" />
+                  كشف حساب تفصيلي للمورد: {selectedHistorySupplier.name}
+                </h3>
+              </div>
+              <button onClick={() => setShowSupplierHistoryModal(false)} className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                <XIcon size={18} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6" dir="rtl">
+              
+              {/* Purchases List */}
+              <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                <h4 className="text-md font-bold text-white mb-4 border-b border-white/5 pb-2">سجل فواتير الشراء والتوريد</h4>
+                {selectedHistorySupplier.purchaseOrders && selectedHistorySupplier.purchaseOrders.length > 0 ? (
+                  <div className="max-h-60 overflow-y-auto custom-scrollbar">
+                    <table className="w-full text-right text-sm">
+                      <thead className="bg-slate-900 text-slate-400">
+                        <tr>
+                          <th className="p-3">رقم الفاتورة</th>
+                          <th className="p-3">التاريخ</th>
+                          <th className="p-3">الإجمالي قبل الضريبة</th>
+                          <th className="p-3">قيمة الضريبة</th>
+                          <th className="p-3">الإجمالي الصافي</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/50">
+                        {selectedHistorySupplier.purchaseOrders.map((ord: any) => (
+                          <tr key={ord.id} className="hover:bg-white/5">
+                            <td className="p-3 font-mono font-bold text-white">{ord.billNumber}</td>
+                            <td className="p-3 font-mono text-xs text-slate-300">{new Date(ord.date || ord.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit' })}</td>
+                            <td className="p-3 font-mono text-slate-300">{ord.totalAmount.toFixed(2)} ج.م</td>
+                            <td className="p-3 font-mono text-slate-400">{ord.taxAmount.toFixed(2)} ج.م</td>
+                            <td className="p-3 font-mono text-purple-400 font-bold">{ord.netAmount.toFixed(2)} ج.م</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-slate-500 font-bold text-sm">لا توجد فواتير شراء مسجلة لهذا المورد</div>
+                )}
+              </div>
+
+              {/* Payments/Expenses List */}
+              <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                <h4 className="text-md font-bold text-white mb-4 border-b border-white/5 pb-2">سجل سندات الصرف والمدفوعات للمورد</h4>
+                {selectedHistorySupplier.expenses && selectedHistorySupplier.expenses.length > 0 ? (
+                  <div className="max-h-60 overflow-y-auto custom-scrollbar">
+                    <table className="w-full text-right text-sm">
+                      <thead className="bg-slate-900 text-slate-400">
+                        <tr>
+                          <th className="p-3">رقم سند الصرف</th>
+                          <th className="p-3">التاريخ</th>
+                          <th className="p-3">البنك/الخزينة</th>
+                          <th className="p-3">ملاحظات</th>
+                          <th className="p-3">المبلغ الصادر</th>
+                          <th className="p-3 text-center">طباعة</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/50">
+                        {selectedHistorySupplier.expenses.map((exp: any) => (
+                          <tr key={exp.id} className="hover:bg-white/5">
+                            <td className="p-3 font-mono font-bold text-white">{exp.expenseNumber}</td>
+                            <td className="p-3 font-mono text-xs text-slate-300">{new Date(exp.date || exp.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit' })}</td>
+                            <td className="p-3 font-bold text-slate-300">{exp.bank?.name || 'الخزينة/البنك'}</td>
+                            <td className="p-3 text-slate-400 text-xs">{exp.notes || '-'}</td>
+                            <td className="p-3 font-mono text-red-400 font-bold">{exp.amount.toFixed(2)} ج.م</td>
+                            <td className="p-3 text-center">
+                              <button 
+                                onClick={() => {
+                                  setSelectedExpense({ ...exp, supplier: selectedHistorySupplier });
+                                  setShowExpenseReceiptModal(true);
+                                }}
+                                className="text-slate-400 hover:text-white bg-white/5 p-1.5 rounded-lg transition-colors cursor-pointer"
+                              ><PrinterIcon size={14} /></button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-slate-500 font-bold text-sm">لا توجد سندات صرف مسجلة لهذا المورد</div>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL 9: SUPPLIER FORM MODAL */}
       {showSupplierModal && (
