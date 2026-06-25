@@ -41,14 +41,20 @@ body {
     visibility: hidden;
   }
   
-  /* Show only the invoice/receipt container */
+  /* Show only the targeted printable containers */
   #printable-invoice, #printable-invoice *,
-  #printable-receipt, #printable-receipt * {
+  #printable-receipt, #printable-receipt *,
+  #printable-expense-receipt, #printable-expense-receipt *,
+  #printable-statement, #printable-statement *,
+  #printable-table, #printable-table * {
     visibility: visible;
   }
   
   #printable-invoice,
-  #printable-receipt {
+  #printable-receipt,
+  #printable-expense-receipt,
+  #printable-statement,
+  #printable-table {
     position: absolute;
     left: 0;
     top: 0;
@@ -64,29 +70,22 @@ body {
   }
   
   /* Print-friendly color overrides */
-  #printable-invoice h3,
-  #printable-invoice h4,
-  #printable-invoice p,
-  #printable-invoice span,
-  #printable-invoice td,
-  #printable-invoice th {
+  h1, h2, h3, h4, p, span, td, th, div {
     color: black !important;
   }
 
   /* Table borders in print */
-  #printable-invoice .border,
-  #printable-invoice td,
-  #printable-invoice th {
-    border: 1px solid #475569 !important; /* slate-600 */
+  .border, td, th {
+    border: 1px solid #000000 !important;
   }
 
-  #printable-invoice table th {
+  table th {
     background-color: #f1f5f9 !important; /* slate-100 */
     color: black !important;
   }
   
   /* Hide all buttons & control headers */
-  .no-print {
+  .no-print, button, svg {
     display: none !important;
     height: 0 !important;
     padding: 0 !important;

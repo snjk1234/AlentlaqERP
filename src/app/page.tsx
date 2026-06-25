@@ -125,6 +125,7 @@ export default function POSDashboard() {
   const [selectedHistorySupplier, setSelectedHistorySupplier] = useState<any>(null);
   const [showPurchaseDetailModal, setShowPurchaseDetailModal] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
+  const [printTableData, setPrintTableData] = useState<{ title: string; headers: string[]; rows: any[][] } | null>(null);
 
   // Navigation active tab
   const [activeTab, setActiveTab] = useState<'POS' | 'CUSTOMERS' | 'INVENTORY' | 'BANKS' | 'PAYMENTS' | 'INVOICES' | 'SUPPLIERS' | 'PURCHASES' | 'EXPENSES'>('POS');
@@ -1335,6 +1336,28 @@ export default function POSDashboard() {
                 <PlusIcon className="w-4 h-4" />
                 <span>إضافة عميل جديد</span>
               </button>
+              <button 
+                onClick={() => {
+                  setPrintTableData({
+                    title: 'كشف بيانات وعناوين العملاء والشركات المسجلين',
+                    headers: ['م', 'اسم العميل', 'النوع', 'رقم الهاتف', 'العنوان', 'الرقم الضريبي', 'السجل التجاري', 'عدد العمارات'],
+                    rows: filteredCustomers.map((c, i) => [
+                      i + 1,
+                      c.name,
+                      c.customerType === 'CREDIT' ? 'آجل' : 'نقدي',
+                      c.phone || '-',
+                      c.location || '-',
+                      c.trn || '-',
+                      c.cr || '-',
+                      c.buildingsCount
+                    ])
+                  });
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+              >
+                <PrinterIcon className="w-4 h-4" />
+                <span>طباعة الجدول</span>
+              </button>
             </div>
 
             {/* Customer Cards Grid */}
@@ -1512,6 +1535,28 @@ export default function POSDashboard() {
                 >
                   <PlusIcon className="w-4 h-4" />
                   <span>إضافة منتج جديد</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    setPrintTableData({
+                      title: 'كشف جرد المخزون والأسعار الحالي',
+                      headers: ['م', 'كود الصنف', 'اسم المنتج', 'المقاس', 'اللون', 'سعر التكلفة', 'سعر البيع', 'المخزون الحالي'],
+                      rows: filteredInventoryProducts.map((p, i) => [
+                        i + 1,
+                        p.code,
+                        p.name,
+                        p.size,
+                        p.color || '-',
+                        `${p.costPrice.toFixed(2)} ج.م`,
+                        `${p.price.toFixed(2)} ج.م`,
+                        p.stockQty
+                      ])
+                    });
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+                >
+                  <PrinterIcon className="w-4 h-4" />
+                  <span>طباعة الجدول</span>
                 </button>
               </div>
 
@@ -1704,6 +1749,27 @@ export default function POSDashboard() {
               >
                 <PlusIcon className="w-4 h-4" />
                 <span>إضافة مورد جديد</span>
+              </button>
+              <button 
+                onClick={() => {
+                  setPrintTableData({
+                    title: 'كشف مديونيات وأرصدة الموردين والشركات المسجلين',
+                    headers: ['م', 'اسم المورد', 'الهاتف', 'العنوان', 'الرقم الضريبي', 'السجل التجاري', 'الرصيد للمورد (ج.م)'],
+                    rows: suppliers.filter(s => (s.name || '').includes(supplierSearch)).map((s, i) => [
+                      i + 1,
+                      s.name,
+                      s.phone || '-',
+                      s.address || '-',
+                      s.trn || '-',
+                      s.cr || '-',
+                      `${s.balance.toFixed(2)} ج.م`
+                    ])
+                  });
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+              >
+                <PrinterIcon className="w-4 h-4" />
+                <span>طباعة الجدول</span>
               </button>
             </div>
 
@@ -3067,17 +3133,26 @@ export default function POSDashboard() {
       {/* MODAL 8: CUSTOMER HISTORY MODAL */}
       {showCustomerHistoryModal && selectedHistoryCustomer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+          <div id="printable-statement" className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] print:max-h-none print:shadow-none print:bg-white print:border-none print:w-full">
             <div className="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-bold text-white flex gap-2 items-center">
-                  <FileTextIcon className="text-entlaq-red" />
+                  <FileTextIcon className="text-entlaq-red animate-pulse" />
                   كشف حساب تفصيلي: {selectedHistoryCustomer.name}
                 </h3>
               </div>
-              <button onClick={() => setShowCustomerHistoryModal(false)} className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
-                <XIcon size={18} />
-              </button>
+              <div className="flex gap-2 items-center no-print">
+                <button 
+                  onClick={() => window.print()}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex gap-1.5 items-center transition-all duration-300 cursor-pointer shadow-lg"
+                >
+                  <PrinterIcon size={14} />
+                  <span>طباعة الكشف</span>
+                </button>
+                <button onClick={() => setShowCustomerHistoryModal(false)} className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                  <XIcon size={18} />
+                </button>
+              </div>
             </div>
             
             <div className="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6" dir="rtl">
@@ -3178,17 +3253,26 @@ export default function POSDashboard() {
       {/* MODAL 8.5: SUPPLIER HISTORY MODAL */}
       {showSupplierHistoryModal && selectedHistorySupplier && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+          <div id="printable-statement" className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] print:max-h-none print:shadow-none print:bg-white print:border-none print:w-full">
             <div className="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-bold text-white flex gap-2 items-center">
-                  <FileTextIcon className="text-purple-400" />
+                  <FileTextIcon className="text-purple-400 animate-pulse" />
                   كشف حساب تفصيلي للمورد: {selectedHistorySupplier.name}
                 </h3>
               </div>
-              <button onClick={() => setShowSupplierHistoryModal(false)} className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
-                <XIcon size={18} />
-              </button>
+              <div className="flex gap-2 items-center no-print">
+                <button 
+                  onClick={() => window.print()}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex gap-1.5 items-center transition-all duration-300 cursor-pointer shadow-lg"
+                >
+                  <PrinterIcon size={14} />
+                  <span>طباعة الكشف</span>
+                </button>
+                <button onClick={() => setShowSupplierHistoryModal(false)} className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                  <XIcon size={18} />
+                </button>
+              </div>
             </div>
             
             <div className="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6" dir="rtl">
@@ -3745,6 +3829,156 @@ export default function POSDashboard() {
                   <div className="col-span-2"><span className="font-bold">البيان:</span> {selectedExpense.notes || 'سداد دفعة للمورد'}</div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* MODAL 13: PURCHASE DETAIL & PRINT MODAL */}
+      {showPurchaseDetailModal && selectedPurchase && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in">
+          <div id="printable-invoice" className="bg-white text-black w-full max-w-4xl rounded-md shadow-2xl flex flex-col max-h-[95vh] relative print:max-h-none print:shadow-none print:bg-white">
+            <div className="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center no-print text-white rounded-t-md">
+              <h3 className="text-lg font-bold flex items-center gap-2"><PrinterIcon size={20} className="text-purple-400" /> فاتورة الشراء التفصيلية</h3>
+              <div className="flex gap-2">
+                <button onClick={() => window.print()} className="bg-purple-600 px-5 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-purple-700 transition-colors cursor-pointer">
+                  طباعة الفاتورة
+                </button>
+                <button onClick={() => setShowPurchaseDetailModal(false)} className="bg-white/10 p-2 rounded-lg hover:bg-white/20 transition-colors cursor-pointer"><XIcon size={20} /></button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8 font-sans print:p-0 print:overflow-visible">
+              {/* Invoice Header */}
+              <div className="flex justify-between items-center border-b-2 border-black pb-4 mb-6">
+                <div className="text-right">
+                  <h1 className="text-2xl font-black mb-1 tracking-wide">شركة الإنطلاق</h1>
+                  <p className="text-xs font-bold">لتصنيع وتوريد خراطيم ومواسير الكهرباء</p>
+                  <p className="text-[10px]">العاشر من رمضان - المنطقة الصناعية الثالثة</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-14 h-14 mx-auto mb-1 border border-gray-300 rounded-lg flex items-center justify-center p-1 bg-gray-50">
+                    <img src="/images/logo.png" alt="الإنطلاق" className="w-full h-full object-contain" />
+                  </div>
+                </div>
+                <div className="text-left" dir="rtl">
+                  <h2 className="text-lg font-bold border-2 border-black px-4 py-1 rounded-md inline-block">فاتورة شراء / توريد</h2>
+                  <p className="text-xs mt-2 font-mono">رقم الفاتورة: {selectedPurchase.billNumber}</p>
+                  <p className="text-xs font-mono">التاريخ: {new Date(selectedPurchase.date || selectedPurchase.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
+                </div>
+              </div>
+
+              {/* Parties Details */}
+              <div className="grid grid-cols-2 gap-8 border-b-2 border-black pb-6 mb-6 text-sm" dir="rtl">
+                <div className="space-y-1.5 text-right">
+                  <h3 className="font-bold text-gray-500 border-b border-gray-200 pb-1 mb-2">بيانات المورد (Supplier):</h3>
+                  <div><span className="font-bold">الاسم:</span> {selectedPurchase.supplier?.name}</div>
+                  {selectedPurchase.supplier?.phone && <div><span className="font-bold">الهاتف:</span> {selectedPurchase.supplier.phone}</div>}
+                  {selectedPurchase.supplier?.address && <div><span className="font-bold">العنوان:</span> {selectedPurchase.supplier.address}</div>}
+                  {selectedPurchase.supplier?.cr && <div><span className="font-bold">السجل التجاري:</span> {selectedPurchase.supplier.cr}</div>}
+                  {selectedPurchase.supplier?.trn && <div><span className="font-bold">الرقم الضريبي:</span> {selectedPurchase.supplier.trn}</div>}
+                </div>
+                <div className="space-y-1.5 text-right">
+                  <h3 className="font-bold text-gray-500 border-b border-gray-200 pb-1 mb-2">بيانات المستلم (Buyer):</h3>
+                  <div><span className="font-bold">المستلم:</span> شركة الإنطلاق لمواسير الكهرباء</div>
+                  <div><span className="font-bold">الرقم الضريبي:</span> 442-563-120</div>
+                  <div><span className="font-bold">العنوان:</span> العاشر من رمضان - المنطقة الصناعية الثالثة</div>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div className="mb-8" dir="rtl">
+                <table className="w-full text-right text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100 border-b border-black text-black">
+                      <th className="p-3 font-bold border border-black">م</th>
+                      <th className="p-3 font-bold border border-black">كود الصنف</th>
+                      <th className="p-3 font-bold border border-black">اسم الصنف / المقاس / اللون</th>
+                      <th className="p-3 font-bold border border-black text-center">الكمية الواردة</th>
+                      <th className="p-3 font-bold border border-black text-left">سعر الوحدة</th>
+                      <th className="p-3 font-bold border border-black text-left">قيمة الضريبة (14%)</th>
+                      <th className="p-3 font-bold border border-black text-left">الإجمالي الصافي</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedPurchase.items?.map((item: any, idx: number) => (
+                      <tr key={item.id} className="border-b border-gray-300 text-black">
+                        <td className="p-3 border border-black text-center">{idx + 1}</td>
+                        <td className="p-3 border border-black font-mono">{item.product?.code}</td>
+                        <td className="p-3 border border-black font-bold">
+                          {item.product?.name} {item.product?.size} {item.product?.color ? `(${item.product.color})` : ''}
+                        </td>
+                        <td className="p-3 border border-black text-center font-mono">{item.quantity}</td>
+                        <td className="p-3 border border-black text-left font-mono">{Number(item.unitCost).toFixed(2)} ج.م</td>
+                        <td className="p-3 border border-black text-left font-mono">{Number(item.taxAmount).toFixed(2)} ج.م</td>
+                        <td className="p-3 border border-black text-left font-mono font-bold">{Number(item.total).toFixed(2)} ج.م</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Summary Table */}
+              <div className="flex justify-start text-sm" dir="rtl">
+                <div className="w-72 border border-black rounded p-3 space-y-2 bg-gray-50">
+                  <div className="flex justify-between">
+                    <span className="font-bold">المجموع قبل الضريبة:</span>
+                    <span className="font-mono">{selectedPurchase.totalAmount.toFixed(2)} ج.م</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-bold">ضريبة القيمة المضافة:</span>
+                    <span className="font-mono">{selectedPurchase.taxAmount.toFixed(2)} ج.م</span>
+                  </div>
+                  <div className="flex justify-between border-t border-black pt-1.5 text-base font-black">
+                    <span>الإجمالي شامل الضريبة:</span>
+                    <span className="font-mono">{selectedPurchase.netAmount.toFixed(2)} ج.م</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 14: GENERAL TABLE PRINT MODAL */}
+      {printTableData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in">
+          <div id="printable-table" className="bg-white text-black w-full max-w-5xl rounded-md shadow-2xl flex flex-col max-h-[95vh] relative print:max-h-none print:shadow-none print:bg-white">
+            <div className="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center no-print text-white rounded-t-md">
+              <h3 className="text-lg font-bold flex items-center gap-2"><PrinterIcon size={20} className="text-purple-400" /> طباعة الجدول: {printTableData.title}</h3>
+              <div className="flex gap-2">
+                <button onClick={() => window.print()} className="bg-purple-600 px-5 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-purple-700 transition-colors cursor-pointer">
+                  بدء الطباعة
+                </button>
+                <button onClick={() => setPrintTableData(null)} className="bg-white/10 p-2 rounded-lg hover:bg-white/20 transition-colors cursor-pointer"><XIcon size={20} /></button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8 font-sans print:p-0 print:overflow-visible">
+              <div className="text-center mb-6">
+                <h1 className="text-2xl font-black mb-1">شركة الإنطلاق لمواسير الكهرباء</h1>
+                <h2 className="text-lg font-bold mt-2 border-b border-black pb-2 inline-block px-8">{printTableData.title}</h2>
+                <p className="text-xs text-slate-500 font-mono mt-2" dir="rtl">تاريخ الطباعة: {new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</p>
+              </div>
+
+              <table className="w-full text-right text-xs border-collapse">
+                <thead>
+                  <tr className="bg-gray-100 border-b border-black text-black">
+                    {printTableData.headers.map((h, i) => (
+                      <th key={i} className="p-2 font-bold border border-black">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {printTableData.rows.map((row, idx) => (
+                    <tr key={idx} className="border-b border-gray-300 text-black">
+                      {row.map((cell, cidx) => (
+                        <td key={cidx} className="p-2 border border-black">{cell}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
