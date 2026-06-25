@@ -31,13 +31,13 @@ export async function POST(request: Request) {
         color: body.color || null,
         length: body.length || null,
         weight: body.weight || null,
-        costPrice: Number(body.costPrice) || 0,
-        markup: Number(body.markup) || 1.3,
-        price: Number(body.price),
-        taxRate: Number(body.taxRate) ?? 0.14,
-        stockQty: Number(body.stockQty) || 0,
-        minStockQty: Number(body.minStockQty) ?? 10,
-        maxStockQty: Number(body.maxStockQty) ?? 1000,
+        costPrice: isNaN(Number(body.costPrice)) ? 0 : Number(body.costPrice),
+        markup: isNaN(Number(body.markup)) ? 1.3 : Number(body.markup),
+        price: isNaN(Number(body.price)) ? 0 : Number(body.price),
+        taxRate: (body.taxRate !== undefined && body.taxRate !== null && !isNaN(Number(body.taxRate))) ? Number(body.taxRate) : 0.14,
+        stockQty: isNaN(Number(body.stockQty)) ? 0 : Number(body.stockQty),
+        minStockQty: isNaN(Number(body.minStockQty)) ? 10 : Number(body.minStockQty),
+        maxStockQty: isNaN(Number(body.maxStockQty)) ? 1000 : Number(body.maxStockQty),
       }
     });
 
@@ -70,13 +70,13 @@ export async function PUT(request: Request) {
         color: body.color || null,
         length: body.length || null,
         weight: body.weight || null,
-        costPrice: Number(body.costPrice) || 0,
-        markup: Number(body.markup) || 1.3,
-        price: Number(body.price),
-        taxRate: Number(body.taxRate) ?? 0.14,
-        stockQty: Number(body.stockQty) || 0,
-        minStockQty: Number(body.minStockQty) ?? 10,
-        maxStockQty: Number(body.maxStockQty) ?? 1000,
+        costPrice: isNaN(Number(body.costPrice)) ? 0 : Number(body.costPrice),
+        markup: isNaN(Number(body.markup)) ? 1.3 : Number(body.markup),
+        price: isNaN(Number(body.price)) ? 0 : Number(body.price),
+        taxRate: (body.taxRate !== undefined && body.taxRate !== null && !isNaN(Number(body.taxRate))) ? Number(body.taxRate) : 0.14,
+        stockQty: isNaN(Number(body.stockQty)) ? 0 : Number(body.stockQty),
+        minStockQty: isNaN(Number(body.minStockQty)) ? 10 : Number(body.minStockQty),
+        maxStockQty: isNaN(Number(body.maxStockQty)) ? 1000 : Number(body.maxStockQty),
       }
     });
 
