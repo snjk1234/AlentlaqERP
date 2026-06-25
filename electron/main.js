@@ -20,6 +20,53 @@ const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 let mainWindow = null;
 let prisma = null;
 
+async function seedUsers() {
+  try {
+    const adminExists = await prisma.user.findUnique({ where: { username: 'admin' } });
+    if (!adminExists) {
+      await prisma.user.create({
+        data: {
+          username: 'admin',
+          name: 'مدير النظام',
+          password: 'pos62026',
+          role: 'ADMIN'
+        }
+      });
+    } else if (adminExists.password === 'admin') {
+      await prisma.user.update({
+        where: { username: 'admin' },
+        data: { password: 'pos62026' }
+      });
+    }
+
+    const cashierExists = await prisma.user.findUnique({ where: { username: 'cashier' } });
+    if (!cashierExists) {
+      await prisma.user.create({
+        data: {
+          username: 'cashier',
+          name: 'كاشير الانطلاق',
+          password: '123456',
+          role: 'CASHIER'
+        }
+      });
+    }
+
+    const storekeeperExists = await prisma.user.findUnique({ where: { username: 'storekeeper' } });
+    if (!storekeeperExists) {
+      await prisma.user.create({
+        data: {
+          username: 'storekeeper',
+          name: 'أمين المخزن',
+          password: '123456',
+          role: 'STOREKEEPER'
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Error seeding users:', err);
+  }
+}
+
 // Initialize Database Connection to Supabase / PostgreSQL
 function initializeDatabase() {
   let databaseUrl = process.env.DATABASE_URL;
@@ -50,6 +97,8 @@ function initializeDatabase() {
       }
     }
   });
+
+  seedUsers().catch(console.error);
 }
 
 function createWindow() {
@@ -455,6 +504,264 @@ ipcMain.handle('create-payment', async (event, paymentData) => {
     });
   } catch (err) {
     console.error('Error creating payment:', err);
+    throw err;
+  }
+});
+
+// Suppliers IPC
+ipcMain.handle('get-suppliers', async () => {
+  try {
+    return await prisma.supplier.findMany({
+      orderBy: { name: 'asc' },
+      include: {
+        purchaseOrders: true,
+        expenses: {
+          include: { bank: true }
+        }
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching suppliers:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('create-supplier', async (event, supplierData) => {
+  try {
+    return await prisma.supplier.create({
+      data: {
+        name: supplierData.name,
+        phone: supplierData.phone || null,
+        address: supplierData.address || null,
+        cr: supplierData.cr || null,
+        trn: supplierData.trn || null,
+        balance: Number(supplierData.balance) || 0
+      }
+    });
+  } catch (err) {
+    console.error('Error creating supplier:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('update-supplier', async (event, supplierData) => {
+  const { id, name, phone, address, cr, trn, balance } = supplierData;
+  try {
+    return await prisma.supplier.update({
+      where: { id },
+      data: {
+        name,
+        phone: phone || null,
+        address: address || null,
+        cr: cr || null,
+        trn: trn || null,
+        balance: balance !== undefined ? Number(balance) : undefined
+      }
+    });
+  } catch (err) {
+    console.error('Error updating supplier:', err);
+    throw err;
+  }
+});
+
+// Purchases IPC
+ipcMain.handle('get-purchases', async () => {
+  try {
+    return await prisma.purchaseOrder.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        supplier: true,
+        items: {
+          include: { product: true }
+        }
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching purchases:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('create-purchase', async (event, purchaseData) => {
+  const { billNumber, supplierId, items } = purchaseData;
+  try {
+    return await prisma.$transaction(async (tx) => {
+      let totalAmount = 0;
+      let taxAmount = 0;
+      const orderItemsData = [];
+
+      for (const item of items) {
+        const product = await tx.product.findUnique({ where: { id: item.productId } });
+        if (!product) throw new Error(`Product not found: ${item.productId}`);
+
+        const cost = Number(item.unitCost) || product.costPrice;
+        const qty = Number(item.quantity) || 1;
+        const taxRate = product.taxRate || 0.14;
+
+        const totalCost = cost * qty;
+        const itemTax = totalCost * taxRate;
+        const totalWithTax = totalCost + itemTax;
+
+        totalAmount += totalCost;
+        taxAmount += itemTax;
+
+        orderItemsData.push({
+          productId: item.productId,
+          quantity: qty,
+          unitCost: cost,
+          taxAmount: itemTax,
+          total: totalWithTax
+        });
+
+        // Update stock and costPrice/price
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stockQty: { increment: qty },
+            costPrice: cost,
+            price: cost * (1 + (product.markup / 100))
+          }
+        });
+      }
+
+      const netAmount = totalAmount + taxAmount;
+
+      // Update Supplier balance
+      await tx.supplier.update({
+        where: { id: supplierId },
+        data: { balance: { increment: netAmount } }
+      });
+
+      return await tx.purchaseOrder.create({
+        data: {
+          billNumber,
+          supplierId,
+          totalAmount,
+          taxAmount,
+          netAmount,
+          items: { create: orderItemsData }
+        },
+        include: {
+          supplier: true,
+          items: { include: { product: true } }
+        }
+      });
+    });
+  } catch (err) {
+    console.error('Error creating purchase order native:', err);
+    throw err;
+  }
+});
+
+// Expenses IPC
+ipcMain.handle('get-expenses', async () => {
+  try {
+    return await prisma.expensePayment.findMany({
+      include: {
+        supplier: true,
+        bank: true
+      },
+      orderBy: { date: 'desc' }
+    });
+  } catch (err) {
+    console.error('Error fetching expenses:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('create-expense', async (event, expenseData) => {
+  const { supplierId, bankId, amount, notes, reference } = expenseData;
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const count = await tx.expensePayment.count();
+      const expenseNumber = `EXP-${new Date().getFullYear()}-${String(count + 1).padStart(5, '0')}`;
+
+      const expense = await tx.expensePayment.create({
+        data: {
+          expenseNumber,
+          supplierId,
+          bankId,
+          amount: Number(amount),
+          reference: reference || null,
+          notes: notes || null
+        },
+        include: {
+          supplier: true,
+          bank: true
+        }
+      });
+
+      // Update supplier balance (decrease supplier debt / credit)
+      await tx.supplier.update({
+        where: { id: supplierId },
+        data: { balance: { decrement: Number(amount) } }
+      });
+
+      // Decrement bank balance
+      await tx.bank.update({
+        where: { id: bankId },
+        data: { balance: { decrement: Number(amount) } }
+      });
+
+      return expense;
+    });
+  } catch (err) {
+    console.error('Error creating expense payment native:', err);
+    throw err;
+  }
+});
+
+// Users Management IPC
+ipcMain.handle('login', async (event, { username, password }) => {
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        username: username.toLowerCase().trim()
+      }
+    });
+    if (!user) {
+      throw new Error('المستخدم غير موجود!');
+    }
+    if (user.password !== password) {
+      throw new Error('كلمة المرور غير صحيحة!');
+    }
+    return {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      role: user.role
+    };
+  } catch (err) {
+    console.error('Login error:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('get-users', async () => {
+  try {
+    return await prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        role: true
+      }
+    });
+  } catch (err) {
+    console.error('Error getting users:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('change-password', async (event, { userId, newPassword }) => {
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: newPassword }
+    });
+    return { success: true };
+  } catch (err) {
+    console.error('Error changing password:', err);
     throw err;
   }
 });

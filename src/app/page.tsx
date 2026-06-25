@@ -83,6 +83,26 @@ const getProductDescription = (type: string, name: string) => {
 };
 
 export default function POSDashboard() {
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [dbUsers, setDbUsers] = useState<any[]>([]);
+  const [loginUsername, setLoginUsername] = useState('admin');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [changePasswordForm, setChangePasswordForm] = useState({ userId: '', newPassword: '', confirmPassword: '' });
+
+  const isRoleAllowed = (tab: string) => {
+    if (!currentUser) return false;
+    if (currentUser.role === 'ADMIN') return true;
+    if (currentUser.role === 'CASHIER') {
+      return ['POS', 'CUSTOMERS', 'INVOICES'].includes(tab);
+    }
+    if (currentUser.role === 'STOREKEEPER') {
+      return ['INVENTORY', 'SUPPLIERS', 'PURCHASES'].includes(tab);
+    }
+    return false;
+  };
+
   const [isMounted, setIsMounted] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
@@ -196,6 +216,88 @@ export default function POSDashboard() {
     setIsMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (isMounted) {
+      if (typeof window !== 'undefined' && (window as any).electronAPI) {
+        (window as any).electronAPI.getUsers()
+          .then((users: any) => {
+            if (Array.isArray(users) && users.length > 0) {
+              setDbUsers(users);
+            }
+          })
+          .catch(console.error);
+      } else {
+        // Browser mock users
+        setDbUsers([
+          { id: 'admin-id', username: 'admin', name: 'مدير النظام', role: 'ADMIN' },
+          { id: 'cashier-id', username: 'cashier', name: 'كاشير الانطلاق', role: 'CASHIER' },
+          { id: 'storekeeper-id', username: 'storekeeper', name: 'أمين المخزن', role: 'STOREKEEPER' }
+        ]);
+      }
+    }
+  }, [isMounted]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    try {
+      if (typeof window !== 'undefined' && (window as any).electronAPI) {
+        const user = await (window as any).electronAPI.login({ username: loginUsername, password: loginPassword });
+        if (user) {
+          setCurrentUser(user);
+          if (user.role === 'CASHIER') {
+            setActiveTab('POS');
+          } else if (user.role === 'STOREKEEPER') {
+            setActiveTab('INVENTORY');
+          } else {
+            setActiveTab('POS');
+          }
+        }
+      } else {
+        // Browser mockup auth
+        if (loginUsername === 'admin' && loginPassword === 'pos62026') {
+          setCurrentUser({ id: 'admin-id', username: 'admin', name: 'مدير النظام', role: 'ADMIN' });
+          setActiveTab('POS');
+        } else if (loginUsername === 'cashier' && loginPassword === '123456') {
+          setCurrentUser({ id: 'cashier-id', username: 'cashier', name: 'كاشير الانطلاق', role: 'CASHIER' });
+          setActiveTab('POS');
+        } else if (loginUsername === 'storekeeper' && loginPassword === '123456') {
+          setCurrentUser({ id: 'storekeeper-id', username: 'storekeeper', name: 'أمين المخزن', role: 'STOREKEEPER' });
+          setActiveTab('INVENTORY');
+        } else {
+          setLoginError('اسم المستخدم أو كلمة المرور غير صحيحة!');
+        }
+      }
+    } catch (err: any) {
+      setLoginError(err.message || 'خطأ أثناء تسجيل الدخول');
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!changePasswordForm.userId || !changePasswordForm.newPassword || !changePasswordForm.confirmPassword) {
+      alert('يرجى ملء جميع الحقول!');
+      return;
+    }
+    if (changePasswordForm.newPassword !== changePasswordForm.confirmPassword) {
+      alert('كلمتا المرور غير متطابقتين!');
+      return;
+    }
+    try {
+      if (typeof window !== 'undefined' && (window as any).electronAPI) {
+        await (window as any).electronAPI.changePassword({ 
+          userId: changePasswordForm.userId, 
+          newPassword: changePasswordForm.newPassword 
+        });
+      }
+      alert('تم تغيير كلمة المرور بنجاح!');
+      setShowChangePasswordModal(false);
+      setChangePasswordForm({ userId: '', newPassword: '', confirmPassword: '' });
+    } catch (err: any) {
+      alert(`خطأ أثناء تغيير كلمة المرور: ${err.message}`);
+    }
+  };
+
   // Fetch products from database
 
   const fetchBanks = () => {
@@ -293,24 +395,42 @@ export default function POSDashboard() {
   };
 
   const fetchSuppliers = () => {
-    fetch('/api/suppliers')
-      .then(res => res.json())
-      .then(data => setSuppliers(Array.isArray(data) ? data : []))
-      .catch(console.error);
+    if (typeof window !== 'undefined' && (window as any).electronAPI) {
+      (window as any).electronAPI.getSuppliers()
+        .then((data: any) => setSuppliers(Array.isArray(data) ? data : []))
+        .catch(console.error);
+    } else {
+      fetch('/api/suppliers')
+        .then(res => res.json())
+        .then(data => setSuppliers(Array.isArray(data) ? data : []))
+        .catch(console.error);
+    }
   };
 
   const fetchPurchases = () => {
-    fetch('/api/purchases')
-      .then(res => res.json())
-      .then(data => setPurchases(Array.isArray(data) ? data : []))
-      .catch(console.error);
+    if (typeof window !== 'undefined' && (window as any).electronAPI) {
+      (window as any).electronAPI.getPurchases()
+        .then((data: any) => setPurchases(Array.isArray(data) ? data : []))
+        .catch(console.error);
+    } else {
+      fetch('/api/purchases')
+        .then(res => res.json())
+        .then(data => setPurchases(Array.isArray(data) ? data : []))
+        .catch(console.error);
+    }
   };
 
   const fetchExpenses = () => {
-    fetch('/api/expenses')
-      .then(res => res.json())
-      .then(data => setExpenses(Array.isArray(data) ? data : []))
-      .catch(console.error);
+    if (typeof window !== 'undefined' && (window as any).electronAPI) {
+      (window as any).electronAPI.getExpenses()
+        .then((data: any) => setExpenses(Array.isArray(data) ? data : []))
+        .catch(console.error);
+    } else {
+      fetch('/api/expenses')
+        .then(res => res.json())
+        .then(data => setExpenses(Array.isArray(data) ? data : []))
+        .catch(console.error);
+    }
   };
 
   useEffect(() => {
@@ -491,6 +611,13 @@ export default function POSDashboard() {
   // Handle Checkout (Invoice or Quotation)
   const handleCheckout = async (isQuotation: boolean) => {
     if (cart.length === 0) return;
+    
+    const hasUnpriced = cart.some(item => item.originalPrice <= 0);
+    if (hasUnpriced) {
+      alert("لا يمكن إتمام العملية! بعض الأصناف في السلة لم يتم تسعيرها من قبل المدير بعد.");
+      return;
+    }
+
     setSubmitting(true);
 
     const orderData = {
@@ -721,13 +848,21 @@ export default function POSDashboard() {
       balance: parseFloat(supplierForm.balance) || 0
     };
     try {
-      const response = await fetch('/api/suppliers', {
-        method: isEditingSupplier ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      const saved = await response.json();
-      if (!response.ok) throw new Error(saved.error || 'Failed to save supplier');
+      if (typeof window !== 'undefined' && (window as any).electronAPI) {
+        if (isEditingSupplier) {
+          await (window as any).electronAPI.updateSupplier(data);
+        } else {
+          await (window as any).electronAPI.createSupplier(data);
+        }
+      } else {
+        const response = await fetch('/api/suppliers', {
+          method: isEditingSupplier ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const saved = await response.json();
+        if (!response.ok) throw new Error(saved.error || 'Failed to save supplier');
+      }
       fetchSuppliers();
       setShowSupplierModal(false);
     } catch (err: any) {
@@ -745,13 +880,17 @@ export default function POSDashboard() {
     }
     setSubmitting(true);
     try {
-      const response = await fetch('/api/purchases', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(purchaseForm)
-      });
-      const saved = await response.json();
-      if (!response.ok) throw new Error(saved.error || 'Failed to save purchase order');
+      if (typeof window !== 'undefined' && (window as any).electronAPI) {
+        await (window as any).electronAPI.createPurchase(purchaseForm);
+      } else {
+        const response = await fetch('/api/purchases', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(purchaseForm)
+        });
+        const saved = await response.json();
+        if (!response.ok) throw new Error(saved.error || 'Failed to save purchase order');
+      }
       fetchPurchases();
       fetchProducts();
       fetchSuppliers();
@@ -772,13 +911,18 @@ export default function POSDashboard() {
     }
     setSubmitting(true);
     try {
-      const response = await fetch('/api/expenses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(expenseForm)
-      });
-      const saved = await response.json();
-      if (!response.ok) throw new Error(saved.error || 'Failed to save expense payment');
+      let saved;
+      if (typeof window !== 'undefined' && (window as any).electronAPI) {
+        saved = await (window as any).electronAPI.createExpense(expenseForm);
+      } else {
+        const response = await fetch('/api/expenses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(expenseForm)
+        });
+        saved = await response.json();
+        if (!response.ok) throw new Error(saved.error || 'Failed to save expense payment');
+      }
       fetchExpenses();
       fetchBanks();
       fetchSuppliers();
@@ -822,6 +966,101 @@ export default function POSDashboard() {
     return (
       <div className="flex h-screen bg-entlaq-darker text-slate-100 items-center justify-center">
         <Loader2Icon className="h-10 w-10 text-entlaq-red animate-spin" />
+      </div>
+    );
+  }
+
+  if (currentUser === null) {
+    return (
+      <div className="flex h-screen bg-slate-950 items-center justify-center font-sans overflow-hidden" dir="rtl">
+        {/* Custom Titlebar (Window Controls) in Login page */}
+        <div 
+          className="fixed top-0 left-0 right-0 h-10 bg-slate-950 border-b border-white/5 flex items-center justify-between px-4 select-none z-50 no-print"
+          style={{ WebkitAppRegion: 'drag' } as any}
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 flex items-center justify-center">
+              <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_2px_4px_rgba(218,41,28,0.3)]" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 15 C35 38 18 62 18 82" stroke="#da291c" strokeWidth="12" strokeLinecap="round" />
+                <path d="M50 15 L80 82" stroke="#da291c" strokeWidth="12" strokeLinecap="round" />
+                <path d="M10 58 C38 52 62 52 90 58" stroke="#da291c" strokeWidth="8" strokeLinecap="round" />
+              </svg>
+            </div>
+            <span className="text-xs font-bold text-slate-300">الإنطــلاق - نظام إدارة المبيعات والمخازن</span>
+          </div>
+          
+          <div className="flex items-center gap-1" style={{ WebkitAppRegion: 'no-drag' } as any}>
+            <button 
+              onClick={() => (window as any).electronAPI?.minimize()} 
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+            >
+              <MinusIcon className="w-3.5 h-3.5" />
+            </button>
+            <button 
+              onClick={() => (window as any).electronAPI?.maximize()} 
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+            >
+              <SquareIcon className="w-3.5 h-3.5" />
+            </button>
+            <button 
+              onClick={() => (window as any).electronAPI?.close()} 
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500/20 hover:text-red-400 transition-colors cursor-pointer"
+            >
+              <XIcon className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Brand/Login Container */}
+        <div className="w-[450px] bg-slate-900/40 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl flex flex-col space-y-6">
+          <div className="text-center space-y-2">
+            <div className="mx-auto w-16 h-16 bg-white/5 rounded-2xl border border-white/10 shadow-lg p-2 flex items-center justify-center">
+              <img src="/images/logo.png" alt="الإنطلاق" className="w-full h-full object-contain" />
+            </div>
+            <h2 className="text-2xl font-black text-white">تسجيل الدخول</h2>
+            <p className="text-xs text-slate-400 font-bold">مصنع خراطيم ومواسير الإنطلاق</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs text-slate-400 font-bold block">نوع المستخدم</label>
+              <select 
+                value={loginUsername}
+                onChange={(e) => setLoginUsername(e.target.value)}
+                className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 font-bold focus:outline-none focus:border-entlaq-red transition-all cursor-pointer"
+              >
+                {dbUsers.map((u: any) => (
+                  <option key={u.id} value={u.username}>{u.name} ({u.role === 'ADMIN' ? 'مدير' : u.role === 'CASHIER' ? 'كاشير' : 'أمين مخزن'})</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs text-slate-400 font-bold block">كلمة المرور</label>
+              <input 
+                type="password"
+                placeholder="••••••"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 font-bold focus:outline-none focus:border-entlaq-red transition-all text-center tracking-widest"
+                required
+              />
+            </div>
+
+            {loginError && (
+              <p className="text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-4 py-2.5 rounded-xl text-center">
+                {loginError}
+              </p>
+            )}
+
+            <button 
+              type="submit"
+              className="w-full bg-entlaq-red hover:bg-red-600 active:scale-95 text-white font-bold text-sm py-3.5 rounded-xl shadow-lg shadow-red-500/20 transition-all cursor-pointer"
+            >
+              دخول النظام
+            </button>
+          </form>
+        </div>
       </div>
     );
   }
@@ -882,83 +1121,126 @@ export default function POSDashboard() {
 
         {/* Navigation Items */}
         <div className="flex-1 flex flex-col space-y-2">
-          <button 
-            onClick={() => setActiveTab('POS')}
-            className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'POS' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
-          >
-            <ShoppingCartIcon className="h-5 w-5" />
-            <span>نقطة البيع</span>
-          </button>
+          {isRoleAllowed('POS') && (
+            <button 
+              onClick={() => setActiveTab('POS')}
+              className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'POS' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+            >
+              <ShoppingCartIcon className="h-5 w-5" />
+              <span>نقطة البيع</span>
+            </button>
+          )}
           
-          <button 
-            onClick={() => setActiveTab('CUSTOMERS')}
-            className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'CUSTOMERS' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
-          >
-            <UsersIcon className="h-5 w-5" />
-            <span>العملاء والشركات</span>
-          </button>
+          {isRoleAllowed('CUSTOMERS') && (
+            <button 
+              onClick={() => setActiveTab('CUSTOMERS')}
+              className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'CUSTOMERS' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+            >
+              <UsersIcon className="h-5 w-5" />
+              <span>العملاء والشركات</span>
+            </button>
+          )}
           
-          <button 
-            onClick={() => setActiveTab('INVENTORY')}
-            className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'INVENTORY' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
-          >
-            <PackageIcon className="h-5 w-5" />
-            <span>إدارة المخزن والأسعار</span>
-          </button>
+          {isRoleAllowed('INVENTORY') && (
+            <button 
+              onClick={() => setActiveTab('INVENTORY')}
+              className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'INVENTORY' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+            >
+              <PackageIcon className="h-5 w-5" />
+              <span>إدارة المخزن والأسعار</span>
+            </button>
+          )}
         
-          <button 
-            onClick={() => setActiveTab('BANKS')}
-            className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'BANKS' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
-          >
-            <BuildingIcon className="h-5 w-5" />
-            <span>البنوك والخزائن</span>
-          </button>
+          {isRoleAllowed('BANKS') && (
+            <button 
+              onClick={() => setActiveTab('BANKS')}
+              className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'BANKS' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+            >
+              <BuildingIcon className="h-5 w-5" />
+              <span>البنوك والخزائن</span>
+            </button>
+          )}
           
-          <button 
-            onClick={() => setActiveTab('PAYMENTS')}
-            className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'PAYMENTS' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
-          >
-            <BanknoteIcon className="h-5 w-5" />
-            <span>سداد / دفعات</span>
-          </button>
-  
-        
+          {isRoleAllowed('PAYMENTS') && (
+            <button 
+              onClick={() => setActiveTab('PAYMENTS')}
+              className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'PAYMENTS' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+            >
+              <BanknoteIcon className="h-5 w-5" />
+              <span>سداد / دفعات</span>
+            </button>
+          )}
           
-          <button 
-            onClick={() => setActiveTab('SUPPLIERS')}
-            className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'SUPPLIERS' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
-          >
-            <TruckIcon className="h-5 w-5" />
-            <span>إدارة الموردين</span>
-          </button>
+          {isRoleAllowed('SUPPLIERS') && (
+            <button 
+              onClick={() => setActiveTab('SUPPLIERS')}
+              className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'SUPPLIERS' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+            >
+              <TruckIcon className="h-5 w-5" />
+              <span>إدارة الموردين</span>
+            </button>
+          )}
 
-          <button 
-            onClick={() => setActiveTab('PURCHASES')}
-            className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'PURCHASES' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
-          >
-            <ShoppingBagIcon className="h-5 w-5" />
-            <span>فاتورة مشتريات (وارد)</span>
-          </button>
+          {isRoleAllowed('PURCHASES') && (
+            <button 
+              onClick={() => setActiveTab('PURCHASES')}
+              className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'PURCHASES' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+            >
+              <ShoppingBagIcon className="h-5 w-5" />
+              <span>فاتورة مشتريات (وارد)</span>
+            </button>
+          )}
 
-          <button 
-            onClick={() => setActiveTab('EXPENSES')}
-            className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'EXPENSES' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
-          >
-            <ReceiptIcon className="h-5 w-5" />
-            <span>سندات الصرف (مصروف)</span>
-          </button>
+          {isRoleAllowed('EXPENSES') && (
+            <button 
+              onClick={() => setActiveTab('EXPENSES')}
+              className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'EXPENSES' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+            >
+              <ReceiptIcon className="h-5 w-5" />
+              <span>سندات الصرف (مصروف)</span>
+            </button>
+          )}
   
-          <button onClick={() => setActiveTab('INVOICES')}
-            className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'INVOICES' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
-          >
-            <FileTextIcon className="h-5 w-5" />
-            <span>الفواتير وعروض الأسعار</span>
-          </button>
-  
+          {isRoleAllowed('INVOICES') && (
+            <button onClick={() => setActiveTab('INVOICES')}
+              className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'INVOICES' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+            >
+              <FileTextIcon className="h-5 w-5" />
+              <span>الفواتير وعروض الأسعار</span>
+            </button>
+          )}
+        </div>
+
+        {/* User Info & Actions */}
+        <div className="pt-3 border-t border-white/5 space-y-2">
+          <div className="flex flex-col px-3 py-2 bg-white/5 rounded-xl border border-white/5">
+            <span className="text-xs font-black text-white">{currentUser?.name}</span>
+            <span className="text-[9px] text-slate-400 font-bold mt-0.5">
+              {currentUser?.role === 'ADMIN' ? 'مدير النظام' : currentUser?.role === 'CASHIER' ? 'كاشير' : 'أمين المخزن'}
+            </span>
+          </div>
+
+          <div className="flex gap-1.5">
+            <button 
+              onClick={() => {
+                setChangePasswordForm({ userId: currentUser.id, newPassword: '', confirmPassword: '' });
+                setShowChangePasswordModal(true);
+              }}
+              className="flex-1 text-[10px] bg-slate-900 border border-white/10 hover:bg-slate-800 text-slate-300 font-bold py-2 rounded-xl text-center cursor-pointer transition-all"
+            >
+              كلمة المرور
+            </button>
+            <button 
+              onClick={() => setCurrentUser(null)}
+              className="flex-1 text-[10px] bg-red-950/40 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-400 font-bold py-2 rounded-xl text-center cursor-pointer transition-all"
+            >
+              خروج
+            </button>
+          </div>
         </div>
 
         {/* Footer Info */}
-        <div className="pt-4 border-t border-white/5 text-[9px] text-slate-500 text-center font-mono">
+        <div className="pt-2 border-t border-white/5 text-[9px] text-slate-500 text-center font-mono">
           <span>الإصدار 1.2.0</span>
         </div>
       </div>
@@ -1171,6 +1453,11 @@ export default function POSDashboard() {
                             <h4 className="font-bold text-slate-200 mb-1 text-sm">{item.name}</h4>
                             <span className="text-xs px-2 py-0.5 bg-white/10 rounded text-slate-300 font-mono font-bold">{item.size}</span>
                         </div>
+                        {item.originalPrice <= 0 && (
+                          <div className="mt-1.5 mb-1 text-[10px] font-black text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1.5 rounded-lg text-center">
+                            ⚠️ لم يتم وضع التسعير من المدير بعد!
+                          </div>
+                        )}
 
                         {/* Editable Discount Section */}
                         <div className="flex items-center gap-3 mt-1.5 select-none">
@@ -1270,9 +1557,10 @@ export default function POSDashboard() {
                 </div>
 
                 {/* Checkout Actions */}
+                {/* Checkout Actions */}
                 <div className="grid grid-cols-2 gap-2.5">
                   <button 
-                    disabled={cart.length === 0 || submitting}
+                    disabled={cart.length === 0 || submitting || cart.some(item => item.originalPrice <= 0)}
                     onClick={() => handleCheckout(true)}
                     className="bg-white/5 text-white border border-white/10 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent transition-all duration-300 cursor-pointer"
                   >
@@ -1280,7 +1568,7 @@ export default function POSDashboard() {
                     حفظ كعرض سعر
                   </button>
                   <button 
-                    disabled={cart.length === 0 || submitting}
+                    disabled={cart.length === 0 || submitting || cart.some(item => item.originalPrice <= 0)}
                     onClick={() => handleCheckout(false)}
                     className="bg-entlaq-red text-white shadow-lg shadow-red-500/30 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 hover:bg-red-600 hover:scale-[1.02] disabled:opacity-40 disabled:hover:bg-entlaq-red disabled:hover:scale-100 transition-all duration-300 cursor-pointer"
                   >
@@ -1661,11 +1949,15 @@ export default function POSDashboard() {
                           <div className="grid grid-cols-3 gap-1 text-xs mb-2.5">
                             <div className="bg-white/5 p-1 rounded text-center">
                               <span className="text-slate-400 block text-[10px] font-bold">الشراء</span>
-                              <span className="font-black font-mono text-slate-200">{p.costPrice.toFixed(2)}</span>
+                              <span className="font-black font-mono text-slate-200">
+                                {currentUser?.role === 'ADMIN' ? `${p.costPrice.toFixed(2)}` : '-'}
+                              </span>
                             </div>
                             <div className="bg-white/5 p-1 rounded text-center">
                               <span className="text-slate-400 block text-[10px] font-bold">النسبة</span>
-                              <span className="font-black font-mono text-amber-400">%{p.markup !== undefined && p.markup !== null ? p.markup.toFixed(1) : '30'}</span>
+                              <span className="font-black font-mono text-amber-400">
+                                {currentUser?.role === 'ADMIN' ? `%${p.markup !== undefined && p.markup !== null ? p.markup.toFixed(1) : '30'}` : '-'}
+                              </span>
                             </div>
                             <div className="bg-white/5 p-1 rounded text-center">
                               <span className="text-slate-400 block text-[10px] font-bold">البيع</span>
@@ -2451,6 +2743,79 @@ export default function POSDashboard() {
         </div>
       )}
 
+      {/* Change Password Modal */}
+      {showChangePasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 no-print" dir="rtl">
+          <div className="bg-slate-900 border border-white/10 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+            <div className="p-5 bg-slate-950 border-b border-white/5 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-white">تغيير كلمة المرور</h3>
+              <button 
+                onClick={() => setShowChangePasswordModal(false)}
+                className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+              >
+                <XIcon size={18} />
+              </button>
+            </div>
+            
+            <form onSubmit={handlePasswordChange} className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs text-slate-400 font-bold block">المستهدف</label>
+                {currentUser?.role === 'ADMIN' ? (
+                  <select 
+                    value={changePasswordForm.userId}
+                    onChange={(e) => setChangePasswordForm(prev => ({ ...prev, userId: e.target.value }))}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 font-bold focus:outline-none focus:border-entlaq-red transition-all cursor-pointer"
+                  >
+                    <option value="">-- اختر مستخدماً لتغيير كلمته --</option>
+                    {dbUsers.map((u: any) => (
+                      <option key={u.id} value={u.id}>{u.name} ({u.username})</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input 
+                    type="text"
+                    value={currentUser?.name}
+                    disabled
+                    className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-400 font-bold"
+                  />
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs text-slate-400 font-bold block">كلمة المرور الجديدة</label>
+                <input 
+                  type="password"
+                  placeholder="••••••"
+                  value={changePasswordForm.newPassword}
+                  onChange={(e) => setChangePasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 font-bold focus:outline-none focus:border-entlaq-red transition-all text-center tracking-widest"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs text-slate-400 font-bold block">تأكيد كلمة المرور</label>
+                <input 
+                  type="password"
+                  placeholder="••••••"
+                  value={changePasswordForm.confirmPassword}
+                  onChange={(e) => setChangePasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 font-bold focus:outline-none focus:border-entlaq-red transition-all text-center tracking-widest"
+                  required
+                />
+              </div>
+
+              <button 
+                type="submit"
+                className="w-full bg-entlaq-red hover:bg-red-600 active:scale-95 text-white font-bold text-sm py-3.5 rounded-xl shadow-lg shadow-red-500/20 transition-all cursor-pointer mt-2"
+              >
+                تحديث كلمة المرور
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* MODAL 2: PRODUCT IN-GRID DETAIL PREVIEW */}
       {showProductModal && selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
@@ -2656,10 +3021,11 @@ export default function POSDashboard() {
                   <input 
                     type="number"
                     step="0.1"
+                    disabled={currentUser?.role !== 'ADMIN'}
                     value={customerForm.discount}
                     onChange={(e) => setCustomerForm(prev => ({ ...prev, discount: e.target.value }))}
                     placeholder="مثال: 10"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs"
+                    className="w-full bg-white/5 disabled:bg-slate-950/40 disabled:text-slate-400 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs"
                   />
                 </div>
               </div>
@@ -2816,64 +3182,81 @@ export default function POSDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">سعر الشراء (التكلفة) *</label>
-                  <input 
-                    type="number"
-                    step="0.01"
-                    required
-                    value={productForm.costPrice}
-                    onChange={(e) => {
-                      const cost = e.target.value;
-                      setProductForm(prev => {
-                        const computed = (parseFloat(cost) || 0) * (1 + (parseFloat(prev.markup) || 30) / 100);
-                        return {
-                          ...prev,
-                          costPrice: cost,
-                          price: computed > 0 ? computed.toFixed(2) : prev.price
-                        };
-                      });
-                    }}
-                    placeholder="سعر التكلفة"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
-                  />
+              {currentUser?.role === 'ADMIN' ? (
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs text-slate-400 block mb-1 text-slate-300">سعر الشراء (التكلفة) *</label>
+                    <input 
+                      type="number"
+                      step="0.01"
+                      required
+                      value={productForm.costPrice}
+                      onChange={(e) => {
+                        const cost = e.target.value;
+                        setProductForm(prev => {
+                          const computed = (parseFloat(cost) || 0) * (1 + (parseFloat(prev.markup) || 30) / 100);
+                          return {
+                            ...prev,
+                            costPrice: cost,
+                            price: computed > 0 ? computed.toFixed(2) : prev.price
+                          };
+                        });
+                      }}
+                      placeholder="سعر التكلفة"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-slate-400 block mb-1 text-slate-300">النسبة *</label>
+                    <input 
+                      type="number"
+                      step="0.01"
+                      required
+                      value={productForm.markup}
+                      onChange={(e) => {
+                        const markup = e.target.value;
+                        setProductForm(prev => {
+                          const computed = (parseFloat(prev.costPrice) || 0) * (1 + (parseFloat(markup) || 30) / 100);
+                          return {
+                            ...prev,
+                            markup: markup,
+                            price: computed > 0 ? computed.toFixed(2) : prev.price
+                          };
+                        });
+                      }}
+                      placeholder="مثال: 30"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-slate-400 block mb-1 text-slate-300">سعر البيع *</label>
+                    <input 
+                      type="number"
+                      step="0.01"
+                      required
+                      value={productForm.price}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
+                      placeholder="سعر البيع النهائي"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">النسبة *</label>
-                  <input 
-                    type="number"
-                    step="0.01"
-                    required
-                    value={productForm.markup}
-                    onChange={(e) => {
-                      const markup = e.target.value;
-                      setProductForm(prev => {
-                        const computed = (parseFloat(prev.costPrice) || 0) * (1 + (parseFloat(markup) || 30) / 100);
-                        return {
-                          ...prev,
-                          markup: markup,
-                          price: computed > 0 ? computed.toFixed(2) : prev.price
-                        };
-                      });
-                    }}
-                    placeholder="مثال: 30"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
-                  />
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs text-slate-400 block mb-1 text-slate-300">سعر البيع *</label>
+                    <input 
+                      type="number"
+                      step="0.01"
+                      required
+                      value={productForm.price}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
+                      placeholder="سعر البيع النهائي"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">سعر البيع *</label>
-                  <input 
-                    type="number"
-                    step="0.01"
-                    required
-                    value={productForm.price}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
-                    placeholder="سعر البيع النهائي"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
-                  />
-                </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">

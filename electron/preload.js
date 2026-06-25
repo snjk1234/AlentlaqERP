@@ -22,4 +22,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   getPayments: () => ipcRenderer.invoke('get-payments'),
   createPayment: (paymentData) => ipcRenderer.invoke('create-payment', paymentData),
+  
+  getSuppliers: () => ipcRenderer.invoke('get-suppliers'),
+  createSupplier: (supplierData) => ipcRenderer.invoke('create-supplier', supplierData),
+  updateSupplier: (supplierData) => ipcRenderer.invoke('update-supplier', supplierData),
+  
+  getPurchases: () => ipcRenderer.invoke('get-purchases'),
+  createPurchase: (purchaseData) => ipcRenderer.invoke('create-purchase', purchaseData),
+  
+  getExpenses: () => ipcRenderer.invoke('get-expenses'),
+  createExpense: (expenseData) => ipcRenderer.invoke('create-expense', expenseData),
+  
+  login: (credentials) => ipcRenderer.invoke('login', credentials),
+  getUsers: () => ipcRenderer.invoke('get-users'),
+  changePassword: (data) => ipcRenderer.invoke('change-password', data),
 });
