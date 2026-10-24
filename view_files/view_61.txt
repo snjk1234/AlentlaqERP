@@ -1,0 +1,49 @@
+Created At: 2026-07-30T17:11:47+03:00
+Completed At: 2026-07-30T17:11:47+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4357
+Total Bytes: 251818
+Showing lines 580 to 620
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+580:   const subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+581:   const totalTax = cart.reduce((acc, item) => acc + (item.tax * item.qty), 0);
+582:   const total = subtotal + totalTax;
+583: 
+584:   // Filter products by type and search query
+585:   const filteredProducts = (Array.isArray(products) ? products : []).filter(p => {
+586:     const matchesCategory = activeCategory === 'ALL' || p.type === activeCategory;
+587:     const matchesSearch = (p.name || '').includes(searchQuery) || (p.code || '').includes(searchQuery);
+588:     return matchesCategory && matchesSearch;
+589:   });
+590: 
+591:   // Filter products by type and search query for Inventory tab
+592:   const filteredInventoryProducts = (Array.isArray(products) ? products : []).filter(p => {
+593:     const matchesCategory = inventoryCategory === 'ALL' || p.type === inventoryCategory;
+594:     const matchesSearch = (p.name || '').includes(inventorySearchQuery) || (p.code || '').includes(inventorySearchQuery);
+595:     return matchesCategory && matchesSearch;
+596:   });
+597: 
+598:   // Filter customers by search query
+599:   const filteredCustomers = (Array.isArray(customers) ? customers : []).filter(c => {
+600:     const matchesSearch = (c.name || '').includes(customerSearch) || (c.trn && c.trn.includes(customerSearch));
+601:     return matchesSearch;
+602:   });
+603: 
+604:   const selectedCustomer = selectedCustomerId === 'CASH'
+605:     ? { id: 'CASH', name: 'عميل نقدي', trn: null }
+606:     : customers.find(c => c.id === selectedCustomerId);
+607: 
+608:   // Helper to generate a unique bill number for purchase invoices
+609:   const generateBillNumber = () => `PUR-${Date.now()}`;
+610: 
+611:   // Handle Checkout (Invoice or Quotation)
+612:   const handleCheckout = async (isQuotation: boolean) => {
+613:     if (cart.length === 0) return;
+614:     
+615:     const hasUnpriced = cart.some(item => item.originalPrice <= 0);
+616:     if (hasUnpriced) {
+617:       alert("لا يمكن إتمام العملية! بعض الأصناف في السلة لم يتم تسعيرها من قبل المدير بعد.");
+618:       return;
+619:     }
+620: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

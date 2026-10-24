@@ -1,0 +1,109 @@
+Created At: 2026-07-30T16:43:59+03:00
+Completed At: 2026-07-30T16:43:59+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4496
+Total Bytes: 254660
+Showing lines 3330 to 3430
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3330:                       onChange={(e) => {
+3331:                         const markup = e.target.value;
+3332:                         setProductForm(prev => {
+3333:                           const computed = (parseFloat(prev.costPrice) || 0) * (1 + (parseFloat(markup) || 30) / 100);
+3334:                           return {
+3335:                             ...prev,
+3336:                             markup: markup,
+3337:                             price: computed > 0 ? computed.toFixed(2) : prev.price
+3338:                           };
+3339:                         });
+3340:                       }}
+3341:                       placeholder="مثال: 30"
+3342:                       className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3343:                     />
+3344:                   </div>
+3345:                   <div className="space-y-1">
+3346:                     <label className="text-xs text-slate-400 block mb-1 text-slate-300">سعر البيع *</label>
+3347:                     <input 
+3348:                       type="number"
+3349:                       step="0.01"
+3350:                       required
+3351:                       value={productForm.price}
+3352:                       onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
+3353:                       placeholder="سعر البيع النهائي"
+3354:                       className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3355:                     />
+3356:                   </div>
+3357:                 </div>
+3358:               ) : (
+3359:                 <div className="grid grid-cols-1 gap-4">
+3360:                   <div className="space-y-1">
+3361:                     <label className="text-xs text-slate-400 block mb-1 text-slate-300">سعر البيع *</label>
+3362:                     <input 
+3363:                       type="number"
+3364:                       step="0.01"
+3365:                       required
+3366:                       disabled
+3367:                       value={productForm.price}
+3368:                       placeholder="سعر البيع النهائي"
+3369:                       className="w-full bg-white/5 disabled:bg-slate-950/40 disabled:text-slate-400 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none font-bold"
+3370:                     />
+3371:                   </div>
+3372:                 </div>
+3373:               )}
+3374: 
+3375:               <div className="grid grid-cols-3 gap-4">
+3376:                 <div className="space-y-1">
+3377:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الكمية الحالية *</label>
+3378:                   <input 
+3379:                     type="number"
+3380:                     required
+3381:                     value={productForm.stockQty}
+3382:                     onChange={(e) => setProductForm(prev => ({ ...prev, stockQty: e.target.value }))}
+3383:                     placeholder="الكمية"
+3384:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3385:                   />
+3386:                 </div>
+3387:                 <div className="space-y-1">
+3388:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الحد الأدنى *</label>
+3389:                   <input 
+3390:                     type="number"
+3391:                     required
+3392:                     value={productForm.minStockQty}
+3393:                     onChange={(e) => setProductForm(prev => ({ ...prev, minStockQty: e.target.value }))}
+3394:                     placeholder="حد التنبيه"
+3395:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3396:                   />
+3397:                 </div>
+3398:                 <div className="space-y-1">
+3399:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الحد الأقصى *</label>
+3400:                   <input 
+3401:                     type="number"
+3402:                     required
+3403:                     value={productForm.maxStockQty}
+3404:                     onChange={(e) => setProductForm(prev => ({ ...prev, maxStockQty: e.target.value }))}
+3405:                     placeholder="الحد الأقصى"
+3406:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3407:                   />
+3408:                 </div>
+3409:               </div>
+3410: 
+3411:               <div className="pt-4 border-t border-slate-800 flex gap-3">
+3412:                 <button 
+3413:                   type="submit"
+3414:                   className="flex-1 bg-entlaq-red text-white py-2 rounded-lg font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10"
+3415:                 >
+3416:                   حفظ البيانات
+3417:                 </button>
+3418:                 <button 
+3419:                   type="button"
+3420:                   onClick={() => setShowProductFormModal(false)}
+3421:                   className="bg-white/5 text-slate-300 px-6 py-2 rounded-lg font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
+3422:                 >
+3423:                   إلغاء
+3424:                 </button>
+3425:               </div>
+3426:             </form>
+3427: 
+3428:           </div>
+3429:         </div>
+3430:       )}
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

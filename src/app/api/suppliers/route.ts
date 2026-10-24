@@ -37,7 +37,7 @@ export async function POST(request: Request) {
         address: body.address || null,
         cr: body.cr || null,
         trn: body.trn || null,
-        balance: Number(body.balance) || 0
+        openingBalance: Number(body.openingBalance ?? body.balance) || 0
       }
     });
 
@@ -67,7 +67,7 @@ export async function PUT(request: Request) {
         address: body.address || null,
         cr: body.cr || null,
         trn: body.trn || null,
-        balance: Number(body.balance) || 0
+        openingBalance: body.openingBalance !== undefined ? Number(body.openingBalance) : undefined
       }
     });
 

@@ -1,0 +1,78 @@
+Created At: 2026-07-30T18:55:41+03:00
+Completed At: 2026-07-30T18:55:42+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4535
+Total Bytes: 261807
+Showing lines 1531 to 1600
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1531:                         <option key={c.id} value={c.id}>🏢 {c.name}</option>
+1532:                       ))}
+1533:                     </select>
+1534:                     <button 
+1535:                       onClick={() => {
+1536:                         setCustomerForm({ id: '', name: '', phone: '', location: '', buildingsCount: '0', cr: '', trn: '', customerType: 'CASH', discount: '0' });
+1537:                         setIsEditingCustomer(false);
+1538:                         setShowCustomerModal(true);
+1539:                       }}
+1540:                       className="bg-white/5 border border-white/10 p-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+1541:                       title="إضافة عميل جديد سريعا"
+1542:                     >
+1543:                       <PlusIcon className="w-3.5 h-3.5" />
+1544:                     </button>
+1545:                   </div>
+1546:                 </div>
+1547:                 <button 
+1548:                   onClick={clearCart}
+1549:                   disabled={cart.length === 0}
+1550:                   className="text-slate-400 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-400/10 disabled:opacity-40 cursor-pointer"
+1551:                   title="تفريغ السلة بالكامل"
+1552:                 >
+1553:                   <Trash2Icon className="h-6 w-6" />
+1554:                 </button>
+1555:               </div>
+1556: 
+1557:               {/* Cart Items */}
+1558:               {cart.length === 0 ? (
+1559:                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+1560:                   <ShoppingCartIcon className="h-16 w-16 text-slate-600 animate-pulse" />
+1561:                   <div>
+1562:                     <h3 className="text-lg font-bold text-slate-300">سلة المبيعات فارغة</h3>
+1563:                     <p className="text-sm text-slate-500 mt-1">اضغط على أي صنف لإضافته إلى الفاتورة</p>
+1564:                   </div>
+1565:                 </div>
+1566:               ) : (
+1567:                 <div className="flex-1 overflow-y-auto p-2.5 space-y-2 custom-scrollbar">
+1568:                   {cart.map((item) => (
+1569:                     <div key={item.id} className="bg-slate-800/40 border border-white/5 rounded-lg p-2.5 flex gap-2.5 hover:border-white/10 transition-colors">
+1570:                       <div className="flex-1 flex flex-col justify-between">
+1571:                         <div className="flex justify-between items-start">
+1572:                             <h4 className="font-bold text-slate-200 mb-1 text-sm">{item.name}</h4>
+1573:                             <span className="text-xs px-2 py-0.5 bg-white/10 rounded text-slate-300 font-mono font-bold">{item.size}</span>
+1574:                         </div>
+1575:                         {item.originalPrice <= 0 && (
+1576:                           <div className="mt-1.5 mb-1 text-[10px] font-black text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1.5 rounded-lg text-center">
+1577:                             ⚠️ لم يتم وضع التسعير من المدير بعد!
+1578:                           </div>
+1579:                         )}
+1580: 
+1581:                         {/* Editable Discount Section */}
+1582:                         <div className="flex items-center gap-3 mt-1.5 select-none">
+1583:                           <div className="flex items-center gap-1 bg-white/5 border border-white/10 px-2 py-0.5 rounded-lg">
+1584:                             <span className="text-[10px] text-slate-400 font-bold">خصم:</span>
+1585:                             <input 
+1586:                               type="number"
+1587:                               value={item.discountPercent !== undefined ? item.discountPercent : 0}
+1588:                               onChange={(e) => {
+1589:                                 const val = parseFloat(e.target.value);
+1590:                                 updateItemDiscount(item.id, isNaN(val) ? 0 : val);
+1591:                               }}
+1592:                               className="bg-transparent text-white font-mono text-xs w-8 text-center focus:outline-none focus:bg-white/5 rounded font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+1593:                               min="0"
+1594:                               max="100"
+1595:                               step="0.1"
+1596:                             />
+1597:                             <span className="text-[10px] text-slate-400 font-bold">%</span>
+1598:                           </div>
+1599:                           {item.discountPercent > 0 && (
+1600:                             <span className="text-[10px] text-slate-500 line-through font-mono">
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

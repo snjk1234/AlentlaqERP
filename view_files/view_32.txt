@@ -1,0 +1,29 @@
+Created At: 2026-07-29T18:42:15+03:00
+Completed At: 2026-07-29T18:42:15+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 355 to 375
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+355:         })
+356:         .catch(err => {
+357:           console.error(err);
+358:           if (!isSilent) setLoading(false);
+359:           // Fallback dummy products for web view
+360:           setProducts(prev => prev.length > 0 ? prev : [
+361:             { id: 'p1', code: '3020', barcode: '622001', name: 'ماسورة UPVC قطر 20مم فئة خفيفة', type: 'PIPE', gauge: 'Light', size: '20 mm', color: 'أبيض', costPrice: 12, price: 18, taxRate: 0.14, stockQty: 120, minStockQty: 10 },
+362:             { id: 'p2', code: '3025', barcode: '622002', name: 'ماسورة UPVC قطر 25مم فئة متوسطة', type: 'PIPE', gauge: 'Medium', size: '25 mm', color: 'أبيض', costPrice: 16, price: 24, taxRate: 0.14, stockQty: 85, minStockQty: 10 },
+363:             { id: 'p3', code: '5010', barcode: '622003', name: 'خرطوم حريق مرن مقاس 1 إنش طول 30م', type: 'HOSE', gauge: 'Heavy', size: '1 inch', color: 'أحمر', costPrice: 150, price: 210, taxRate: 0.14, stockQty: 15, minStockQty: 5 }
+364:           ]);
+365:         });
+366:     }
+367:   };
+368: 
+369:   // Fetch customers from database
+370:   const fetchCustomers = () => {
+371:     if (typeof window !== 'undefined' && (window as any).electronAPI) {
+372:       (window as any).electronAPI.getCustomers()
+373:         .then((data: any) => {
+374:           setCustomers(data);
+375:         })
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

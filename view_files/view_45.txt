@@ -1,0 +1,39 @@
+Created At: 2026-07-30T16:33:33+03:00
+Completed At: 2026-07-30T16:33:33+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4490
+Total Bytes: 254297
+Showing lines 715 to 745
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+715:         setQrCodeUrl('');
+716:       }
+717: 
+718:       setShowModal(true);
+719:       clearCart();
+720:       fetchProducts(); fetchInvoices(); // Refresh stock in UI
+721:       fetchCustomers(); // Refresh customer stats
+722:     } catch (err: any) {
+723:       alert(`خطأ: ${err.message}`);
+724:     } finally {
+725:       setSubmitting(false);
+726:     }
+727:   };
+728: 
+729:   // Customer Save handler
+730:   const handleSaveCustomer = async (e: React.FormEvent) => {
+731:     e.preventDefault();
+732:     if (!customerForm.name) {
+733:       alert("يرجى إدخال اسم العميل!");
+734:       return;
+735:     }
+736:     
+737:     const formattedData = {
+738:       ...customerForm,
+739:       buildingsCount: parseInt(customerForm.buildingsCount) || 0,
+740:       discount: parseFloat(customerForm.discount) || 0
+741:     };
+742:     
+743:     try {
+744:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+745:         if (isEditingCustomer) {
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

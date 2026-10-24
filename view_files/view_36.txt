@@ -1,0 +1,54 @@
+Created At: 2026-07-29T18:42:20+03:00
+Completed At: 2026-07-29T18:42:20+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 790 to 835
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+790: 
+791:   const handleSavePayment = async (e: React.FormEvent) => {
+792:     e.preventDefault();
+793:     if (!paymentForm.customerId || !paymentForm.bankId || !paymentForm.amount) return;
+794:     setSubmitting(true);
+795:     try {
+796:       const data = { 
+797:         customerId: paymentForm.customerId, 
+798:         bankId: paymentForm.bankId, 
+799:         amount: parseFloat(paymentForm.amount) || 0,
+800:         reference: paymentForm.reference,
+801:         notes: paymentForm.notes
+802:       };
+803:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+804:         const payment = await (window as any).electronAPI.createPayment(data);
+805:         fetchPayments();
+806:         fetchBanks();
+807:         fetchCustomers();
+808:         if (payment) {
+809:           const cust = customers.find(c => c.id === paymentForm.customerId);
+810:           const bank = banks.find(b => b.id === paymentForm.bankId);
+811:           setSelectedReceipt({...payment, customer: cust, bank: bank});
+812:           setShowReceiptModal(true);
+813:         }
+814:       } else {
+815:         const response = await fetch('/api/payments', {
+816:           method: 'POST',
+817:           headers: { 'Content-Type': 'application/json' },
+818:           body: JSON.stringify(data)
+819:         });
+820:         const payment = await response.json();
+821:         if (!response.ok) throw new Error(payment.error || 'Failed to save payment');
+822:         fetchPayments();
+823:         fetchBanks();
+824:         fetchCustomers();
+825:         const cust = customers.find(c => c.id === paymentForm.customerId);
+826:         const bank = banks.find(b => b.id === paymentForm.bankId);
+827:         setSelectedReceipt({...payment, customer: cust, bank: bank});
+828:         setShowReceiptModal(true);
+829:       }
+830:       setIsPaymentModalOpen(false);
+831:     } catch(err: any) {
+832:       alert(err.message);
+833:     } finally {
+834:       setSubmitting(false);
+835:     }
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

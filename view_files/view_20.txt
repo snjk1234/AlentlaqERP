@@ -1,0 +1,159 @@
+Created At: 2026-07-29T18:36:50+03:00
+Completed At: 2026-07-29T18:36:51+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 300 to 450
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+300: 
+301:   // Fetch products from database
+302: 
+303:   const fetchBanks = () => {
+304:     if (typeof window !== 'undefined' && (window as any).electronAPI) {
+305:       (window as any).electronAPI.getBanks().then((data: any) => setBanks(data)).catch(console.error);
+306:     } else {
+307:       fetch('/api/banks')
+308:         .then(res => res.json())
+309:         .then(data => setBanks(Array.isArray(data) ? data : []))
+310:         .catch(console.error);
+311:     }
+312:   };
+313: 
+314:   const fetchPayments = () => {
+315:     if (typeof window !== 'undefined' && (window as any).electronAPI) {
+316:       (window as any).electronAPI.getPayments().then((data: any) => setPayments(data)).catch(console.error);
+317:     } else {
+318:       fetch('/api/payments')
+319:         .then(res => res.json())
+320:         .then(data => setPayments(Array.isArray(data) ? data : []))
+321:         .catch(console.error);
+322:     }
+323:   };
+324: 
+325:   const fetchInvoices = () => {
+326:     if (typeof window !== 'undefined' && (window as any).electronAPI) {
+327:       (window as any).electronAPI.getOrders().then((data: any) => setInvoices(data)).catch(console.error);
+328:     } else {
+329:       fetch('/api/orders')
+330:         .then(res => res.json())
+331:         .then(data => setInvoices(Array.isArray(data) ? data : []))
+332:         .catch(console.error);
+333:     }
+334:   };
+335: 
+336: 
+337:   const fetchProducts = (isSilent = false) => {
+338:     if (!isSilent) setLoading(true);
+339:     if (typeof window !== 'undefined' && (window as any).electronAPI) {
+340:       (window as any).electronAPI.getProducts()
+341:         .then((data: any) => {
+342:           setProducts(data);
+343:           if (!isSilent) setLoading(false);
+344:         })
+345:         .catch((err: any) => {
+346:           console.error(err);
+347:           if (!isSilent) setLoading(false);
+348:         });
+349:     } else {
+350:       fetch('/api/products')
+351:         .then(res => res.json())
+352:         .then(data => {
+353:           setProducts(Array.isArray(data) ? data : []);
+354:           if (!isSilent) setLoading(false);
+355:         })
+356:         .catch(err => {
+357:           console.error(err);
+358:           if (!isSilent) setLoading(false);
+359:           // Fallback dummy products for web view
+360:           setProducts(prev => prev.length > 0 ? prev : [
+361:             { id: 'p1', code: '3020', barcode: '622001', name: 'ماسورة UPVC قطر 20مم فئة خفيفة', type: 'PIPE', gauge: 'Light', size: '20 mm', color: 'أبيض', costPrice: 12, price: 18, taxRate: 0.14, stockQty: 120, minStockQty: 10 },
+362:             { id: 'p2', code: '3025', barcode: '622002', name: 'ماسورة UPVC قطر 25مم فئة متوسطة', type: 'PIPE', gauge: 'Medium', size: '25 mm', color: 'أبيض', costPrice: 16, price: 24, taxRate: 0.14, stockQty: 85, minStockQty: 10 },
+363:             { id: 'p3', code: '5010', barcode: '622003', name: 'خرطوم حريق مرن مقاس 1 إنش طول 30م', type: 'HOSE', gauge: 'Heavy', size: '1 inch', color: 'أحمر', costPrice: 150, price: 210, taxRate: 0.14, stockQty: 15, minStockQty: 5 }
+364:           ]);
+365:         });
+366:     }
+367:   };
+368: 
+369:   // Fetch customers from database
+370:   const fetchCustomers = () => {
+371:     if (typeof window !== 'undefined' && (window as any).electronAPI) {
+372:       (window as any).electronAPI.getCustomers()
+373:         .then((data: any) => {
+374:           setCustomers(data);
+375:         })
+376:         .catch((err: any) => {
+377:           console.error(err);
+378:         });
+379:     } else {
+380:       fetch('/api/customers')
+381:         .then(res => res.json())
+382:         .then(data => {
+383:           setCustomers(Array.isArray(data) ? data : []);
+384:         })
+385:         .catch(err => {
+386:           console.error(err);
+387:           // Fallback dummy customers for web view
+388:           setCustomers(prev => prev.length > 0 ? prev : [
+389:             { id: 'cust-1', name: 'شركة المقاولون العرب', phone: '01012345678', email: 'info@arabco.com', address: 'القاهرة، مصر', trn: '310122345600003', orders: [] },
+390:             { id: 'cust-2', name: 'أوراسكوم للإنشاءات', phone: '01298765432', email: 'contact@orascom.com', address: 'الجيزة، مصر', trn: '320011223300003', orders: [] },
+391:             { id: 'cust-3', name: 'السويدي إليكتريك', phone: '01123456789', email: 'sales@elsewedy.com', address: 'العاشر من رمضان، مصر', trn: '330044556600003', orders: [] }
+392:           ]);
+393:         });
+394:     }
+395:   };
+396: 
+397:   const fetchSuppliers = () => {
+398:     if (typeof window !== 'undefined' && (window as any).electronAPI) {
+399:       (window as any).electronAPI.getSuppliers()
+400:         .then((data: any) => setSuppliers(Array.isArray(data) ? data : []))
+401:         .catch(console.error);
+402:     } else {
+403:       fetch('/api/suppliers')
+404:         .then(res => res.json())
+405:         .then(data => setSuppliers(Array.isArray(data) ? data : []))
+406:         .catch(console.error);
+407:     }
+408:   };
+409: 
+410:   const fetchPurchases = () => {
+411:     if (typeof window !== 'undefined' && (window as any).electronAPI) {
+412:       (window as any).electronAPI.getPurchases()
+413:         .then((data: any) => setPurchases(Array.isArray(data) ? data : []))
+414:         .catch(console.error);
+415:     } else {
+416:       fetch('/api/purchases')
+417:         .then(res => res.json())
+418:         .then(data => setPurchases(Array.isArray(data) ? data : []))
+419:         .catch(console.error);
+420:     }
+421:   };
+422: 
+423:   const fetchExpenses = () => {
+424:     if (typeof window !== 'undefined' && (window as any).electronAPI) {
+425:       (window as any).electronAPI.getExpenses()
+426:         .then((data: any) => setExpenses(Array.isArray(data) ? data : []))
+427:         .catch(console.error);
+428:     } else {
+429:       fetch('/api/expenses')
+430:         .then(res => res.json())
+431:         .then(data => setExpenses(Array.isArray(data) ? data : []))
+432:         .catch(console.error);
+433:     }
+434:   };
+435: 
+436:   useEffect(() => {
+437:     if (isMounted) {
+438:       fetchProducts();
+439:       fetchCustomers();
+440:       fetchBanks();
+441:       fetchPayments();
+442:       fetchInvoices();
+443:       fetchSuppliers();
+444:       fetchPurchases();
+445:       fetchExpenses();
+446:     }
+447:   }, [isMounted]);
+448: 
+449:   // Clear all search queries when changing active tab
+450:   useEffect(() => {
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

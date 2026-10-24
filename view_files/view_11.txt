@@ -1,0 +1,114 @@
+Created At: 2026-06-22T10:21:15Z
+Completed At: 2026-06-22T10:21:15Z
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 1991
+Total Bytes: 106346
+Showing lines 745 to 850
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+745:                               <ShoppingCartIcon className="h-4 w-4" />
+746:                             </button>
+747:                           </div>
+748:                         
+749:                           {cust.customerType === 'CREDIT' && cust.payments && cust.payments.length > 0 && (
+750:                             <div className="mt-2 pt-2 border-t border-white/5">
+751:                               <p className="text-[10px] text-slate-400 mb-1">آخر الدفعات:</p>
+752:                               {cust.payments.slice(0, 3).map((p: any) => (
+753:                                 <div key={p.id} className="flex justify-between text-[11px] text-slate-300">
+754:                                   <span>{new Date(p.date).toLocaleDateString()}</span>
+755:                                   <span className="text-emerald-400 font-bold">+{p.amount} ر.س</span>
+756:                                 </div>
+757:                               ))}
+758:                             </div>
+759:                           )}
+760: 
+761: 
+762:                           {cust.customerType === 'CREDIT' && cust.payments && cust.payments.length > 0 && (
+763:                             <div className="mt-2 pt-2 border-t border-white/5">
+764:                               <p className="text-[10px] text-slate-400 mb-1">آخر الدفعات:</p>
+765:                               {cust.payments.slice(0, 3).map((p: any) => (
+766:                                 <div key={p.id} className="flex justify-between text-[11px] text-slate-300">
+767:                                   <span>{new Date(p.date).toLocaleDateString()}</span>
+768:                                   <span className="text-emerald-400 font-bold">+{p.amount} ر.س</span>
+769:                                 </div>
+770:                               ))}
+771:                             </div>
+772:                           )}
+773: 
+774:                         </div>
+775:                       </div>
+776:                     );
+777:                   })}
+778:                 </div>
+779:               )}
+780:             </div>
+781: 
+782:             {/* Cart Panel (Left Side in POS) */}
+783:             <div className="w-[360px] glass-panel border-r-0 border-l border-white/10 flex flex-col shadow-2xl relative z-10 m-1.5 rounded-xl overflow-hidden no-print">
+784:               
+785:               {/* Cart Header */}
+786:               <div className="p-3 border-b border-white/10 flex justify-between items-center bg-white/5">
+787:                 <div className="flex-1">
+788:                   <h2 className="text-2xl font-bold flex items-center gap-3 text-white">
+789:                     <PrinterIcon className="h-6 w-6 text-entlaq-red" />
+790:                     المبيعات والعروض
+791:                   </h2>
+792:                   <div className="flex items-center gap-2 mt-2 select-none">
+793:                     <span className="text-xs text-slate-400 font-semibold">العميل:</span>
+794:                     <select 
+795:                       value={selectedCustomerId}
+796:                       onChange={(e) => setSelectedCustomerId(e.target.value)}
+797:                       className="bg-slate-900 border border-white/10 rounded-xl px-2.5 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-red-500/50 cursor-pointer font-bold"
+798:                     >
+799:                       <option value="CASH">👤 عميل نقدي</option>
+800:                       {customers.map((c: any) => (
+801:                         <option key={c.id} value={c.id}>🏢 {c.name}</option>
+802:                       ))}
+803:                     </select>
+804:                     <button 
+805:                       onClick={() => {
+806:                         setCustomerForm({ id: '', name: '', phone: '', location: '', buildingsCount: '0', cr: '', trn: '', customerType: 'CASH', discount: '0' });
+807:                         setIsEditingCustomer(false);
+808:                         setShowCustomerModal(true);
+809:                       }}
+810:                       className="bg-white/5 border border-white/10 p-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+811:                       title="إضافة عميل جديد سريعا"
+812:                     >
+813:                       <PlusIcon className="w-3.5 h-3.5" />
+814:                     </button>
+815:                   </div>
+816:                 </div>
+817:                 <button 
+818:                   onClick={clearCart}
+819:                   disabled={cart.length === 0}
+820:                   className="text-slate-400 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-400/10 disabled:opacity-40 cursor-pointer"
+821:                   title="تفريغ السلة بالكامل"
+822:                 >
+823:                   <Trash2Icon className="h-6 w-6" />
+824:                 </button>
+825:               </div>
+826: 
+827:               {/* Cart Items */}
+828:               {cart.length === 0 ? (
+829:                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+830:                   <ShoppingCartIcon className="h-16 w-16 text-slate-600 animate-pulse" />
+831:                   <div>
+832:                     <h3 className="text-lg font-bold text-slate-300">سلة المبيعات فارغة</h3>
+833:                     <p className="text-sm text-slate-500 mt-1">اضغط على أي صنف لإضافته إلى الفاتورة</p>
+834:                   </div>
+835:                 </div>
+836:               ) : (
+837:                 <div className="flex-1 overflow-y-auto p-2.5 space-y-2 custom-scrollbar">
+838:                   {cart.map((item) => (
+839:                     <div key={item.id} className="bg-slate-800/40 border border-white/5 rounded-lg p-2.5 flex gap-2.5 hover:border-white/10 transition-colors">
+840:                       <div className="flex-1 flex flex-col justify-between">
+841:                         <div className="flex justify-between items-start">
+842:                             <h4 className="font-bold text-slate-200 mb-1 text-sm">{item.name}</h4>
+843:                             <span className="text-xs px-2 py-0.5 bg-white/10 rounded text-slate-300 font-mono font-bold">{item.size}</span>
+844:                         </div>
+845: 
+846:                         {/* Editable Discount Section */}
+847:                         <div className="flex items-center gap-3 mt-1.5 select-none">
+848:                           <div className="flex items-center gap-1 bg-white/5 border border-white/10 px-2 py-0.5 rounded-lg">
+849:                             <span className="text-[10px] text-slate-400 font-bold">خصم:</span>
+850:                             <input 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

@@ -1,0 +1,69 @@
+Created At: 2026-07-29T18:42:38+03:00
+Completed At: 2026-07-29T18:42:38+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4484
+Total Bytes: 253943
+Showing lines 3130 to 3190
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3130:                     className="w-full bg-white/5 disabled:bg-slate-950/40 disabled:text-slate-400 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs"
+3131:                   />
+3132:                 </div>
+3133:               </div>
+3134: 
+3135:               <div className="pt-4 border-t border-slate-800 flex gap-3">
+3136:                 <button 
+3137:                   type="submit"
+3138:                   className="flex-1 bg-entlaq-red text-white py-2 rounded-lg font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10"
+3139:                 >
+3140:                   حفظ البيانات
+3141:                 </button>
+3142:                 <button 
+3143:                   type="button"
+3144:                   onClick={() => setShowCustomerModal(false)}
+3145:                   className="bg-white/5 text-slate-300 px-6 py-2 rounded-lg font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
+3146:                 >
+3147:                   إلغاء
+3148:                 </button>
+3149:               </div>
+3150:             </form>
+3151: 
+3152:           </div>
+3153:         </div>
+3154:       )}
+3155:         {/* MODAL 4: PRODUCT FORM MODAL */}
+3156:       {showProductFormModal && (
+3157:         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
+3158:           <div className="bg-slate-900 border border-slate-700 w-full max-w-xl rounded-xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+3159:             
+3160:             <div className="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+3161:               <div>
+3162:                 <h3 className="text-lg font-bold text-white">
+3163:                   {isEditingProduct ? 'تعديل بيانات الصنف' : 'إضافة صنف جديد بالمخزن'}
+3164:                 </h3>
+3165:                 <p className="text-xs text-slate-400 mt-1">أدخل المواصفات الفنية والمالية للصنف بدقة</p>
+3166:               </div>
+3167:               <button 
+3168:                 onClick={() => setShowProductFormModal(false)}
+3169:                 className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+3170:               >
+3171:                 <XIcon size={18} />
+3172:               </button>
+3173:             </div>
+3174: 
+3175:             <form onSubmit={handleSaveProduct} className="p-4 space-y-3 overflow-y-auto custom-scrollbar text-right" dir="rtl">
+3176:               
+3177:               <div className="grid grid-cols-2 gap-4">
+3178:                 <div className="space-y-1">
+3179:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">كود الصنف *</label>
+3180:                   <input 
+3181:                     type="text"
+3182:                     required
+3183:                     value={productForm.code}
+3184:                     onChange={(e) => setProductForm(prev => ({ ...prev, code: e.target.value }))}
+3185:                     placeholder="مثال: 3020"
+3186:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3187:                   />
+3188:                 </div>
+3189:                 <div className="space-y-1">
+3190:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الباركود (اختياري)</label>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

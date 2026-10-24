@@ -1,0 +1,58 @@
+Created At: 2026-07-30T18:55:37+03:00
+Completed At: 2026-07-30T18:55:37+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4535
+Total Bytes: 261807
+Showing lines 1481 to 1530
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1481:                             </div>
+1482:                             <h3 className="text-xs font-bold text-slate-200 mb-1 leading-tight line-clamp-2 min-h-[36px]">{item.name}</h3>
+1483:                             <p className="text-[10px] text-slate-400">
+1484:                               المخزون:{' '}
+1485:                               <span className={`font-mono font-bold ${isOutOfStock ? 'text-red-500' : isLowStock ? 'text-amber-500 animate-pulse' : 'text-emerald-400'}`}>
+1486:                                 {item.stockQty} {isOutOfStock ? '(نافذ)' : ''}
+1487:                               </span>
+1488:                             </p>
+1489:                           </div>
+1490:                           <div className="flex justify-between items-center mt-3 border-t border-white/5 pt-3">
+1491:                             <span className="text-base font-black text-white">{item.price.toFixed(2)} <span className="text-[10px] font-normal text-slate-400">ج.م</span></span>
+1492:                             <button 
+1493:                               disabled={isOutOfStock}
+1494:                               onClick={(e) => {
+1495:                                 e.stopPropagation();
+1496:                                 addToCart(item);
+1497:                               }}
+1498:                               className="bg-red-500/10 text-red-500 p-2 rounded-xl hover:bg-entlaq-red hover:text-white transition-all shadow-sm disabled:opacity-50 disabled:hover:bg-red-500/10 disabled:hover:text-red-500 cursor-pointer"
+1499:                               title="إضافة إلى السلة"
+1500:                             >
+1501:                               <ShoppingCartIcon className="h-4 w-4" />
+1502:                             </button>
+1503:                           </div>
+1504:                         </div>
+1505:                       </div>
+1506:                     );
+1507:                   })}
+1508:                 </div>
+1509:               )}
+1510:             </div>
+1511: 
+1512:             {/* Cart Panel (Left Side in POS) */}
+1513:             <div className="w-[360px] glass-panel border-r-0 border-l border-white/10 flex flex-col shadow-2xl relative z-10 m-1.5 rounded-xl overflow-hidden no-print">
+1514:               
+1515:               {/* Cart Header */}
+1516:               <div className="p-3 border-b border-white/10 flex justify-between items-center bg-white/5">
+1517:                 <div className="flex-1">
+1518:                   <h2 className="text-2xl font-bold flex items-center gap-3 text-white">
+1519:                     <PrinterIcon className="h-6 w-6 text-entlaq-red" />
+1520:                     المبيعات والعروض
+1521:                   </h2>
+1522:                   <div className="flex items-center gap-2 mt-2 select-none">
+1523:                     <span className="text-xs text-slate-400 font-semibold">العميل:</span>
+1524:                     <select 
+1525:                       value={selectedCustomerId}
+1526:                       onChange={(e) => setSelectedCustomerId(e.target.value)}
+1527:                       className="bg-slate-900 border border-white/10 rounded-xl px-2.5 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-red-500/50 cursor-pointer font-bold"
+1528:                     >
+1529:                       <option value="CASH">👤 عميل نقدي</option>
+1530:                       {customers.map((c: any) => (
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

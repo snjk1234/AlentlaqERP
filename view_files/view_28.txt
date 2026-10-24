@@ -1,0 +1,159 @@
+Created At: 2026-07-29T18:37:11+03:00
+Completed At: 2026-07-29T18:37:11+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 2400 to 2550
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2400:               )}
+2401:             </div>
+2402:           </div>
+2403:         )}
+2404: 
+2405:         {/* TAB 5: PAYMENTS */}
+2406:         {activeTab === 'PAYMENTS' && (
+2407:           <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+2408:             <div>
+2409:               <h2 className="text-xl font-bold text-white">سداد ودفعات العملاء</h2>
+2410:               <p className="text-xs text-slate-400 mt-0.5">متابعة سجل المقبوضات وإصدار سندات القبض والدفعات من العملاء</p>
+2411:             </div>
+2412: 
+2413:             <div className="flex gap-3 items-center max-w-xl">
+2414:               <div className="relative group flex-1">
+2415:                 <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+2416:                   <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+2417:                 </div>
+2418:                 <input 
+2419:                   type="text" 
+2420:                   value={paymentSearch}
+2421:                   onChange={(e) => setPaymentSearch(e.target.value)}
+2422:                   placeholder="ابحث برقم السند أو اسم العميل..." 
+2423:                   className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+2424:                 />
+2425:                 {paymentSearch && (
+2426:                   <button 
+2427:                     onClick={() => setPaymentSearch('')}
+2428:                     className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+2429:                   >
+2430:                     <XIcon size={14} />
+2431:                   </button>
+2432:                 )}
+2433:               </div>
+2434:               <button 
+2435:                 onClick={() => { setIsPaymentModalOpen(true); setPaymentForm({ customerId: '', bankId: '', amount: '', notes: '', reference: '' }); }}
+2436:                 className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+2437:               >
+2438:                 <PlusIcon className="w-4 h-4" />
+2439:                 <span>سند قبض جديد</span>
+2440:               </button>
+2441:             </div>
+2442:             
+2443:             <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex-1 overflow-y-auto custom-scrollbar">
+2444:               <table className="w-full text-right text-sm">
+2445:                 <thead>
+2446:                   <tr className="bg-slate-950 text-slate-400 border-b border-slate-800">
+2447:                     <th className="p-4 font-bold">رقم السند</th>
+2448:                     <th className="p-4 font-bold">التاريخ</th>
+2449:                     <th className="p-4 font-bold">العميل</th>
+2450:                     <th className="p-4 font-bold">البنك/الخزينة</th>
+2451:                     <th className="p-4 font-bold">المبلغ</th>
+2452:                   </tr>
+2453:                 </thead>
+2454:                 <tbody className="divide-y divide-slate-800/50">
+2455:                   {payments.filter(p => (p.customer?.name || '').includes(paymentSearch) || (p.receiptNumber && p.receiptNumber.includes(paymentSearch))).map(payment => (
+2456:                     <tr key={payment.id} className="hover:bg-white/5 transition-colors cursor-pointer" onClick={() => { setSelectedReceipt(payment); setShowReceiptModal(true); }}>
+2457:                       <td className="p-4 font-mono text-slate-300 font-bold">{payment.receiptNumber ? `REC-${payment.receiptNumber}` : `REC-${payment.id.substring(0,6).toUpperCase()}`}</td>
+2458:                       <td className="p-4 text-slate-300 font-mono text-xs">{new Date(payment.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+2459:                       <td className="p-4 font-bold text-white">{payment.customer?.name || 'غير معروف'}</td>
+2460:                       <td className="p-4 text-slate-300">{payment.bank?.name || 'غير معروف'}</td>
+2461:                       <td className="p-4 font-mono font-bold text-emerald-400" dir="ltr">{payment.amount.toFixed(2)} ج.م</td>
+2462:                     </tr>
+2463:                   ))}
+2464:                   {payments.filter(p => (p.customer?.name || '').includes(paymentSearch) || (p.receiptNumber && p.receiptNumber.includes(paymentSearch))).length === 0 && (
+2465:                     <tr>
+2466:                       <td colSpan={5} className="p-10 text-center text-slate-500 font-bold">لا توجد سندات قبض مسجلة</td>
+2467:                     </tr>
+2468:                   )}
+2469:                 </tbody>
+2470:               </table>
+2471:             </div>
+2472:           </div>
+2473:         )}
+2474:   
+2475: 
+2476:       
+2477:         {/* TAB 6: INVOICES */}
+2478:         {activeTab === 'INVOICES' && (
+2479:           <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+2480:             <div>
+2481:               <h2 className="text-xl font-bold text-white">الفواتير وعروض الأسعار</h2>
+2482:               <p className="text-xs text-slate-400 mt-0.5">مراجعة وإعادة طباعة فواتير المبيعات وعروض الأسعار الصادرة للمؤسسات والأفراد</p>
+2483:             </div>
+2484: 
+2485:             <div className="flex gap-3 items-center max-w-xl">
+2486:               <div className="relative group flex-1">
+2487:                 <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+2488:                   <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+2489:                 </div>
+2490:                 <input 
+2491:                   type="text" 
+2492:                   value={invoiceSearch}
+2493:                   onChange={(e) => setInvoiceSearch(e.target.value)}
+2494:                   placeholder="ابحث برقم الفاتورة أو اسم العميل..." 
+2495:                   className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+2496:                 />
+2497:                 {invoiceSearch && (
+2498:                   <button 
+2499:                     onClick={() => setInvoiceSearch('')}
+2500:                     className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+2501:                   >
+2502:                     <XIcon size={14} />
+2503:                   </button>
+2504:                 )}
+2505:               </div>
+2506:             </div>
+2507:             
+2508:             <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex-1 overflow-y-auto custom-scrollbar">
+2509:               <table className="w-full text-right text-sm">
+2510:                 <thead>
+2511:                   <tr className="bg-slate-950 text-slate-400 border-b border-slate-800">
+2512:                     <th className="p-4 font-bold">رقم الفاتورة</th>
+2513:                     <th className="p-4 font-bold">التاريخ</th>
+2514:                     <th className="p-4 font-bold">العميل</th>
+2515:                     <th className="p-4 font-bold">النوع</th>
+2516:                     <th className="p-4 font-bold">الإجمالي</th>
+2517:                   </tr>
+2518:                 </thead>
+2519:                 <tbody className="divide-y divide-slate-800/50">
+2520:                   {invoices.filter(inv => (inv.invoiceNumber || '').includes(invoiceSearch) || (inv.customerName || '').includes(invoiceSearch) || (inv.customer?.name || '').includes(invoiceSearch)).map(inv => (
+2521:                     <tr key={inv.id} className="hover:bg-white/5 transition-colors cursor-pointer" onClick={() => {
+2522:                       setInvoice(inv);
+2523:                       if (inv.qrCode) {
+2524:                         QRCode.toDataURL(inv.qrCode, { width: 160, margin: 1 })
+2525:                           .then(url => setQrCodeUrl(url))
+2526:                           .catch(err => console.error(err));
+2527:                       } else {
+2528:                         setQrCodeUrl('');
+2529:                       }
+2530:                       setShowModal(true);
+2531:                     }}>
+2532:                       <td className="p-4 font-mono text-slate-300 font-bold">{inv.invoiceNumber}</td>
+2533:                       <td className="p-4 text-slate-300 font-mono text-xs">{new Date(inv.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+2534:                       <td className="p-4 font-bold text-white">{inv.customer?.name || inv.customerName || 'عميل نقدي'}</td>
+2535:                       <td className="p-4 text-slate-300">
+2536:                         <span className={`px-2 py-1 rounded text-xs font-bold ${inv.isQuotation ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
+2537:                           {inv.isQuotation ? 'عرض سعر' : 'فاتورة'}
+2538:                         </span>
+2539:                       </td>
+2540:                       <td className="p-4 font-mono font-bold text-white" dir="ltr">{inv.netAmount.toFixed(2)} ج.م</td>
+2541:                     </tr>
+2542:                   ))}
+2543:                   {invoices.filter(inv => (inv.invoiceNumber || '').includes(invoiceSearch) || (inv.customerName || '').includes(invoiceSearch) || (inv.customer?.name || '').includes(invoiceSearch)).length === 0 && (
+2544:                     <tr>
+2545:                       <td colSpan={5} className="p-10 text-center text-slate-500 font-bold">لا توجد فواتير مسجلة</td>
+2546:                     </tr>
+2547:                   )}
+2548:                 </tbody>
+2549:               </table>
+2550:             </div>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

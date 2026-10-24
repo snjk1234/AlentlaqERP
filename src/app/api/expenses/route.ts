@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { updateDocument } from '@/lib/document-edit-route';
 
 export const dynamic = 'force-dynamic';
+
+export async function PUT(request: Request) {
+  return updateDocument(request, 'expense');
+}
 
 // GET all expense payments (سندات الصرف)
 export async function GET() {

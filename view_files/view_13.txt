@@ -1,0 +1,69 @@
+Created At: 2026-07-29T18:36:00+03:00
+Completed At: 2026-07-29T18:36:00+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 620 to 680
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+620: 
+621:     setSubmitting(true);
+622: 
+623:     const orderData = {
+624:       customerName: selectedCustomer ? selectedCustomer.name : 'عميل نقدي',
+625:       customerId: selectedCustomer && selectedCustomer.id !== 'CASH' ? selectedCustomer.id : null,
+626:       isQuotation,
+627:       items: cart.map(item => ({
+628:         productId: item.id,
+629:         quantity: item.qty,
+630:         unitPrice: item.price
+631:       }))
+632:     };
+633: 
+634:     try {
+635:       let data;
+636:       // Check if running inside Electron wrapper
+637:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+638:         data = await (window as any).electronAPI.createOrder(orderData);
+639:       } else {
+640:         // Fallback for browser preview
+641:         const response = await fetch('/api/orders', {
+642:           method: 'POST',
+643:           headers: { 'Content-Type': 'application/json' },
+644:           body: JSON.stringify(orderData)
+645:         });
+646:         data = await response.json();
+647:         if (!response.ok) throw new Error(data.error || 'Failed to submit order');
+648:       }
+649: 
+650:       setInvoice(data);
+651:       
+652:       // Generate QR Code if ZATCA compliant QR string exists in order
+653:       if (data.qrCode) {
+654:         const qrUrl = await QRCode.toDataURL(data.qrCode, { width: 160, margin: 1 });
+655:         setQrCodeUrl(qrUrl);
+656:       } else {
+657:         setQrCodeUrl('');
+658:       }
+659: 
+660:       setShowModal(true);
+661:       clearCart();
+662:       fetchProducts(); fetchInvoices(); // Refresh stock in UI
+663:       fetchCustomers(); // Refresh customer stats
+664:     } catch (err: any) {
+665:       alert(`خطأ: ${err.message}`);
+666:     } finally {
+667:       setSubmitting(false);
+668:     }
+669:   };
+670: 
+671:   // Customer Save handler
+672:   const handleSaveCustomer = async (e: React.FormEvent) => {
+673:     e.preventDefault();
+674:     if (!customerForm.name) {
+675:       alert("يرجى إدخال اسم العميل!");
+676:       return;
+677:     }
+678:     
+679:     const formattedData = {
+680:       ...customerForm,
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

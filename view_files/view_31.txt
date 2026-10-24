@@ -1,0 +1,59 @@
+Created At: 2026-07-29T18:42:14+03:00
+Completed At: 2026-07-29T18:42:14+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 60 to 110
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+60: };
+61: 
+62: const getCategoryBadgeClass = (type: string) => {
+63:   switch (type) {
+64:     case 'PIPE':
+65:       return 'bg-sky-500/10 text-sky-400 border border-sky-500/20';
+66:     case 'HOSE':
+67:       return 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+68:     case 'ACCESSORY':
+69:       return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+70:     default:
+71:       return 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
+72:   }
+73: };
+74: 
+75: const getProductDescription = (type: string, name: string) => {
+76:   if (type === 'PIPE') {
+77:     return 'مواسير الإنطلاق UPVC مصنعة بأعلى معايير الجودة لمقاومة الصدمات والضغط الميكانيكي، ومصممة خصيصاً لتمديدات شبكات الكهرباء ومقاومة للأحماض والقلويات والحرائق.';
+78:   } else if (type === 'HOSE') {
+79:     return 'خراطيم الإنطلاق المرنة المقاومة للحريق ومصممة خصيصاً لتحمل درجات الحرارة العالية وسهولة الانحناء والتمديد داخل الجدران والأسقف الخرسانية والجبسية.';
+80:   } else {
+81:     return `إكسسوارات وقطع غيار ${name} من مصنع الانطلاق، مصنعة من مواد UPVC عالية الجودة والمضادة للحريق لضمان عزل وتوصيل آمن للمواسير والوصلات الكهربائية.`;
+82:   }
+83: };
+84: 
+85: export default function POSDashboard() {
+86:   const [currentUser, setCurrentUser] = useState<any>(null);
+87:   const [dbUsers, setDbUsers] = useState<any[]>([]);
+88:   const [loginUsername, setLoginUsername] = useState('admin');
+89:   const [loginPassword, setLoginPassword] = useState('');
+90:   const [loginError, setLoginError] = useState('');
+91:   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+92:   const [changePasswordForm, setChangePasswordForm] = useState({ userId: '', newPassword: '', confirmPassword: '' });
+93: 
+94:   const isRoleAllowed = (tab: string) => {
+95:     if (!currentUser) return false;
+96:     if (currentUser.role === 'ADMIN') return true;
+97:     if (currentUser.role === 'CASHIER') {
+98:       return ['POS', 'CUSTOMERS', 'INVOICES', 'PAYMENTS'].includes(tab);
+99:     }
+100:     if (currentUser.role === 'STOREKEEPER') {
+101:       return ['INVENTORY', 'SUPPLIERS', 'PURCHASES'].includes(tab);
+102:     }
+103:     return false;
+104:   };
+105: 
+106:   const [isMounted, setIsMounted] = useState(false);
+107:   const [products, setProducts] = useState<any[]>([]);
+108:   const [customers, setCustomers] = useState<any[]>([]);
+109: 
+110:   const [banks, setBanks] = useState<any[]>([]);
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

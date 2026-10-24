@@ -1,0 +1,104 @@
+Created At: 2026-07-30T19:06:39+03:00
+Completed At: 2026-07-30T19:06:39+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4370
+Total Bytes: 252895
+Showing lines 1330 to 1425
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1330:                           setSelectedProduct(item);
+1331:                           setShowProductModal(true);
+1332:                         }}
+1333:                         className={`glass-card rounded-xl p-2.5 cursor-pointer group flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] hover:border-red-500/20 ${isOutOfStock ? 'opacity-40 cursor-not-allowed' : ''}`}
+1334:                       >
+1335:                         <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden mb-3 bg-black/20 border border-white/5">
+1336:                           <img 
+1337:                             src={getProductImage(item.type)} 
+1338:                             alt={item.name}
+1339:                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+1340:                           />
+1341:                           {isLowStock && !isOutOfStock && (
+1342:                             <span className="absolute top-2 right-2 px-2 py-0.5 bg-amber-500/90 text-slate-900 rounded-lg text-[10px] font-bold animate-pulse">
+1343:                               منخفض
+1344:                             </span>
+1345:                           )}
+1346:                           {isOutOfStock && (
+1347:                             <span className="absolute top-2 right-2 px-2 py-0.5 bg-red-600/90 text-white rounded-lg text-[10px] font-bold">
+1348:                               نافذ
+1349:                             </span>
+1350:                           )}
+1351:                         </div>
+1352:                         <div className="flex-1 flex flex-col justify-between">
+1353:                           <div>
+1354:                             <div className="flex justify-between items-center mb-1">
+1355:                               <span className="text-[10px] font-mono text-slate-400">كود: {item.code}</span>
+1356:                               <div className="flex items-center gap-1 select-none">
+1357:                                 <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${getCategoryBadgeClass(item.type)}`}>
+1358:                                   {getCategoryNameAr(item.type)}
+1359:                                 </span>
+1360:                                 <span className="text-[10px] px-1.5 py-0.2 bg-white/10 text-slate-300 rounded font-bold">{item.size}</span>
+1361:                               </div>
+1362:                             </div>
+1363:                             <h3 className="text-xs font-bold text-slate-200 mb-1 leading-tight line-clamp-2 min-h-[36px]">{item.name}</h3>
+1364:                             <p className="text-[10px] text-slate-400">
+1365:                               المخزون:{' '}
+1366:                               <span className={`font-mono font-bold ${isOutOfStock ? 'text-red-500' : isLowStock ? 'text-amber-500 animate-pulse' : 'text-emerald-400'}`}>
+1367:                                 {item.stockQty} {isOutOfStock ? '(نافذ)' : ''}
+1368:                               </span>
+1369:                             </p>
+1370:                           </div>
+1371:                           <div className="flex justify-between items-center mt-3 border-t border-white/5 pt-3">
+1372:                             <span className="text-base font-black text-white">{item.price.toFixed(2)} <span className="text-[10px] font-normal text-slate-400">ج.م</span></span>
+1373:                             <button 
+1374:                               disabled={isOutOfStock}
+1375:                               onClick={(e) => {
+1376:                                 e.stopPropagation();
+1377:                                 addToCart(item);
+1378:                               }}
+1379:                               className="bg-red-500/10 text-red-500 p-2 rounded-xl hover:bg-entlaq-red hover:text-white transition-all shadow-sm disabled:opacity-50 disabled:hover:bg-red-500/10 disabled:hover:text-red-500 cursor-pointer"
+1380:                               title="إضافة إلى السلة"
+1381:                             >
+1382:                               <ShoppingCartIcon className="h-4 w-4" />
+1383:                             </button>
+1384:                           </div>
+1385:                         </div>
+1386:                       </div>
+1387:                     );
+1388:                   })}
+1389:                 </div>
+1390:               )}
+1391:             </div>
+1392: 
+1393:             {/* Cart Panel (Left Side in POS) */}
+1394:             <div className="w-[360px] glass-panel border-r-0 border-l border-white/10 flex flex-col shadow-2xl relative z-10 m-1.5 rounded-xl overflow-hidden no-print">
+1395:               
+1396:               {/* Cart Header */}
+1397:               <div className="p-3 border-b border-white/10 flex justify-between items-center bg-white/5">
+1398:                 <div className="flex-1">
+1399:                   <h2 className="text-2xl font-bold flex items-center gap-3 text-white">
+1400:                     <PrinterIcon className="h-6 w-6 text-entlaq-red" />
+1401:                     المبيعات والعروض
+1402:                   </h2>
+1403:                   <div className="flex items-center gap-2 mt-2 select-none">
+1404:                     <span className="text-xs text-slate-400 font-semibold">العميل:</span>
+1405:                     <select 
+1406:                       value={selectedCustomerId}
+1407:                       onChange={(e) => setSelectedCustomerId(e.target.value)}
+1408:                       className="bg-slate-900 border border-white/10 rounded-xl px-2.5 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-red-500/50 cursor-pointer font-bold"
+1409:                     >
+1410:                       <option value="CASH">👤 عميل نقدي</option>
+1411:                       {customers.map((c: any) => (
+1412:                         <option key={c.id} value={c.id}>🏢 {c.name}</option>
+1413:                       ))}
+1414:                     </select>
+1415:                     <button 
+1416:                       onClick={() => {
+1417:                         setCustomerForm({ id: '', name: '', phone: '', location: '', buildingsCount: '0', cr: '', trn: '', customerType: 'CASH', discount: '0' });
+1418:                         setIsEditingCustomer(false);
+1419:                         setShowCustomerModal(true);
+1420:                       }}
+1421:                       className="bg-white/5 border border-white/10 p-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+1422:                       title="إضافة عميل جديد سريعا"
+1423:                     >
+1424:                       <PlusIcon className="w-3.5 h-3.5" />
+1425:                     </button>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

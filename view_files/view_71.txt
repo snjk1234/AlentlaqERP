@@ -1,0 +1,109 @@
+Created At: 2026-07-30T17:13:48+03:00
+Completed At: 2026-07-30T17:13:48+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4412
+Total Bytes: 253203
+Showing lines 3200 to 3300
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3200:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3201:                   />
+3202:                 </div>
+3203:                 <div className="space-y-1">
+3204:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الوزن</label>
+3205:                   <input 
+3206:                     type="text"
+3207:                     value={productForm.weight}
+3208:                     onChange={(e) => setProductForm(prev => ({ ...prev, weight: e.target.value }))}
+3209:                     placeholder="مثال: 5.050 kg"
+3210:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3211:                   />
+3212:                 </div>
+3213:               </div>
+3214: 
+3215:               {currentUser?.role === 'ADMIN' ? (
+3216:                 <div className="grid grid-cols-3 gap-4">
+3217:                   <div className="space-y-1">
+3218:                     <label className="text-xs text-slate-400 block mb-1 text-slate-300">سعر الشراء (التكلفة) *</label>
+3219:                     <input 
+3220:                       type="number"
+3221:                       step="0.01"
+3222:                       required
+3223:                       value={productForm.costPrice}
+3224:                       onChange={(e) => {
+3225:                         const cost = e.target.value;
+3226:                         setProductForm(prev => {
+3227:                           const computed = (parseFloat(cost) || 0) * (1 + (parseFloat(prev.markup) || 30) / 100);
+3228:                           return {
+3229:                             ...prev,
+3230:                             costPrice: cost,
+3231:                             price: computed > 0 ? computed.toFixed(2) : prev.price
+3232:                           };
+3233:                         });
+3234:                       }}
+3235:                       placeholder="سعر التكلفة"
+3236:                       className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3237:                     />
+3238:                   </div>
+3239:                   <div className="space-y-1">
+3240:                     <label className="text-xs text-slate-400 block mb-1 text-slate-300">النسبة *</label>
+3241:                     <input 
+3242:                       type="number"
+3243:                       step="0.01"
+3244:                       required
+3245:                       value={productForm.markup}
+3246:                       onChange={(e) => {
+3247:                         const markup = e.target.value;
+3248:                         setProductForm(prev => {
+3249:                           const computed = (parseFloat(prev.costPrice) || 0) * (1 + (parseFloat(markup) || 30) / 100);
+3250:                           return {
+3251:                             ...prev,
+3252:                             markup: markup,
+3253:                             price: computed > 0 ? computed.toFixed(2) : prev.price
+3254:                           };
+3255:                         });
+3256:                       }}
+3257:                       placeholder="مثال: 30"
+3258:                       className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3259:                     />
+3260:                   </div>
+3261:                   <div className="space-y-1">
+3262:                     <label className="text-xs text-slate-400 block mb-1 text-slate-300">سعر البيع *</label>
+3263:                     <input 
+3264:                       type="number"
+3265:                       step="0.01"
+3266:                       required
+3267:                       value={productForm.price}
+3268:                       onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
+3269:                       placeholder="سعر البيع النهائي"
+3270:                       className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3271:                     />
+3272:                   </div>
+3273:                 </div>
+3274:               ) : (
+3275:                 <div className="grid grid-cols-1 gap-4">
+3276:                   <div className="space-y-1">
+3277:                     <label className="text-xs text-slate-400 block mb-1 text-slate-300">سعر البيع *</label>
+3278:                     <input 
+3279:                       type="number"
+3280:                       step="0.01"
+3281:                       required
+3282:                       disabled
+3283:                       value={productForm.price}
+3284:                       placeholder="سعر البيع النهائي"
+3285:                       className="w-full bg-white/5 disabled:bg-slate-950/40 disabled:text-slate-400 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none font-bold"
+3286:                     />
+3287:                   </div>
+3288:                 </div>
+3289:               )}
+3290: 
+3291:               <div className="grid grid-cols-3 gap-4">
+3292:                 <div className="space-y-1">
+3293:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الكمية الحالية *</label>
+3294:                   <input 
+3295:                     type="number"
+3296:                     required
+3297:                     value={productForm.stockQty}
+3298:                     onChange={(e) => setProductForm(prev => ({ ...prev, stockQty: e.target.value }))}
+3299:                     placeholder="الكمية"
+3300:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { customerName, customerId, isQuotation, items, userId } = body;
+    const { customerName, customerId, isQuotation, items, userId, siteReceiptNumber, receiverName, invoiceType, linkedQuotationId } = body;
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: 'Invoice must contain items' }, { status: 400 });
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       const taxRate = product.taxRate;
       
       const itemTotal = Number((unitPrice * quantity).toFixed(2));
-      const itemTax = Number((itemTotal * taxRate).toFixed(2));
+      const itemTax = (invoiceType === 'فاتورة' || invoiceType === 'فاتورة مبسطة') ? 0 : Number((itemTotal * taxRate).toFixed(2));
       const lineTotal = Number((itemTotal + itemTax).toFixed(2));
 
       totalAmount += itemTotal;
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     const netAmount = Number((totalAmount + taxAmount).toFixed(2));
 
     // Generate ZATCA compliant invoice details
-    const sellerName = 'شركة الإنطلاق لتصنيع وتوريد الخراطيم والمواسير';
+    const sellerName = 'شركة الإنطلاق لتصنيع وتوريد الخراطيم والمواسير والأسلاك';
     const trn = '310122345600003'; // Mock Saudi ZATCA TRN
     const timestamp = new Date().toISOString();
     
@@ -102,6 +102,9 @@ export async function POST(request: Request) {
           taxAmount,
           netAmount,
           qrCode: qrCodeBase64,
+          siteReceiptNumber: siteReceiptNumber || null,
+          receiverName: receiverName || null,
+          invoiceType: invoiceType || 'فاتورة ضريبية',
           userId: dbUserId || '',
           items: {
             create: orderItemsData
@@ -127,11 +130,31 @@ export async function POST(request: Request) {
               }
             }
           });
+
+          if (customerId) {
+            const quota = await tx.customerCeilingQuota.findUnique({
+              where: { customerId_productId: { customerId, productId: item.productId } }
+            });
+            if (quota) {
+              await tx.customerCeilingQuota.update({
+                where: { id: quota.id },
+                data: { deliveredQuantity: { increment: item.quantity } }
+              });
+            }
+          }
         }
       }
 
+      // Mark the quotation as converted if this invoice was generated from one
+      if (linkedQuotationId && !isQuotation) {
+        await tx.order.update({
+          where: { id: linkedQuotationId },
+          data: { status: 'CONVERTED' }
+        });
+      }
+
       return newOrder;
-    });
+    }, { timeout: 20000, maxWait: 20000 });
 
     return NextResponse.json(order);
   } catch (error: any) {
@@ -145,6 +168,7 @@ export async function GET() {
     const orders = await prisma.order.findMany({
       include: {
         customer: true,
+        orderReturns: { include: { bank: true, items: { include: { product: true } } } },
         items: {
           include: {
             product: true,

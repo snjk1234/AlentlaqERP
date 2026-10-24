@@ -1,0 +1,39 @@
+Created At: 2026-06-22T10:20:30Z
+Completed At: 2026-06-22T10:20:30Z
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 1991
+Total Bytes: 106346
+Showing lines 1340 to 1370
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1340:                             </button>
+1341:                           </div>
+1342:                         </div>
+1343:                       </div>
+1344:                     );
+1345:                   })}
+1346:                 </div>
+1347:               )}
+1348:             </div>
+1349:           </div>
+1350:         )}
+1351: 
+1352:       </div>
+1353: 
+1354:       {/* MODAL 1: INVOICE & QUOTATION PRINT MODAL */}
+1355:       {showModal && invoice && (
+1356:         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in">
+1357:           <div id="printable-invoice" className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+1358:             
+1359:             {/* Modal Header */}
+1360:             <div className="p-6 bg-slate-950 border-b border-slate-700 flex justify-between items-center no-print">
+1361:               <div>
+1362:                 <h3 className="text-xl font-bold flex gap-2 items-center text-white">
+1363:                   <PrinterIcon className="text-entlaq-red h-6 w-6" />
+1364:                   {invoice.isQuotation ? 'عرض سعر توريد' : 'فاتورة ضريبية مبسطة'}
+1365:                 </h3>
+1366:                 <p className="text-xs text-slate-400 mt-1">الرقم: {invoice.invoiceNumber}</p>
+1367:               </div>
+1368:               <button 
+1369:                 onClick={() => setShowModal(false)}
+1370:                 className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all no-print cursor-pointer"
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

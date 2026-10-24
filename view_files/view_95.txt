@@ -1,0 +1,108 @@
+Created At: 2026-07-30T18:55:49+03:00
+Completed At: 2026-07-30T18:55:49+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4535
+Total Bytes: 261807
+Showing lines 2751 to 2850
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2751:                 <div className="text-left text-sm">
+2752:                   <span className="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-md text-xs font-bold">
+2753:                     {invoice.isQuotation ? 'عرض سعر' : 'فاتورة ضريبية'}
+2754:                   </span>
+2755:                   <p className="text-xs text-slate-400 mt-2 font-mono">الرقم: {invoice.invoiceNumber}</p>
+2756:                   <p className="text-xs text-slate-400 font-mono">التاريخ: {new Date(invoice.createdAt).toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</p>
+2757:                 </div>
+2758:               </div>
+2759: 
+2760:               {/* Vendor & Customer Info */}
+2761:               <div className="grid grid-cols-2 gap-6 text-sm bg-gray-50 p-4 rounded-md border border-gray-200">
+2762:                 <div>
+2763:                   <h4 className="font-bold text-gray-500 mb-1 text-xs">بيانات المورد (البائع)</h4>
+2764:                   <p className="font-bold text-black">مصنع الانطلاق للصناعات البلاستيكية</p>
+2765:                   <p className="text-xs text-gray-500 mt-0.5">الرقم الضريبي: 310122345600003</p>
+2766:                   <p className="text-xs text-gray-500">السجل التجاري: 12056-أ</p>
+2767:                 </div>
+2768:                 <div>
+2769:                   <h4 className="font-bold text-gray-500 mb-1 text-xs">بيانات العميل (المشتري)</h4>
+2770:                   <p className="font-bold text-black">{invoice.customerName}</p>
+2771:                   <p className="text-xs text-gray-500 mt-0.5">النشاط: مقاولات وتوريدات كهربائية</p>
+2772:                   <p className="text-xs text-gray-500">حالة الدفع: نقدي</p>
+2773:                 </div>
+2774:               </div>
+2775: 
+2776:               {/* Items List - Outlined grid styled table as requested */}
+2777:               <div className="border border-gray-200 rounded-md overflow-hidden bg-gray-50/50">
+2778:                 <table className="w-full text-right border-collapse text-sm">
+2779:                   <thead>
+2780:                     <tr className="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
+2781:                       <th className="p-3 border-l border-gray-200">الصنف</th>
+2782:                       <th className="p-3 border-l border-gray-200">الكود</th>
+2783:                       <th className="p-3 border-l border-gray-200">الكمية</th>
+2784:                       <th className="p-3 border-l border-gray-200">سعر الوحدة</th>
+2785:                       <th className="p-3 border-l border-gray-200">الضريبة</th>
+2786:                       <th className="p-3">الإجمالي</th>
+2787:                     </tr>
+2788:                   </thead>
+2789:                   <tbody className="divide-y divide-gray-200 bg-white">
+2790:                     {invoice.items && invoice.items.map((item: any, idx: number) => (
+2791:                       <tr key={idx} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
+2792:                         <td className="p-3 border-l border-gray-200 font-bold text-black">{item.product.name} ({item.product.size})</td>
+2793:                         <td className="p-3 border-l border-gray-200 font-mono text-xs text-gray-600">{item.product.code}</td>
+2794:                         <td className="p-3 border-l border-gray-200 font-mono text-black">{item.quantity}</td>
+2795:                         <td className="p-3 border-l border-gray-200 font-mono text-black">{item.unitPrice.toFixed(2)} ج.م</td>
+2796:                         <td className="p-3 border-l border-gray-200 font-mono text-black">{item.taxAmount.toFixed(2)} ج.م</td>
+2797:                         <td className="p-3 font-mono font-bold text-black">{item.total.toFixed(2)} ج.م</td>
+2798:                       </tr>
+2799:                     ))}
+2800:                   </tbody>
+2801:                 </table>
+2802:               </div>
+2803: 
+2804:               {/* Totals & QR Code */}
+2805:               <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+2806:                 
+2807:                 {/* ZATCA compliant QR Code (Offline-ready) */}
+2808:                 <div className="bg-white p-3 rounded-md flex flex-col items-center justify-center shadow-lg border border-gray-200">
+2809:                   {qrCodeUrl ? (
+2810:                     <img src={qrCodeUrl} alt="ZATCA E-Invoicing QR Code" className="w-32 h-32" />
+2811:                   ) : (
+2812:                     <div className="w-32 h-32 border border-gray-200 rounded flex items-center justify-center text-[10px] text-gray-500 font-bold text-center">
+2813:                       عرض سعر<br/>(لا يحتاج رمز QR)
+2814:                     </div>
+2815:                   )}
+2816:                 </div>
+2817: 
+2818:                 {/* Summaries */}
+2819:                 <div className="w-72 space-y-3 bg-gray-50 p-5 rounded-md border border-gray-200">
+2820:                   <div className="flex justify-between text-xs text-gray-600 font-mono">
+2821:                     <span>الإجمالي (غير شامل الضريبة)</span>
+2822:                     <span>{invoice.totalAmount.toFixed(2)} ج.م</span>
+2823:                   </div>
+2824:                   <div className="flex justify-between text-xs text-gray-600 font-mono">
+2825:                     <span>ضريبة القيمة المضافة (14%)</span>
+2826:                     <span>{invoice.taxAmount.toFixed(2)} ج.م</span>
+2827:                   </div>
+2828:                   <div className="h-px bg-gray-200 w-full"></div>
+2829:                   <div className="flex justify-between items-end">
+2830:                     <span className="text-sm font-bold text-black">الإجمالي المستحق</span>
+2831:                     <span className="text-2xl font-black text-red-600 font-mono">
+2832:                       {invoice.netAmount.toFixed(2)} <span className="text-xs font-normal text-red-500">ج.م</span>
+2833:                     </span>
+2834:                   </div>
+2835:                 </div>
+2836:               </div>
+2837: 
+2838:               {/* Thank you note & Contacts */}
+2839:               <div className="pt-6 border-t border-gray-200 flex flex-col items-center text-center space-y-3">
+2840:                 <p className="text-sm font-bold text-black tracking-wide">
+2841:                   💚 شكراً لتعاملكم مع مصنع الانطلاق ونتطلع لخدمتكم دائماً!
+2842:                 </p>
+2843:                 <div className="flex justify-center gap-6 text-xs text-gray-500 font-mono">
+2844:                   <span>هاتف: 01030099400 / 01021683030</span>
+2845:                   <span>|</span>
+2846:                   <span>إيميل: info@al-entlaq.com</span>
+2847:                   <span>|</span>
+2848:                   <span>ويب: www.al-entlaq.com</span>
+2849:                 </div>
+2850:               </div>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

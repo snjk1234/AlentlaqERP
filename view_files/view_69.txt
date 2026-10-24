@@ -1,0 +1,79 @@
+Created At: 2026-07-30T17:13:44+03:00
+Completed At: 2026-07-30T17:13:44+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4412
+Total Bytes: 253203
+Showing lines 1820 to 1890
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1820: 
+1821:         {/* TAB 3: INVENTORY TAB */}
+1822:         {activeTab === 'INVENTORY' && (
+1823:           <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+1824:             
+1825:             {/* Header */}
+1826:             <div>
+1827:               <h2 className="text-xl font-bold text-white">إدارة المخزن والأسعار</h2>
+1828:               <p className="text-xs text-slate-400 mt-0.5">مراقبة كميات البضائع، تعديل الأسعار، ومقارنة تكلفة الإنتاج بالبيع وحساب الأرباح</p>
+1829:             </div>
+1830: 
+1831:             {/* Filter, Search & Add Bar */}
+1832:             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+1833:               
+1834:               {/* Search & Add row */}
+1835:               <div className="flex gap-3 items-center w-full max-w-md">
+1836:                 <div className="relative group flex-1">
+1837:                   <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+1838:                     <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+1839:                   </div>
+1840:                   <input 
+1841:                     type="text" 
+1842:                     value={inventorySearchQuery}
+1843:                     onChange={(e) => setInventorySearchQuery(e.target.value)}
+1844:                     placeholder="ابحث عن منتج بالاسم أو الكود..." 
+1845:                     className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+1846:                   />
+1847:                   {inventorySearchQuery && (
+1848:                     <button 
+1849:                       onClick={() => setInventorySearchQuery('')}
+1850:                       className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+1851:                     >
+1852:                       <XIcon size={14} />
+1853:                     </button>
+1854:                   )}
+1855:                 </div>
+1856:                 
+1857:                 <button 
+1858:                   onClick={() => {
+1859:                     setProductForm({
+1860:                       id: '',
+1861:                       code: '',
+1862:                       barcode: '',
+1863:                       name: '',
+1864:                       type: 'PIPE',
+1865:                       size: '',
+1866:                       gauge: '',
+1867:                       color: '',
+1868:                       length: '',
+1869:                       weight: '',
+1870:                       costPrice: '',
+1871:                       markup: '30',
+1872:                       price: '',
+1873:                       stockQty: '',
+1874:                       minStockQty: '10',
+1875:                       maxStockQty: '1000'
+1876:                     });
+1877:                     setIsEditingProduct(false);
+1878:                     setShowProductFormModal(true);
+1879:                   }}
+1880:                   className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+1881:                 >
+1882:                   <PlusIcon className="w-4 h-4" />
+1883:                   <span>إضافة منتج جديد</span>
+1884:                 </button>
+1885:                 <button 
+1886:                   onClick={() => {
+1887:                     setPrintTableData({
+1888:                       title: 'كشف جرد المخزون والأسعار الحالي',
+1889:                       headers: ['م', 'كود الصنف', 'اسم المنتج', 'المقاس', 'اللون', 'سعر البيع', 'المخزون الحالي'],
+1890:                       rows: filteredInventoryProducts.map((p, i) => [
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

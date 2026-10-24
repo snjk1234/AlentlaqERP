@@ -1,0 +1,33 @@
+Created At: 2026-07-30T16:33:38+03:00
+Completed At: 2026-07-30T16:33:38+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4490
+Total Bytes: 254297
+Showing lines 791 to 815
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+791:       maxStockQty: parseInt(productForm.maxStockQty) || 1000
+792:     };
+793:     
+794:     try {
+795:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+796:         if (isEditingProduct) {
+797:           await (window as any).electronAPI.updateProduct(formattedData);
+798:         } else {
+799:           await (window as any).electronAPI.createProduct(formattedData);
+800:         }
+801:         setShowProductFormModal(false);
+802:         fetchProducts();
+803:       } else {
+804:         // Browser fallback: Make actual fetch call to DB!
+805:         const response = await fetch('/api/products', {
+806:           method: isEditingProduct ? 'PUT' : 'POST',
+807:           headers: { 'Content-Type': 'application/json' },
+808:           body: JSON.stringify(formattedData)
+809:         });
+810:         const saved = await response.json();
+811:         if (!response.ok) throw new Error(saved.error || 'Failed to save product');
+812:         fetchProducts();
+813:         setShowProductFormModal(false);
+814:       }
+815:     } catch (err: any) {
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

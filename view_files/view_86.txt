@@ -1,0 +1,109 @@
+Created At: 2026-07-30T18:48:18+03:00
+Completed At: 2026-07-30T18:48:18+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4503
+Total Bytes: 259774
+Showing lines 150 to 250
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+150:   const [changePasswordForm, setChangePasswordForm] = useState({ userId: '', newPassword: '', confirmPassword: '' });
+151: 
+152:   const isRoleAllowed = (tab: string) => {
+153:     if (!currentUser) return false;
+154:     if (currentUser.role === 'ADMIN') return true;
+155:     if (currentUser.role === 'CASHIER') {
+156:       return ['POS', 'CUSTOMERS', 'INVOICES', 'PAYMENTS'].includes(tab);
+157:     }
+158:     if (currentUser.role === 'STOREKEEPER') {
+159:       return ['INVENTORY', 'SUPPLIERS', 'PURCHASES'].includes(tab);
+160:     }
+161:     return false;
+162:   };
+163: 
+164:   const [isMounted, setIsMounted] = useState(false);
+165:   const [products, setProducts] = useState<any[]>([]);
+166:   const [customers, setCustomers] = useState<any[]>([]);
+167: 
+168:   const [banks, setBanks] = useState<any[]>([]);
+169:   const [payments, setPayments] = useState<any[]>([]);
+170:   const [invoices, setInvoices] = useState<any[]>([]);
+171:   const [showCustomerHistoryModal, setShowCustomerHistoryModal] = useState(false);
+172:   const [selectedHistoryCustomer, setSelectedHistoryCustomer] = useState<any>(null);
+173: 
+174:   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+175:   const [paymentCustomer, setPaymentCustomer] = useState<any>(null);
+176:   const [paymentForm, setPaymentForm] = useState({ customerId: '', amount: '', bankId: '', reference: '', notes: '' });
+177:   const [bankForm, setBankForm] = useState<{ id?: string; name: string; accountNumber: string; balance: string }>({ name: '', accountNumber: '', balance: '' });
+178:   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+179:   const [isEditingBank, setIsEditingBank] = useState(false);
+180: 
+181:   
+182:   // Suppliers, Purchases and Expenses states
+183:   const [suppliers, setSuppliers] = useState<any[]>([]);
+184:   const [purchases, setPurchases] = useState<any[]>([]);
+185:   const [expenses, setExpenses] = useState<any[]>([]);
+186:   const [supplierSearch, setSupplierSearch] = useState('');
+187:   const [bankSearch, setBankSearch] = useState('');
+188:   const [paymentSearch, setPaymentSearch] = useState('');
+189:   const [invoiceSearch, setInvoiceSearch] = useState('');
+190:   const [purchaseSearch, setPurchaseSearch] = useState('');
+191:   const [expenseSearch, setExpenseSearch] = useState('');
+192:   
+193:   const [showSupplierModal, setShowSupplierModal] = useState(false);
+194:   const [isEditingSupplier, setIsEditingSupplier] = useState(false);
+195:   const [supplierForm, setSupplierForm] = useState({ id: '', name: '', phone: '', address: '', cr: '', trn: '', balance: '0' });
+196:   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+197:   const [purchaseForm, setPurchaseForm] = useState<any>({ billNumber: '', supplierId: '', items: [] });
+198:   const [showExpenseModal, setShowExpenseModal] = useState(false);
+199:   const [expenseForm, setExpenseForm] = useState({ supplierId: '', bankId: '', amount: '', notes: '', reference: '' });
+200:   const [showExpenseReceiptModal, setShowExpenseReceiptModal] = useState(false);
+201:   const [selectedExpense, setSelectedExpense] = useState<any>(null);
+202:   const [showSupplierHistoryModal, setShowSupplierHistoryModal] = useState(false);
+203:   const [selectedHistorySupplier, setSelectedHistorySupplier] = useState<any>(null);
+204:   const [showPurchaseDetailModal, setShowPurchaseDetailModal] = useState(false);
+205:   const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
+206:   const [printTableData, setPrintTableData] = useState<{ title: string; headers: string[]; rows: any[][] } | null>(null);
+207: 
+208:   // Navigation active tab
+209:   const [activeTab, setActiveTab] = useState<'POS' | 'CUSTOMERS' | 'INVENTORY' | 'BANKS' | 'PAYMENTS' | 'INVOICES' | 'SUPPLIERS' | 'PURCHASES' | 'EXPENSES'>('POS');
+210:   const [showReceiptModal, setShowReceiptModal] = useState(false);
+211:   const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+212:   
+213:   // Search & Filter states
+214:   const [activeCategory, setActiveCategory] = useState('ALL');
+215:   const [searchQuery, setSearchQuery] = useState('');
+216:   const [inventorySearchQuery, setInventorySearchQuery] = useState('');
+217:   const [inventoryCategory, setInventoryCategory] = useState('ALL');
+218:   const [customerSearch, setCustomerSearch] = useState('');
+219:   const [selectedCustomerId, setSelectedCustomerId] = useState('CASH');
+220:   
+221:   // Loading and submission states
+222:   const [loading, setLoading] = useState(true);
+223:   const [submitting, setSubmitting] = useState(false);
+224:   const [cart, setCart] = useState<any[]>([]);
+225: 
+226:   // Invoice Modal states
+227:   const [showModal, setShowModal] = useState(false);
+228:   const [invoice, setInvoice] = useState<any>(null);
+229:   const [qrCodeUrl, setQrCodeUrl] = useState('');
+230: 
+231:   // Product Detail Modal states
+232:   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+233:   const [showProductModal, setShowProductModal] = useState(false);
+234: 
+235:   // Customer Form Modal states
+236:   const [showCustomerModal, setShowCustomerModal] = useState(false);
+237:   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+238:   const [customerForm, setCustomerForm] = useState({
+239:     id: '',
+240:     name: '',
+241:     phone: '',
+242:     location: '',
+243:     buildingsCount: '0',
+244:     cr: '',
+245:     trn: '',
+246:     customerType: 'CASH',
+247:     discount: '0'
+248:   });
+249: 
+250:   // Product Form Modal states
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

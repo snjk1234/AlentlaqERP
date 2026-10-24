@@ -1,0 +1,198 @@
+Created At: 2026-06-22T10:21:11Z
+Completed At: 2026-06-22T10:21:11Z
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 1991
+Total Bytes: 106346
+Showing lines 601 to 790
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+601:             <span>العملاء والشركات</span>
+602:           </button>
+603:           
+604:           <button 
+605:             onClick={() => setActiveTab('INVENTORY')}
+606:             className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'INVENTORY' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+607:           >
+608:             <PackageIcon className="h-5 w-5" />
+609:             <span>إدارة المخزن والأسعار</span>
+610:           </button>
+611:         </div>
+612: 
+613:         {/* Footer Info */}
+614:         <div className="pt-4 border-t border-white/5 text-[9px] text-slate-500 text-center font-mono">
+615:           <span>الإصدار 1.3.0</span>
+616:         </div>
+617:       </div>
+618: 
+619:       {/* Main Content Area */}
+620:       <div className="flex-1 flex overflow-hidden">
+621:         
+622:         {/* TAB 1: POS DASHBOARD */}
+623:         {activeTab === 'POS' && (
+624:           <React.Fragment>
+625:             {/* Products & Search Section */}
+626:             <div className="flex-1 flex flex-col p-3 space-y-3 no-print">
+627:               
+628:               {/* Header Search */}
+629:               <div className="flex items-center justify-between mb-2">
+630:                 <div>
+631:                   <h1 className="text-xl font-bold text-white tracking-wide">صالة المنتجات والمبيعات</h1>
+632:                   <p className="text-xs text-slate-400">اختر من المنتجات أدناه لإدراجها في الفاتورة أو عرض السعر</p>
+633:                 </div>
+634:                 
+635:                 {/* Search Bar */}
+636:                 <div className="relative group w-1/2">
+637:                   <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+638:                     <SearchIcon className="h-5 w-5 text-slate-400 group-focus-within:text-entlaq-red transition-colors" />
+639:                   </div>
+640:                   <input 
+641:                     type="text" 
+642:                     value={searchQuery}
+643:                     onChange={(e) => setSearchQuery(e.target.value)}
+644:                     placeholder="ابحث عن منتج بالاسم أو الكود (مثال: 3020)..." 
+645:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pr-12 pl-4 text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all shadow-lg"
+646:                   />
+647:                 </div>
+648:               </div>
+649: 
+650:               {/* Categories Navigation */}
+651:               <div className="flex gap-3 mb-2">
+652:                 <button 
+653:                   onClick={() => setActiveCategory('ALL')}
+654:                   className={`px-6 py-2.5 rounded-full font-bold flex gap-2 items-center transition-all duration-300 cursor-pointer ${activeCategory === 'ALL' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+655:                 >
+656:                   <PackageSearchIcon size={18} /> الكل
+657:                 </button>
+658:                 <button 
+659:                   onClick={() => setActiveCategory('PIPE')}
+660:                   className={`px-6 py-2.5 rounded-full font-bold flex gap-2 items-center transition-all duration-300 cursor-pointer ${activeCategory === 'PIPE' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+661:                 >
+662:                   <PipetteIcon size={18} /> مواسير UPVC
+663:                 </button>
+664:                 <button 
+665:                   onClick={() => setActiveCategory('HOSE')}
+666:                   className={`px-6 py-2.5 rounded-full font-bold flex gap-2 items-center transition-all duration-300 cursor-pointer ${activeCategory === 'HOSE' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+667:                 >
+668:                   <FlameIcon size={18} /> خراطيم حريق
+669:                 </button>
+670:                 <button 
+671:                   onClick={() => setActiveCategory('ACCESSORY')}
+672:                   className={`px-6 py-2.5 rounded-full font-bold flex gap-2 items-center transition-all duration-300 cursor-pointer ${activeCategory === 'ACCESSORY' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+673:                 >
+674:                   <BoxIcon size={18} /> إكسسوارات وبواطات
+675:                 </button>
+676:               </div>
+677: 
+678:               {/* Product Grid */}
+679:               {loading ? (
+680:                 <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+681:                   <Loader2Icon className="h-10 w-10 text-entlaq-red animate-spin" />
+682:                   <p className="text-slate-400 text-xs">جاري تحميل بيانات المخزون...</p>
+683:                 </div>
+684:               ) : (
+685:                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 overflow-y-auto pb-10 custom-scrollbar pr-2 flex-1">
+686:                   {filteredProducts.map((item) => {
+687:                     const isLowStock = item.stockQty <= item.minStockQty;
+688:                     const isOutOfStock = item.stockQty <= 0;
+689:                     return (
+690:                       <div 
+691:                         key={item.id} 
+692:                         onClick={() => {
+693:                           setSelectedProduct(item);
+694:                           setShowProductModal(true);
+695:                         }}
+696:                         className={`glass-card rounded-xl p-2.5 cursor-pointer group flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] hover:border-red-500/20 ${isOutOfStock ? 'opacity-40 cursor-not-allowed' : ''}`}
+697:                       >
+698:                         <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden mb-3 bg-black/20 border border-white/5">
+699:                           <img 
+700:                             src={getProductImage(item.type)} 
+701:                             alt={item.name}
+702:                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+703:                           />
+704:                           {isLowStock && !isOutOfStock && (
+705:                             <span className="absolute top-2 right-2 px-2 py-0.5 bg-amber-500/90 text-slate-900 rounded-lg text-[10px] font-bold animate-pulse">
+706:                               منخفض
+707:                             </span>
+708:                           )}
+709:                           {isOutOfStock && (
+710:                             <span className="absolute top-2 right-2 px-2 py-0.5 bg-red-600/90 text-white rounded-lg text-[10px] font-bold">
+711:                               نافذ
+712:                             </span>
+713:                           )}
+714:                         </div>
+715:                         <div className="flex-1 flex flex-col justify-between">
+716:                           <div>
+717:                             <div className="flex justify-between items-center mb-1">
+718:                               <span className="text-[10px] font-mono text-slate-400">كود: {item.code}</span>
+719:                               <div className="flex items-center gap-1 select-none">
+720:                                 <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${getCategoryBadgeClass(item.type)}`}>
+721:                                   {getCategoryNameAr(item.type)}
+722:                                 </span>
+723:                                 <span className="text-[10px] px-1.5 py-0.2 bg-white/10 text-slate-300 rounded font-bold">{item.size}</span>
+724:                               </div>
+725:                             </div>
+726:                             <h3 className="text-xs font-bold text-slate-200 mb-1 leading-tight line-clamp-2 min-h-[36px]">{item.name}</h3>
+727:                             <p className="text-[10px] text-slate-400">
+728:                               المخزون:{' '}
+729:                               <span className={`font-mono font-bold ${isOutOfStock ? 'text-red-500' : isLowStock ? 'text-amber-500 animate-pulse' : 'text-emerald-400'}`}>
+730:                                 {item.stockQty} {isOutOfStock ? '(نافذ)' : ''}
+731:                               </span>
+732:                             </p>
+733:                           </div>
+734:                           <div className="flex justify-between items-center mt-3 border-t border-white/5 pt-3">
+735:                             <span className="text-base font-black text-white">{item.price.toFixed(2)} <span className="text-[10px] font-normal text-slate-400">ج.م</span></span>
+736:                             <button 
+737:                               disabled={isOutOfStock}
+738:                               onClick={(e) => {
+739:                                 e.stopPropagation();
+740:                                 addToCart(item);
+741:                               }}
+742:                               className="bg-red-500/10 text-red-500 p-2 rounded-xl hover:bg-entlaq-red hover:text-white transition-all shadow-sm disabled:opacity-50 disabled:hover:bg-red-500/10 disabled:hover:text-red-500 cursor-pointer"
+743:                               title="إضافة إلى السلة"
+744:                             >
+745:                               <ShoppingCartIcon className="h-4 w-4" />
+746:                             </button>
+747:                           </div>
+748:                         
+749:                           {cust.customerType === 'CREDIT' && cust.payments && cust.payments.length > 0 && (
+750:                             <div className="mt-2 pt-2 border-t border-white/5">
+751:                               <p className="text-[10px] text-slate-400 mb-1">آخر الدفعات:</p>
+752:                               {cust.payments.slice(0, 3).map((p: any) => (
+753:                                 <div key={p.id} className="flex justify-between text-[11px] text-slate-300">
+754:                                   <span>{new Date(p.date).toLocaleDateString()}</span>
+755:                                   <span className="text-emerald-400 font-bold">+{p.amount} ر.س</span>
+756:                                 </div>
+757:                               ))}
+758:                             </div>
+759:                           )}
+760: 
+761: 
+762:                           {cust.customerType === 'CREDIT' && cust.payments && cust.payments.length > 0 && (
+763:                             <div className="mt-2 pt-2 border-t border-white/5">
+764:                               <p className="text-[10px] text-slate-400 mb-1">آخر الدفعات:</p>
+765:                               {cust.payments.slice(0, 3).map((p: any) => (
+766:                                 <div key={p.id} className="flex justify-between text-[11px] text-slate-300">
+767:                                   <span>{new Date(p.date).toLocaleDateString()}</span>
+768:                                   <span className="text-emerald-400 font-bold">+{p.amount} ر.س</span>
+769:                                 </div>
+770:                               ))}
+771:                             </div>
+772:                           )}
+773: 
+774:                         </div>
+775:                       </div>
+776:                     );
+777:                   })}
+778:                 </div>
+779:               )}
+780:             </div>
+781: 
+782:             {/* Cart Panel (Left Side in POS) */}
+783:             <div className="w-[360px] glass-panel border-r-0 border-l border-white/10 flex flex-col shadow-2xl relative z-10 m-1.5 rounded-xl overflow-hidden no-print">
+784:               
+785:               {/* Cart Header */}
+786:               <div className="p-3 border-b border-white/10 flex justify-between items-center bg-white/5">
+787:                 <div className="flex-1">
+788:                   <h2 className="text-2xl font-bold flex items-center gap-3 text-white">
+789:                     <PrinterIcon className="h-6 w-6 text-entlaq-red" />
+790:                     المبيعات والعروض
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

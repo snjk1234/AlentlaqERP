@@ -1,0 +1,189 @@
+Created At: 2026-07-29T18:37:09+03:00
+Completed At: 2026-07-29T18:37:09+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 2100 to 2280
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2100:                                 });
+2101:                                 setIsEditingSupplier(true);
+2102:                                 setShowSupplierModal(true);
+2103:                               }}
+2104:                               className="bg-white/5 text-slate-400 p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+2105:                             >
+2106:                               <PencilIcon className="w-3.5 h-3.5" />
+2107:                             </button>
+2108:                           </div>
+2109:                           
+2110:                           <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs text-slate-300 mb-2 border-t border-white/5 pt-2 font-semibold">
+2111:                             {sup.phone && <p>📱 <span className="text-white font-mono font-bold">{sup.phone}</span></p>}
+2112:                             {sup.address && <p>📍 <span className="text-white">{sup.address}</span></p>}
+2113:                             {sup.cr && <p>📜 سجل: <span className="text-white font-mono font-bold">{sup.cr}</span></p>}
+2114:                             {sup.trn && <p className="col-span-2">📋 ضريبي: <span className="text-white font-mono font-bold text-xs">{sup.trn}</span></p>}
+2115:                           </div>
+2116:                         </div>
+2117: 
+2118:                         <div className="border-t border-white/5 pt-2">
+2119:                           <div className="grid grid-cols-2 gap-2 mb-2">
+2120:                             <div className="bg-black/25 px-2 py-1 rounded-lg text-center">
+2121:                               <span className="text-[10px] text-slate-400 block font-bold">فواتير التوريد</span>
+2122:                               <span className="text-sm font-black text-red-400 font-mono">{totalPurchased.toFixed(2)} ج.م</span>
+2123:                             </div>
+2124:                             <div className="bg-black/25 px-2 py-1 rounded-lg text-center">
+2125:                               <span className="text-[10px] text-slate-400 block font-bold">المبالغ المصروفة</span>
+2126:                               <span className="text-sm font-black text-emerald-400 font-mono">{totalPaid.toFixed(2)} ج.م</span>
+2127:                             </div>
+2128:                             <div className="col-span-2 bg-black/25 px-2 py-2 rounded-lg text-center border border-white/5">
+2129:                               <span className="text-[10px] text-slate-400 block font-bold">الرصيد المتبقي له (المديونية)</span>
+2130:                               <span className={`text-base font-black font-mono ${remainingDebt > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+2131:                                 {remainingDebt.toFixed(2)} ج.م
+2132:                               </span>
+2133:                             </div>
+2134:                             <button
+2135:                               onClick={() => {
+2136:                                 setSelectedHistorySupplier(sup);
+2137:                                 setShowSupplierHistoryModal(true);
+2138:                               }}
+2139:                               className="col-span-2 bg-white/5 text-slate-300 p-2 rounded-lg hover:bg-white/10 hover:text-white transition-colors cursor-pointer text-xs font-bold mt-1 shadow-md shadow-black/20"
+2140:                             >
+2141:                               كشف حساب المورد / تفاصيل
+2142:                             </button>
+2143:                           </div>
+2144:                         </div>
+2145:                       </div>
+2146:                     );
+2147:                   })}
+2148:                 </div>
+2149:               )}
+2150:             </div>
+2151:           </div>
+2152:         )}
+2153: 
+2154:         {/* TAB 8: PURCHASES */}
+2155:         {activeTab === 'PURCHASES' && (
+2156:           <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+2157:             <div>
+2158:               <h2 className="text-xl font-bold text-white">فواتير المشتريات والوارد للمخزن</h2>
+2159:               <p className="text-xs text-slate-400 mt-0.5">تسجيل الكميات والمنتجات الواردة من الموردين وتنزيلها تلقائياً للمخزن</p>
+2160:             </div>
+2161: 
+2162:             <div className="flex gap-3 items-center max-w-xl">
+2163:               <div className="relative group flex-1">
+2164:                 <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+2165:                   <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+2166:                 </div>
+2167:                 <input 
+2168:                   type="text" 
+2169:                   value={purchaseSearch}
+2170:                   onChange={(e) => setPurchaseSearch(e.target.value)}
+2171:                   placeholder="ابحث برقم الفاتورة أو اسم المورد..." 
+2172:                   className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+2173:                 />
+2174:                 {purchaseSearch && (
+2175:                   <button 
+2176:                     onClick={() => setPurchaseSearch('')}
+2177:                     className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+2178:                   >
+2179:                     <XIcon size={14} />
+2180:                   </button>
+2181:                 )}
+2182:               </div>
+2183:               <button 
+2184:                 onClick={() => {
+2185:                   setPurchaseForm({ billNumber: generateBillNumber(), supplierId: '', items: [] });
+2186:                   setShowPurchaseModal(true);
+2187:                 }}
+2188:                 className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+2189:               >
+2190:                 <PlusIcon className="w-4 h-4" />
+2191:                 <span>تسجيل فاتورة شراء</span>
+2192:               </button>
+2193:             </div>
+2194:             
+2195:             <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex-1 overflow-y-auto custom-scrollbar">
+2196:               <table className="w-full text-right text-sm">
+2197:                 <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
+2198:                   <tr>
+2199:                     <th className="p-4 font-bold">رقم الفاتورة</th>
+2200:                     <th className="p-4 font-bold">التاريخ</th>
+2201:                     <th className="p-4 font-bold">المورد</th>
+2202:                     <th className="p-4 font-bold">الإجمالي قبل الضريبة</th>
+2203:                     <th className="p-4 font-bold">الضريبة (14%)</th>
+2204:                     <th className="p-4 font-bold">الصافي شامل الضريبة</th>
+2205:                   </tr>
+2206:                 </thead>
+2207:                 <tbody className="divide-y divide-slate-800/50">
+2208:                   {purchases.filter(p => (p.billNumber || '').includes(purchaseSearch) || (p.supplier?.name || '').includes(purchaseSearch)).map(purchase => (
+2209:                       <tr key={purchase.id} className="hover:bg-white/5 transition-colors cursor-pointer" onClick={() => { setSelectedPurchase(purchase); setShowPurchaseDetailModal(true); }}>
+2210:                         <td className="p-4 font-mono text-slate-300 font-bold">{purchase.billNumber}</td>
+2211:                         <td className="p-4 text-slate-300 font-mono text-xs">{new Date(purchase.date).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+2212:                         <td className="p-4 font-bold text-white">{purchase.supplier?.name || 'غير معروف'}</td>
+2213:                         <td className="p-4 font-mono text-slate-300">{purchase.totalAmount.toFixed(2)} ج.م</td>
+2214:                         <td className="p-4 font-mono text-slate-400">{purchase.taxAmount.toFixed(2)} ج.م</td>
+2215:                         <td className="p-4 font-mono font-bold text-emerald-400" dir="ltr">{purchase.netAmount.toFixed(2)} ج.م</td>
+2216:                       </tr>
+2217:                   ))}
+2218:                   {purchases.filter(p => (p.billNumber || '').includes(purchaseSearch) || (p.supplier?.name || '').includes(purchaseSearch)).length === 0 && (
+2219:                     <tr>
+2220:                       <td colSpan={6} className="p-10 text-center text-slate-500 font-bold">لا توجد فواتير مشتريات مسجلة</td>
+2221:                     </tr>
+2222:                   )}
+2223:                 </tbody>
+2224:               </table>
+2225:             </div>
+2226:           </div>
+2227:         )}
+2228: 
+2229:         {/* TAB 9: EXPENSES */}
+2230:         {activeTab === 'EXPENSES' && (
+2231:           <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+2232:             <div>
+2233:               <h2 className="text-xl font-bold text-white">سندات الصرف للموردين</h2>
+2234:               <p className="text-xs text-slate-400 mt-0.5">تسجيل ومتابعة سندات الصرف للموردين والخصم الفوري من البنوك والخزائن</p>
+2235:             </div>
+2236: 
+2237:             <div className="flex gap-3 items-center max-w-xl">
+2238:               <div className="relative group flex-1">
+2239:                 <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+2240:                   <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+2241:                 </div>
+2242:                 <input 
+2243:                   type="text" 
+2244:                   value={expenseSearch}
+2245:                   onChange={(e) => setExpenseSearch(e.target.value)}
+2246:                   placeholder="ابحث برقم السند أو اسم المورد..." 
+2247:                   className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+2248:                 />
+2249:                 {expenseSearch && (
+2250:                   <button 
+2251:                     onClick={() => setExpenseSearch('')}
+2252:                     className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+2253:                   >
+2254:                     <XIcon size={14} />
+2255:                   </button>
+2256:                 )}
+2257:               </div>
+2258:               <button 
+2259:                 onClick={() => {
+2260:                   setExpenseForm({ supplierId: '', bankId: '', amount: '', notes: '', reference: '' });
+2261:                   setShowExpenseModal(true);
+2262:                 }}
+2263:                 className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+2264:               >
+2265:                 <PlusIcon className="w-4 h-4" />
+2266:                 <span>إصدار سند صرف</span>
+2267:               </button>
+2268:             </div>
+2269:             
+2270:             <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex-1 overflow-y-auto custom-scrollbar">
+2271:               <table className="w-full text-right text-sm">
+2272:                 <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
+2273:                   <tr>
+2274:                     <th className="p-4 font-bold">رقم السند</th>
+2275:                     <th className="p-4 font-bold">التاريخ</th>
+2276:                     <th className="p-4 font-bold">المستلم (المورد)</th>
+2277:                     <th className="p-4 font-bold">المخصوم من (الخزينة)</th>
+2278:                     <th className="p-4 font-bold">البيان</th>
+2279:                     <th className="p-4 font-bold">المبلغ المصروف</th>
+2280:                   </tr>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

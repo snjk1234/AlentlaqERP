@@ -1,0 +1,69 @@
+Created At: 2026-07-29T18:42:19+03:00
+Completed At: 2026-07-29T18:42:19+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 930 to 990
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+930:       setShowExpenseReceiptModal(true);
+931:       setShowExpenseModal(false);
+932:       setExpenseForm({ supplierId: '', bankId: '', amount: '', notes: '', reference: '' });
+933:     } catch (err: any) {
+934:       alert(`خطأ أثناء حفظ سند الصرف: ${err.message}`);
+935:     } finally {
+936:       setSubmitting(false);
+937:     }
+938:   };
+939: 
+940:   const handleQuickStockAdjust = async (product: any, delta: number) => {
+941:     const newQty = product.stockQty + delta;
+942:     if (newQty < 0) return;
+943:     
+944:     try {
+945:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+946:         await (window as any).electronAPI.updateProduct({ id: product.id, stockQty: newQty });
+947:       } else {
+948:         // Browser fallback: Make actual PUT call to DB!
+949:         const response = await fetch('/api/products', {
+950:           method: 'PUT',
+951:           headers: { 'Content-Type': 'application/json' },
+952:           body: JSON.stringify({ id: product.id, stockQty: newQty })
+953:         });
+954:         if (!response.ok) {
+955:           const data = await response.json();
+956:           throw new Error(data.error || 'Failed to adjust stock');
+957:         }
+958:       }
+959:       fetchProducts();
+960:     } catch (err: any) {
+961:       alert(`خطأ أثناء تعديل المخزون: ${err.message}`);
+962:     }
+963:   };
+964: 
+965:   if (!isMounted) {
+966:     return (
+967:       <div className="flex h-screen bg-entlaq-darker text-slate-100 items-center justify-center">
+968:         <Loader2Icon className="h-10 w-10 text-entlaq-red animate-spin" />
+969:       </div>
+970:     );
+971:   }
+972: 
+973:   if (currentUser === null) {
+974:     return (
+975:       <div className="flex h-screen bg-slate-950 items-center justify-center font-sans overflow-hidden" dir="rtl">
+976:         {/* Custom Titlebar (Window Controls) in Login page */}
+977:         <div 
+978:           className="fixed top-0 left-0 right-0 h-10 bg-slate-950 border-b border-white/5 flex items-center justify-between px-4 select-none z-50 no-print"
+979:           style={{ WebkitAppRegion: 'drag' } as any}
+980:         >
+981:           <div className="flex items-center gap-2">
+982:             <div className="w-4 h-4 flex items-center justify-center">
+983:               <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_2px_4px_rgba(218,41,28,0.3)]" fill="none" xmlns="http://www.w3.org/2000/svg">
+984:                 <path d="M50 15 C35 38 18 62 18 82" stroke="#da291c" strokeWidth="12" strokeLinecap="round" />
+985:                 <path d="M50 15 L80 82" stroke="#da291c" strokeWidth="12" strokeLinecap="round" />
+986:                 <path d="M10 58 C38 52 62 52 90 58" stroke="#da291c" strokeWidth="8" strokeLinecap="round" />
+987:               </svg>
+988:             </div>
+989:             <span className="text-xs font-bold text-slate-300">الإنطــلاق - نظام إدارة المبيعات والمخازن</span>
+990:           </div>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

@@ -7,6 +7,7 @@ export async function GET() {
   try {
     const customers = await prisma.customer.findMany({
       include: {
+        customPrices: true,
         payments: {
           include: {
             bank: true
@@ -22,6 +23,14 @@ export async function GET() {
                 product: true
               }
             }
+          },
+          orderBy: { createdAt: 'desc' }
+        },
+        orderReturns: {
+          include: {
+            order: true,
+            bank: true,
+            items: { include: { product: true } }
           },
           orderBy: { createdAt: 'desc' }
         }
@@ -50,7 +59,8 @@ export async function POST(request: Request) {
         buildingsCount: Number(body.buildingsCount) || 0,
         trn: body.trn || null,
         customerType: body.customerType || 'CASH',
-        discount: Number(body.discount) || 0
+        discount: Number(body.discount) || 0,
+        openingBalance: Number(body.openingBalance) || 0
       }
     });
 
@@ -80,7 +90,8 @@ export async function PUT(request: Request) {
         buildingsCount: Number(body.buildingsCount) || 0,
         trn: body.trn || null,
         customerType: body.customerType || 'CASH',
-        discount: Number(body.discount) || 0
+        discount: Number(body.discount) || 0,
+        openingBalance: Number(body.openingBalance) || 0
       }
     });
 
@@ -90,4 +101,3 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: 'Failed to update customer' }, { status: 500 });
   }
 }
-

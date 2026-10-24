@@ -1,0 +1,109 @@
+Created At: 2026-07-29T18:37:01+03:00
+Completed At: 2026-07-29T18:37:01+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 2900 to 3000
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2900:                 <p className="text-xs text-slate-400 mt-1">أدخل تفاصيل العميل لتسجيل الفواتير المخصصة والشركات</p>
+2901:               </div>
+2902:               <button 
+2903:                 onClick={() => setShowCustomerModal(false)}
+2904:                 className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+2905:               >
+2906:                 <XIcon size={18} />
+2907:               </button>
+2908:             </div>
+2909: 
+2910:             <form onSubmit={handleSaveCustomer} className="p-4 space-y-3 overflow-y-auto custom-scrollbar text-right" dir="rtl">
+2911:               <div className="space-y-1">
+2912:                 <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">اسم العميل / الشركة *</label>
+2913:                 <input 
+2914:                   type="text"
+2915:                   required
+2916:                   value={customerForm.name}
+2917:                   onChange={(e) => setCustomerForm(prev => ({ ...prev, name: e.target.value }))}
+2918:                   placeholder="مثال: شركة المقاولون العرب"
+2919:                   className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+2920:                 />
+2921:               </div>
+2922: 
+2923:               <div className="grid grid-cols-2 gap-4">
+2924:                 <div className="space-y-1">
+2925:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">رقم التلفون</label>
+2926:                   <input 
+2927:                     type="text"
+2928:                     value={customerForm.phone}
+2929:                     onChange={(e) => setCustomerForm(prev => ({ ...prev, phone: e.target.value }))}
+2930:                     placeholder="مثال: 01021683030"
+2931:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+2932:                   />
+2933:                 </div>
+2934:                 <div className="space-y-1">
+2935:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الموقع</label>
+2936:                   <input 
+2937:                     type="text"
+2938:                     value={customerForm.location}
+2939:                     onChange={(e) => setCustomerForm(prev => ({ ...prev, location: e.target.value }))}
+2940:                     placeholder="مثال: القاهرة - مدينة نصر"
+2941:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+2942:                   />
+2943:                 </div>
+2944:               </div>
+2945: 
+2946:               <div className="grid grid-cols-2 gap-4">
+2947:                 <div className="space-y-1">
+2948:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">عدد العماير</label>
+2949:                   <input 
+2950:                     type="number"
+2951:                     value={customerForm.buildingsCount}
+2952:                     onChange={(e) => setCustomerForm(prev => ({ ...prev, buildingsCount: e.target.value }))}
+2953:                     placeholder="مثال: 5"
+2954:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+2955:                   />
+2956:                 </div>
+2957:                 <div className="space-y-1">
+2958:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">السجل التجاري</label>
+2959:                   <input 
+2960:                     type="text"
+2961:                     value={customerForm.cr}
+2962:                     onChange={(e) => setCustomerForm(prev => ({ ...prev, cr: e.target.value }))}
+2963:                     placeholder="مثال: 1010123456"
+2964:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+2965:                   />
+2966:                 </div>
+2967:               </div>
+2968: 
+2969:               <div className="grid grid-cols-3 gap-4">
+2970:                 <div className="space-y-1">
+2971:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الرقم الضريبي</label>
+2972:                   <input 
+2973:                     type="text"
+2974:                     value={customerForm.trn}
+2975:                     onChange={(e) => setCustomerForm(prev => ({ ...prev, trn: e.target.value }))}
+2976:                     placeholder="مثال: 310122345600003"
+2977:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs"
+2978:                   />
+2979:                 </div>
+2980:                 <div className="space-y-1">
+2981:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">طبيعة العميل</label>
+2982:                   <select 
+2983:                     value={customerForm.customerType}
+2984:                     onChange={(e) => setCustomerForm(prev => ({ ...prev, customerType: e.target.value }))}
+2985:                     className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs font-bold"
+2986:                   >
+2987:                     <option value="CASH">نقدي</option>
+2988:                     <option value="CREDIT">آجل</option>
+2989:                   </select>
+2990:                 </div>
+2991:                 <div className="space-y-1">
+2992:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">نسبة الخصم (%)</label>
+2993:                   <input 
+2994:                     type="number"
+2995:                     step="0.1"
+2996:                     disabled={currentUser?.role !== 'ADMIN'}
+2997:                     value={customerForm.discount}
+2998:                     onChange={(e) => setCustomerForm(prev => ({ ...prev, discount: e.target.value }))}
+2999:                     placeholder="مثال: 10"
+3000:                     className="w-full bg-white/5 disabled:bg-slate-950/40 disabled:text-slate-400 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs"
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

@@ -1,0 +1,79 @@
+Created At: 2026-07-29T18:42:16+03:00
+Completed At: 2026-07-29T18:42:16+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 2300 to 2370
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2300:             </div>
+2301:           </div>
+2302:         )}
+2303:   
+2304: 
+2305:         {/* TAB 4: BANKS */}
+2306:         {activeTab === 'BANKS' && (
+2307:           <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+2308:             <div>
+2309:               <h2 className="text-xl font-bold text-white">إدارة البنوك والخزائن</h2>
+2310:               <p className="text-xs text-slate-400 mt-0.5">إدارة الحسابات البنكية والنقدية ومتابعة الأرصدة والعمليات المالية</p>
+2311:             </div>
+2312: 
+2313:             <div className="flex gap-3 items-center max-w-xl">
+2314:               <div className="relative group flex-1">
+2315:                 <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+2316:                   <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+2317:                 </div>
+2318:                 <input 
+2319:                   type="text" 
+2320:                   value={bankSearch}
+2321:                   onChange={(e) => setBankSearch(e.target.value)}
+2322:                   placeholder="ابحث عن بنك أو خزينة بالاسم..." 
+2323:                   className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+2324:                 />
+2325:                 {bankSearch && (
+2326:                   <button 
+2327:                     onClick={() => setBankSearch('')}
+2328:                     className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+2329:                   >
+2330:                     <XIcon size={14} />
+2331:                   </button>
+2332:                 )}
+2333:               </div>
+2334:               <button 
+2335:                 onClick={() => { setIsBankModalOpen(true); setBankForm({ name: '', accountNumber: '', balance: '0' }); }}
+2336:                 className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+2337:               >
+2338:                 <PlusIcon className="w-4 h-4" />
+2339:                 <span>إضافة بنك / خزينة</span>
+2340:               </button>
+2341:             </div>
+2342: 
+2343:             <div className="flex-1 overflow-y-auto pb-10 custom-scrollbar pr-2">
+2344:               {banks.filter(b => (b.name || '').includes(bankSearch)).length === 0 ? (
+2345:                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
+2346:                   <BuildingIcon className="h-16 w-16 text-slate-600 animate-pulse" />
+2347:                   <div>
+2348:                     <h3 className="text-lg font-bold text-slate-300">لا توجد حسابات متطابقة</h3>
+2349:                     <p className="text-sm text-slate-500 mt-1">أضف بنك أو خزينة جديدة لبدء العمليات المالية</p>
+2350:                   </div>
+2351:                 </div>
+2352:               ) : (
+2353:                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+2354:                   {banks.filter(b => (b.name || '').includes(bankSearch)).map((bank) => (
+2355:                     <div key={bank.id} className="glass-card rounded-xl p-3 flex flex-col justify-between border border-white/5 hover:border-red-500/20 transition-all duration-300 text-right" dir="rtl">
+2356:                       <div>
+2357:                         <div className="flex justify-between items-start mb-2">
+2358:                           <div>
+2359:                             <h3 className="text-[15px] font-bold text-white leading-snug">{bank.name}</h3>
+2360:                             <p className="text-[10px] text-slate-400 mt-1">حساب مالي</p>
+2361:                           </div>
+2362:                           <div className="bg-white/5 text-slate-400 p-1.5 rounded-lg border border-white/5">
+2363:                             <BuildingIcon className="w-3.5 h-3.5" />
+2364:                           </div>
+2365:                         </div>
+2366:                         
+2367:                         <div className="flex justify-between items-center mt-2">
+2368:                           <button
+2369:                             onClick={() => {
+2370:                               setBankForm({
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

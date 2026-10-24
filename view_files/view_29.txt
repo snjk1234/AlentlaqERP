@@ -1,0 +1,109 @@
+Created At: 2026-07-29T18:37:14+03:00
+Completed At: 2026-07-29T18:37:14+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 1650 to 1750
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1650: 
+1651:             {/* Customer Cards Grid */}
+1652:             <div className="flex-1 overflow-y-auto pb-10 custom-scrollbar pr-2">
+1653:               {filteredCustomers.length === 0 ? (
+1654:                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
+1655:                   <UsersIcon className="h-16 w-16 text-slate-600" />
+1656:                   <div>
+1657:                     <h3 className="text-lg font-bold text-slate-300">لا يوجد عملاء متطابقين</h3>
+1658:                     <p className="text-sm text-slate-500 mt-1">أضف عميل جديد لبدء تسجيل الفواتير باسمه</p>
+1659:                   </div>
+1660:                 </div>
+1661:               ) : (
+1662:                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+1663:                   {filteredCustomers.map((cust) => {
+1664:                     const validOrders = cust.orders ? cust.orders.filter((o:any) => !o.isQuotation) : [];
+1665:                     const totalSpent = validOrders.reduce((sum: number, o: any) => sum + o.netAmount, 0);
+1666:                     const totalPayments = cust.payments ? cust.payments.reduce((sum: number, p: any) => sum + p.amount, 0) : 0;
+1667:                     const paymentsCount = cust.payments ? cust.payments.length : 0;
+1668:                     const ordersCount = validOrders.length;
+1669:                     const remainingBalance = totalSpent - totalPayments;
+1670:                     return (
+1671:                       <div key={cust.id} className="glass-card rounded-xl p-3 flex flex-col justify-between border border-white/5 hover:border-red-500/20 transition-all duration-300 text-right" dir="rtl">
+1672:                         <div>
+1673:                           <div className="flex justify-between items-start mb-2">
+1674:                             <div>
+1675:                               <h3 className="text-[15px] font-bold text-white leading-snug">{cust.name}</h3>
+1676:                               <div className="flex items-center gap-1 mt-1 select-none">
+1677:                                 <span className={`px-1.5 py-0.2 rounded text-[11px] font-bold ${cust.customerType === 'CREDIT' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/10' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/10'}`}>
+1678:                                   {cust.customerType === 'CREDIT' ? 'آجل' : 'نقدي'}
+1679:                                 </span>
+1680:                                 {cust.discount > 0 && (
+1681:                                   <span className="px-1.5 py-0.2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/10 rounded text-[11px] font-bold">
+1682:                                     خصم {cust.discount}%
+1683:                                   </span>
+1684:                                 )}
+1685:                               </div>
+1686:                             </div>
+1687:                             <button 
+1688:                               onClick={() => {
+1689:                                 setCustomerForm({
+1690:                                   id: !!cust.id ? cust.id : '',
+1691:                                   name: cust.name,
+1692:                                   phone: cust.phone || '',
+1693:                                   location: cust.location || '',
+1694:                                   buildingsCount: cust.buildingsCount ? cust.buildingsCount.toString() : '0',
+1695:                                   cr: cust.cr || '',
+1696:                                   trn: cust.trn || '',
+1697:                                   customerType: cust.customerType || 'CASH',
+1698:                                   discount: cust.discount ? cust.discount.toString() : '0'
+1699:                                 });
+1700:                                 setIsEditingCustomer(true);
+1701:                                 setShowCustomerModal(true);
+1702:                               }}
+1703:                               className="bg-white/5 text-slate-400 p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+1704:                               title="تعديل البيانات"
+1705:                             >
+1706:                               <PencilIcon className="w-3.5 h-3.5" />
+1707:                             </button>
+1708:                           </div>
+1709:                           
+1710:                           <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs text-slate-300 mb-2 border-t border-white/5 pt-2 font-semibold">
+1711:                             {cust.phone && <p>📱 <span className="text-white font-mono font-bold">{cust.phone}</span></p>}
+1712:                             {cust.location && <p>📍 <span className="text-white">{cust.location}</span></p>}
+1713:                             <p>🏢 عماير: <span className="text-white font-mono font-bold">{cust.buildingsCount || 0}</span></p>
+1714:                             {cust.cr && <p>📜 سجل: <span className="text-white font-mono font-bold">{cust.cr}</span></p>}
+1715:                             {cust.trn && <p className="col-span-2">📋 ضريبي: <span className="text-white font-mono font-bold text-xs">{cust.trn}</span></p>}
+1716:                           </div>
+1717:                         </div>
+1718: 
+1719:                         <div className="border-t border-white/5 pt-2">
+1720:                           <div className="grid grid-cols-2 gap-2 mb-2">
+1721:                             <div className="bg-black/25 px-2 py-1 rounded-lg text-center">
+1722:                               <span className="text-[10px] text-slate-400 block font-bold">الفواتير</span>
+1723:                               <span className="text-sm font-black text-white font-mono">{ordersCount}</span>
+1724:                             </div>
+1725:                             <div className="bg-black/25 px-2 py-1 rounded-lg text-center">
+1726:                               <span className="text-[10px] text-slate-400 block font-bold">الدفعات</span>
+1727:                               <span className="text-sm font-black text-white font-mono">{paymentsCount}</span>
+1728:                             </div>
+1729:                             <div className="bg-black/25 px-2 py-1 rounded-lg text-center">
+1730:                               <span className="text-[10px] text-slate-400 block font-bold">إجمالي المسحوبات</span>
+1731:                               <span className="text-sm font-black text-red-400 font-mono">{totalSpent.toFixed(2)} ج.م</span>
+1732:                             </div>
+1733:                             <div className="bg-black/25 px-2 py-1 rounded-lg text-center">
+1734:                               <span className="text-[10px] text-slate-400 block font-bold">إجمالي الدفعات</span>
+1735:                               <span className="text-sm font-black text-emerald-400 font-mono">{totalPayments.toFixed(2)} ج.م</span>
+1736:                             </div>
+1737:                             <div className="col-span-2 bg-black/25 px-2 py-2 rounded-lg text-center border border-white/5">
+1738:                               <span className="text-[10px] text-slate-400 block font-bold">الرصيد المتبقي (المديونية)</span>
+1739:                               <span className={`text-base font-black font-mono ${remainingBalance > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+1740:                                 {remainingBalance.toFixed(2)} ج.م
+1741:                               </span>
+1742:                             </div>
+1743:                             <button
+1744:                                 onClick={() => {
+1745:                                   setSelectedHistoryCustomer(cust);
+1746:                                   setShowCustomerHistoryModal(true);
+1747:                                 }}
+1748:                                 className="col-span-2 bg-white/5 text-slate-300 p-2 rounded-lg hover:bg-white/10 hover:text-white transition-colors cursor-pointer text-xs font-bold mt-1 shadow-md shadow-black/20"
+1749:                               >
+1750:                                 كشف حساب / تفاصيل
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

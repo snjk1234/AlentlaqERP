@@ -1,0 +1,79 @@
+Created At: 2026-06-22T10:19:12Z
+Completed At: 2026-06-22T10:19:12Z
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 1975
+Total Bytes: 105056
+Showing lines 1030 to 1100
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1030:                                     خصم {cust.discount}%
+1031:                                   </span>
+1032:                                 )}
+1033:                               </div>
+1034:                             </div>
+1035:                             <button 
+1036:                               onClick={() => {
+1037:                                 setCustomerForm({
+1038:                                   id: !!cust.id ? cust.id : '',
+1039:                                   name: cust.name,
+1040:                                   phone: cust.phone || '',
+1041:                                   location: cust.location || '',
+1042:                                   buildingsCount: cust.buildingsCount ? cust.buildingsCount.toString() : '0',
+1043:                                   cr: cust.cr || '',
+1044:                                   trn: cust.trn || '',
+1045:                                   customerType: cust.customerType || 'CASH',
+1046:                                   discount: cust.discount ? cust.discount.toString() : '0'
+1047:                                 });
+1048:                                 setIsEditingCustomer(true);
+1049:                                 setShowCustomerModal(true);
+1050:                               }}
+1051:                               className="bg-white/5 text-slate-400 p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+1052:                               title="تعديل البيانات"
+1053:                             >
+1054:                               <PencilIcon className="w-3.5 h-3.5" />
+1055:                             </button>
+1056: 
+1057:                             {cust.customerType === 'CREDIT' && (
+1058:                               <button 
+1059:                                 onClick={() => {
+1060:                                   setPaymentCustomer(cust);
+1061:                                   setIsPaymentModalOpen(true);
+1062:                                 }}
+1063:                                 className="bg-emerald-500/20 text-emerald-400 p-1.5 rounded-lg hover:bg-emerald-500 hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold mr-2"
+1064:                                 title="تسجيل دفعة"
+1065:                               >
+1066:                                 <DollarSignIcon className="w-3.5 h-3.5" />
+1067:                                 <span>سداد</span>
+1068:                               </button>
+1069:                             )}
+1070: 
+1071:                           </div>
+1072:                           
+1073:                           <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs text-slate-300 mb-2 border-t border-white/5 pt-2 font-semibold">
+1074:                             {cust.phone && <p>📱 <span className="text-white font-mono font-bold">{cust.phone}</span></p>}
+1075:                             {cust.location && <p>📍 <span className="text-white">{cust.location}</span></p>}
+1076:                             <p>🏢 عماير: <span className="text-white font-mono font-bold">{cust.buildingsCount || 0}</span></p>
+1077:                             {cust.cr && <p>📜 سجل: <span className="text-white font-mono font-bold">{cust.cr}</span></p>}
+1078:                             {cust.trn && <p className="col-span-2">📋 ضريبي: <span className="text-white font-mono font-bold text-xs">{cust.trn}</span></p>}
+1079:                           </div>
+1080:                         </div>
+1081: 
+1082:                         <div className="border-t border-white/5 pt-2">
+1083:                           <div className="flex gap-2 mb-2">
+1084:                             <div className="bg-black/25 px-2 py-1 rounded-lg flex-1 text-center">
+1085:                               <span className="text-[10px] text-slate-400 block font-bold">الفواتير</span>
+1086:                               <span className="text-sm font-black text-white font-mono">{cust.orders ? cust.orders.length : 0}</span>
+1087:                             </div>
+1088:                             <div className="bg-black/25 px-2 py-1 rounded-lg flex-1 text-center">
+1089:                               <span className="text-[10px] text-slate-400 block font-bold">إجمالي المسحوبات</span>
+1090:                               <span className="text-sm font-black text-emerald-400 font-mono">{totalSpent.toFixed(2)} ج.م</span>
+1091:                             </div>
+1092:                           </div>
+1093: 
+1094:                           {/* Invoices List */}
+1095:                           {cust.orders && cust.orders.length > 0 && (
+1096:                             <div>
+1097:                               <div className="max-h-24 overflow-y-auto space-y-1 custom-scrollbar pr-1">
+1098:                                 {cust.orders.map((ord: any) => (
+1099:                                   <div 
+1100:                                     key={ord.id}
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

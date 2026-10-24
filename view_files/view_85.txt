@@ -1,0 +1,58 @@
+Created At: 2026-07-30T18:48:16+03:00
+Completed At: 2026-07-30T18:48:16+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4503
+Total Bytes: 259774
+Showing lines 3251 to 3300
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3251:                   />
+3252:                 </div>
+3253:                 <div className="space-y-1">
+3254:                   <label className="text-xs text-slate-400 block mb-1 mb-1">اللون</label>
+3255:                   <select 
+3256:                     value={productForm.color || ''}
+3257:                     onChange={(e) => setProductForm(prev => ({ ...prev, color: e.target.value }))}
+3258:                     className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3259:                   >
+3260:                     <option value="">بدون لون</option>
+3261:                     <option value="أبيض">أبيض</option>
+3262:                     <option value="أسود">أسود</option>
+3263:                     <option value="رمادي">رمادي</option>
+3264:                     <option value="رصاصي">رصاصي</option>
+3265:                     <option value="شفاف">شفاف</option>
+3266:                     <option value="أحمر">أحمر</option>
+3267:                     <option value="أزرق">أزرق</option>
+3268:                     <option value="أزرق داكن">أزرق داكن</option>
+3269:                     <option value="أخضر">أخضر</option>
+3270:                     <option value="أخضر داكن">أخضر داكن</option>
+3271:                     <option value="أصفر">أصفر</option>
+3272:                     <option value="برتقالي">برتقالي</option>
+3273:                     <option value="بني">بني</option>
+3274:                   </select>
+3275:                 </div>
+3276:               </div>
+3277: 
+3278:               <div className="grid grid-cols-2 gap-4">
+3279:                 <div className="space-y-1">
+3280:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الطول</label>
+3281:                   <input 
+3282:                     type="text"
+3283:                     value={productForm.length}
+3284:                     onChange={(e) => setProductForm(prev => ({ ...prev, length: e.target.value }))}
+3285:                     placeholder="مثال: 45 m"
+3286:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3287:                   />
+3288:                 </div>
+3289:                 <div className="space-y-1">
+3290:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الوزن</label>
+3291:                   <input 
+3292:                     type="text"
+3293:                     value={productForm.weight}
+3294:                     onChange={(e) => setProductForm(prev => ({ ...prev, weight: e.target.value }))}
+3295:                     placeholder="مثال: 5.050 kg"
+3296:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3297:                   />
+3298:                 </div>
+3299:               </div>
+3300: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

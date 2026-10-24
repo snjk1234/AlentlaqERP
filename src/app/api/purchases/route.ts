@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { updateDocument } from '@/lib/document-edit-route';
 
 export const dynamic = 'force-dynamic';
+
+export async function PUT(request: Request) {
+  return updateDocument(request, 'purchase');
+}
 
 // GET all purchase orders
 export async function GET() {
@@ -26,7 +31,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { billNumber, supplierId, items } = body;
+    const { billNumber, supplierId, invoiceType, items } = body;
 
     if (!billNumber || !supplierId || !items || items.length === 0) {
       return NextResponse.json({ error: 'Missing required purchase order fields' }, { status: 400 });
@@ -51,7 +56,8 @@ export async function POST(request: Request) {
 
         const cost = Number(item.unitCost) || product.costPrice;
         const qty = Number(item.quantity) || 1;
-        const taxRate = product.taxRate || 0.14;
+        const isVat = invoiceType !== 'فاتورة';
+        const taxRate = isVat ? (product.taxRate || 0.14) : 0;
 
         const totalCost = cost * qty;
         const itemTax = totalCost * taxRate;
@@ -94,6 +100,7 @@ export async function POST(request: Request) {
         data: {
           billNumber,
           supplierId,
+          invoiceType: invoiceType || 'فاتورة ضريبية',
           totalAmount,
           taxAmount,
           netAmount,
@@ -110,7 +117,7 @@ export async function POST(request: Request) {
       });
 
       return purchaseOrder;
-    });
+    }, { timeout: 20000, maxWait: 20000 });
 
     return NextResponse.json(result);
   } catch (error: any) {

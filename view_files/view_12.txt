@@ -1,0 +1,31 @@
+Created At: 2026-06-22T10:21:16Z
+Completed At: 2026-06-22T10:21:16Z
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 1991
+Total Bytes: 106346
+Showing lines 670 to 692
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+670:                 <button 
+671:                   onClick={() => setActiveCategory('ACCESSORY')}
+672:                   className={`px-6 py-2.5 rounded-full font-bold flex gap-2 items-center transition-all duration-300 cursor-pointer ${activeCategory === 'ACCESSORY' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+673:                 >
+674:                   <BoxIcon size={18} /> إكسسوارات وبواطات
+675:                 </button>
+676:               </div>
+677: 
+678:               {/* Product Grid */}
+679:               {loading ? (
+680:                 <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+681:                   <Loader2Icon className="h-10 w-10 text-entlaq-red animate-spin" />
+682:                   <p className="text-slate-400 text-xs">جاري تحميل بيانات المخزون...</p>
+683:                 </div>
+684:               ) : (
+685:                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 overflow-y-auto pb-10 custom-scrollbar pr-2 flex-1">
+686:                   {filteredProducts.map((item) => {
+687:                     const isLowStock = item.stockQty <= item.minStockQty;
+688:                     const isOutOfStock = item.stockQty <= 0;
+689:                     return (
+690:                       <div 
+691:                         key={item.id} 
+692:                         onClick={() => {
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

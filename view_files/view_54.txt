@@ -1,0 +1,148 @@
+Created At: 2026-07-30T16:44:10+03:00
+Completed At: 2026-07-30T16:44:10+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4496
+Total Bytes: 254660
+Showing lines 3861 to 4000
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3861:               </div>
+3862: 
+3863:             </div>
+3864:           </div>
+3865:         </div>
+3866:       )}
+3867: 
+3868:       {/* MODAL 9: SUPPLIER FORM MODAL */}
+3869:       {showSupplierModal && (
+3870:         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
+3871:           <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+3872:             <div className="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+3873:               <div>
+3874:                 <h3 className="text-lg font-bold text-white">
+3875:                   {isEditingSupplier ? 'تعديل بيانات المورد' : 'إضافة مورد جديد'}
+3876:                 </h3>
+3877:                 <p className="text-xs text-slate-400 mt-1">أدخل بيانات المورد لتسجيل فواتير الشراء وسندات الصرف</p>
+3878:               </div>
+3879:               <button onClick={() => setShowSupplierModal(false)} className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+3880:                 <XIcon size={18} />
+3881:               </button>
+3882:             </div>
+3883: 
+3884:             <form onSubmit={handleSaveSupplier} className="p-4 space-y-3 overflow-y-auto custom-scrollbar text-right" dir="rtl">
+3885:               <div className="space-y-1">
+3886:                 <label className="text-xs text-slate-300 block mb-1">اسم المورد / الشركة *</label>
+3887:                 <input
+3888:                   type="text"
+3889:                   required
+3890:                   value={supplierForm.name}
+3891:                   onChange={(e) => setSupplierForm(prev => ({ ...prev, name: e.target.value }))}
+3892:                   placeholder="مثال: شركة النيل للبتروكيماويات"
+3893:                   className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3894:                 />
+3895:               </div>
+3896: 
+3897:               <div className="grid grid-cols-2 gap-4">
+3898:                 <div className="space-y-1">
+3899:                   <label className="text-xs text-slate-300 block mb-1">رقم التلفون</label>
+3900:                   <input
+3901:                     type="text"
+3902:                     value={supplierForm.phone}
+3903:                     onChange={(e) => setSupplierForm(prev => ({ ...prev, phone: e.target.value }))}
+3904:                     placeholder="مثال: 01021683030"
+3905:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3906:                   />
+3907:                 </div>
+3908:                 <div className="space-y-1">
+3909:                   <label className="text-xs text-slate-300 block mb-1">العنوان</label>
+3910:                   <input
+3911:                     type="text"
+3912:                     value={supplierForm.address}
+3913:                     onChange={(e) => setSupplierForm(prev => ({ ...prev, address: e.target.value }))}
+3914:                     placeholder="مثال: القاهرة - العبور"
+3915:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3916:                   />
+3917:                 </div>
+3918:               </div>
+3919: 
+3920:               <div className="grid grid-cols-2 gap-4">
+3921:                 <div className="space-y-1">
+3922:                   <label className="text-xs text-slate-300 block mb-1">السجل التجاري</label>
+3923:                   <input
+3924:                     type="text"
+3925:                     value={supplierForm.cr}
+3926:                     onChange={(e) => setSupplierForm(prev => ({ ...prev, cr: e.target.value }))}
+3927:                     placeholder="رقم السجل التجاري"
+3928:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3929:                   />
+3930:                 </div>
+3931:                 <div className="space-y-1">
+3932:                   <label className="text-xs text-slate-300 block mb-1">الرقم الضريبي</label>
+3933:                   <input
+3934:                     type="text"
+3935:                     value={supplierForm.trn}
+3936:                     onChange={(e) => setSupplierForm(prev => ({ ...prev, trn: e.target.value }))}
+3937:                     placeholder="الرقم الضريبي للمورد"
+3938:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3939:                   />
+3940:                 </div>
+3941:               </div>
+3942: 
+3943:               <div className="space-y-1">
+3944:                 <label className="text-xs text-slate-300 block mb-1">الرصيد الافتتاحي (مديونية)</label>
+3945:                 <input
+3946:                   type="number"
+3947:                   step="0.01"
+3948:                   value={supplierForm.balance}
+3949:                   onChange={(e) => setSupplierForm(prev => ({ ...prev, balance: e.target.value }))}
+3950:                   placeholder="0.00"
+3951:                   className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-mono"
+3952:                 />
+3953:               </div>
+3954: 
+3955:               <div className="pt-4 border-t border-slate-800 flex gap-3">
+3956:                 <button
+3957:                   type="submit"
+3958:                   disabled={submitting}
+3959:                   className="flex-1 bg-entlaq-red text-white py-2 rounded-lg font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10 disabled:opacity-50"
+3960:                 >
+3961:                   {submitting ? <Loader2Icon size={16} className="animate-spin" /> : null}
+3962:                   حفظ البيانات
+3963:                 </button>
+3964:                 <button
+3965:                   type="button"
+3966:                   onClick={() => setShowSupplierModal(false)}
+3967:                   className="bg-white/5 text-slate-300 px-6 py-2 rounded-lg font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
+3968:                 >
+3969:                   إلغاء
+3970:                 </button>
+3971:               </div>
+3972:             </form>
+3973:           </div>
+3974:         </div>
+3975:       )}
+3976: 
+3977:       {/* MODAL 10: PURCHASE (فاتورة مشتريات) FORM MODAL */}
+3978:       {showPurchaseModal && (
+3979:         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
+3980:           <div className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+3981:             <div className="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+3982:               <div>
+3983:                 <h3 className="text-lg font-bold text-white flex gap-2 items-center">
+3984:                   <ShoppingBagIcon className="text-orange-400" size={18} />
+3985:                   إنشاء فاتورة مشتريات جديدة
+3986:                 </h3>
+3987:                 <p className="text-xs text-slate-400 mt-1">سيتم تحديث المخزون تلقائياً عند حفظ الفاتورة</p>
+3988:               </div>
+3989:               <button onClick={() => setShowPurchaseModal(false)} className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+3990:                 <XIcon size={18} />
+3991:               </button>
+3992:             </div>
+3993: 
+3994:             <form onSubmit={handleSavePurchase} className="flex flex-col flex-1 overflow-hidden">
+3995:               <div className="p-4 space-y-3 overflow-y-auto custom-scrollbar text-right flex-1" dir="rtl">
+3996: 
+3997:                 <div className="grid grid-cols-2 gap-4">
+3998:                   <div className="space-y-1">
+3999:                     <label className="text-xs text-slate-300 block mb-1">رقم فاتورة التوريد *</label>
+4000:                     <input
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

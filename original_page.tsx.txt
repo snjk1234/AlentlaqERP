@@ -1,0 +1,109 @@
+Created At: 2026-08-08T15:33:18+03:00
+Completed At: 2026-08-08T15:33:18+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 5047
+Total Bytes: 300830
+Showing lines 150 to 250
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+150:   const [isEditingSupplier, setIsEditingSupplier] = useState(false);
+151:   const [supplierForm, setSupplierForm] = useState({ id: '', name: '', phone: '', address: '', cr: '', trn: '', balance: '0' });
+152:   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+153:   const [purchaseForm, setPurchaseForm] = useState<any>({ billNumber: '', supplierId: '', invoiceType: 'فاتورة ضريبية', items: [] });
+154:   const [showExpenseModal, setShowExpenseModal] = useState(false);
+155:   const [expenseForm, setExpenseForm] = useState({ supplierId: '', bankId: '', amount: '', notes: '', reference: '' });
+156:   const [showExpenseReceiptModal, setShowExpenseReceiptModal] = useState(false);
+157:   const [selectedExpense, setSelectedExpense] = useState<any>(null);
+158:   const [showSupplierHistoryModal, setShowSupplierHistoryModal] = useState(false);
+159:   const [selectedHistorySupplier, setSelectedHistorySupplier] = useState<any>(null);
+160:   const [showPurchaseDetailModal, setShowPurchaseDetailModal] = useState(false);
+161:   const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
+162:   const [printTableData, setPrintTableData] = useState<{ title: string; headers: string[]; rows: any[][] } | null>(null);
+163: 
+164:   // Navigation active tab
+165:   const [activeTab, setActiveTab] = useState<'POS' | 'CUSTOMERS' | 'INVENTORY' | 'BANKS' | 'PAYMENTS' | 'INVOICES' | 'SUPPLIERS' | 'PURCHASES' | 'EXPENSES'>('POS');
+166:   const [showReceiptModal, setShowReceiptModal] = useState(false);
+167:   const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+168: 
+169:   // Custom Pricing states
+170:   const [showCustomerPricesModal, setShowCustomerPricesModal] = useState(false);
+171:   const [selectedCustomerForPrices, setSelectedCustomerForPrices] = useState<any>(null);
+172:   const [customerPricesMap, setCustomerPricesMap] = useState<Record<string, number>>({});
+173:   const [passwordPrompt, setPasswordPrompt] = useState<{ isOpen: boolean, itemId: string, callback?: () => void }>({ isOpen: false, itemId: '' });
+174:   const [passwordInput, setPasswordInput] = useState('');
+175:   const [editingCartPriceId, setEditingCartPriceId] = useState<string | null>(null);
+176:   const [siteReceiptNumber, setSiteReceiptNumber] = useState('');
+177:   const [receiverName, setReceiverName] = useState('');
+178:   const [invoiceType, setInvoiceType] = useState('فاتورة ضريبية');
+179:   const [linkedQuotationId, setLinkedQuotationId] = useState<string | null>(null);
+180: 
+181:   // Search & Filter states
+182:   const [activeCategory, setActiveCategory] = useState('ALL');
+183:   const [activeSupplier, setActiveSupplier] = useState('ALL');
+184:   const [searchQuery, setSearchQuery] = useState('');
+185:   const [inventorySearchQuery, setInventorySearchQuery] = useState('');
+186:   const [inventoryCategory, setInventoryCategory] = useState('ALL');
+187:   const [customerSearch, setCustomerSearch] = useState('');
+188:   const [selectedCustomerId, setSelectedCustomerId] = useState('CASH');
+189: 
+190: 
+191:   // Loading and submission states
+192:   const [loading, setLoading] = useState(true);
+193:   const [submitting, setSubmitting] = useState(false);
+194:   const [cart, setCart] = useState<any[]>([]);
+195: 
+196:   // Auto-update cart prices when customer changes
+197:   useEffect(() => {
+198:     if (cart.length === 0) return;
+199: 
+200:     let defaultDiscount = 0;
+201:     let customerCustomPrices: any[] = [];
+202: 
+203:     if (selectedCustomerId && selectedCustomerId !== 'CASH' && selectedCustomerId !== 'CREDIT_GENERAL') {
+204:       const c = customers.find(c => c.id === selectedCustomerId);
+205:       if (c) {
+206:         defaultDiscount = c.discount || 0;
+207:         customerCustomPrices = c.customPrices || [];
+208:       }
+209:     }
+210: 
+211:     setCart(prevCart => prevCart.map(item => {
+212:       // Do not overwrite manually set prices
+213:       if (item.isManualPrice) return item;
+214: 
+215:       const originalProduct = products.find((p: any) => p.id === item.id);
+216:       if (!originalProduct) return item;
+217: 
+218:       let newBasePrice = originalProduct.price;
+219:       let appliedDiscount = defaultDiscount;
+220:       const customPriceObj = customerCustomPrices.find(cp => cp.productId === item.id);
+221:       if (customPriceObj) {
+222:         newBasePrice = customPriceObj.price;
+223:         appliedDiscount = 0;
+224:       }
+225: 
+226:       const newDiscountedPrice = newBasePrice * (1 - appliedDiscount / 100);
+227:       return {
+228:         ...item,
+229:         originalPrice: newBasePrice,
+230:         discountPercent: appliedDiscount,
+231:         price: newDiscountedPrice,
+232:         tax: newDiscountedPrice * originalProduct.taxRate,
+233:       };
+234:     }));
+235:   }, [selectedCustomerId, customers]);
+236: 
+237:   const handlePriceDoubleClick = (itemId: string) => {
+238:     setPasswordPrompt({ isOpen: true, itemId });
+239:     setPasswordInput('');
+240:   };
+241: 
+242:   const handlePasswordSubmit = () => {
+243:     if (passwordInput === 'solscas') {
+244:       setPasswordPrompt({ isOpen: false, itemId: '' });
+245:       setEditingCartPriceId(passwordPrompt.itemId);
+246:     } else {
+247:       alert('كلمة المرور غير صحيحة');
+248:     }
+249:   };
+250: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

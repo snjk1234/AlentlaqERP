@@ -1,0 +1,128 @@
+Created At: 2026-07-30T16:43:56+03:00
+Completed At: 2026-07-30T16:43:56+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4496
+Total Bytes: 254660
+Showing lines 2161 to 2280
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2161:                   <button 
+2162:                     onClick={() => setSupplierSearch('')}
+2163:                     className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+2164:                   >
+2165:                     <XIcon size={14} />
+2166:                   </button>
+2167:                 )}
+2168:               </div>
+2169:               <button 
+2170:                 onClick={() => {
+2171:                   setSupplierForm({ id: '', name: '', phone: '', address: '', cr: '', trn: '', balance: '0' });
+2172:                   setIsEditingSupplier(false);
+2173:                   setShowSupplierModal(true);
+2174:                 }}
+2175:                 className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+2176:               >
+2177:                 <PlusIcon className="w-4 h-4" />
+2178:                 <span>إضافة مورد جديد</span>
+2179:               </button>
+2180:               <button 
+2181:                 onClick={() => {
+2182:                   setPrintTableData({
+2183:                     title: 'كشف مديونيات وأرصدة الموردين والشركات المسجلين',
+2184:                     headers: ['م', 'اسم المورد', 'الهاتف', 'العنوان', 'الرقم الضريبي', 'السجل التجاري', 'الرصيد للمورد (ج.م)'],
+2185:                     rows: suppliers.filter(s => (s.name || '').includes(supplierSearch)).map((s, i) => [
+2186:                       i + 1,
+2187:                       s.name,
+2188:                       s.phone || '-',
+2189:                       s.address || '-',
+2190:                       s.trn || '-',
+2191:                       s.cr || '-',
+2192:                       `${s.balance.toFixed(2)} ج.م`
+2193:                     ])
+2194:                   });
+2195:                 }}
+2196:                 className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+2197:               >
+2198:                 <PrinterIcon className="w-4 h-4" />
+2199:                 <span>طباعة الجدول</span>
+2200:               </button>
+2201:             </div>
+2202: 
+2203:             <div className="flex-1 overflow-y-auto pb-10 custom-scrollbar pr-2">
+2204:               {suppliers.filter(s => (s.name || '').includes(supplierSearch) || (s.trn && s.trn.includes(supplierSearch))).length === 0 ? (
+2205:                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
+2206:                   <TruckIcon className="h-16 w-16 text-slate-600 animate-pulse" />
+2207:                   <div>
+2208:                     <h3 className="text-lg font-bold text-slate-300">لا يوجد موردين متطابقين</h3>
+2209:                     <p className="text-sm text-slate-500 mt-1">أضف مورد جديد لبدء تسجيل الفواتير وسندات الصرف باسمه</p>
+2210:                   </div>
+2211:                 </div>
+2212:               ) : (
+2213:                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+2214:                   {suppliers.filter(s => (s.name || '').includes(supplierSearch) || (s.trn && s.trn.includes(supplierSearch))).map((sup) => {
+2215:                     const totalPurchased = sup.purchaseOrders ? sup.purchaseOrders.reduce((sum: number, o: any) => sum + o.netAmount, 0) : 0;
+2216:                     const totalPaid = sup.expenses ? sup.expenses.reduce((sum: number, p: any) => sum + p.amount, 0) : 0;
+2217:                     const remainingDebt = sup.balance;
+2218:                     return (
+2219:                       <div key={sup.id} className="glass-card rounded-xl p-3 flex flex-col justify-between border border-white/5 hover:border-red-500/20 transition-all duration-300 text-right" dir="rtl">
+2220:                         <div>
+2221:                           <div className="flex justify-between items-start mb-2">
+2222:                             <div>
+2223:                               <h3 className="text-[15px] font-bold text-white leading-snug">{sup.name}</h3>
+2224:                               <p className="text-[10px] text-slate-400 mt-1">مورد معتمد</p>
+2225:                             </div>
+2226:                             <button 
+2227:                               onClick={() => {
+2228:                                 setSupplierForm({
+2229:                                   id: sup.id,
+2230:                                   name: sup.name,
+2231:                                   phone: sup.phone || '',
+2232:                                   address: sup.address || '',
+2233:                                   cr: sup.cr || '',
+2234:                                   trn: sup.trn || '',
+2235:                                   balance: sup.balance.toString()
+2236:                                 });
+2237:                                 setIsEditingSupplier(true);
+2238:                                 setShowSupplierModal(true);
+2239:                               }}
+2240:                               className="bg-white/5 text-slate-400 p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+2241:                             >
+2242:                               <PencilIcon className="w-3.5 h-3.5" />
+2243:                             </button>
+2244:                           </div>
+2245:                           
+2246:                           <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs text-slate-300 mb-2 border-t border-white/5 pt-2 font-semibold">
+2247:                             {sup.phone && <p>📱 <span className="text-white font-mono font-bold">{sup.phone}</span></p>}
+2248:                             {sup.address && <p>📍 <span className="text-white">{sup.address}</span></p>}
+2249:                             {sup.cr && <p>📜 سجل: <span className="text-white font-mono font-bold">{sup.cr}</span></p>}
+2250:                             {sup.trn && <p className="col-span-2">📋 ضريبي: <span className="text-white font-mono font-bold text-xs">{sup.trn}</span></p>}
+2251:                           </div>
+2252:                         </div>
+2253: 
+2254:                         <div className="border-t border-white/5 pt-2">
+2255:                           <div className="grid grid-cols-2 gap-2 mb-2">
+2256:                             <div className="bg-black/25 px-2 py-1 rounded-lg text-center">
+2257:                               <span className="text-[10px] text-slate-400 block font-bold">فواتير التوريد</span>
+2258:                               <span className="text-sm font-black text-red-400 font-mono">{totalPurchased.toFixed(2)} ج.م</span>
+2259:                             </div>
+2260:                             <div className="bg-black/25 px-2 py-1 rounded-lg text-center">
+2261:                               <span className="text-[10px] text-slate-400 block font-bold">المبالغ المصروفة</span>
+2262:                               <span className="text-sm font-black text-emerald-400 font-mono">{totalPaid.toFixed(2)} ج.م</span>
+2263:                             </div>
+2264:                             <div className="col-span-2 bg-black/25 px-2 py-2 rounded-lg text-center border border-white/5">
+2265:                               <span className="text-[10px] text-slate-400 block font-bold">الرصيد المتبقي له (المديونية)</span>
+2266:                               <span className={`text-base font-black font-mono ${remainingDebt > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+2267:                                 {remainingDebt.toFixed(2)} ج.م
+2268:                               </span>
+2269:                             </div>
+2270:                             <button
+2271:                               onClick={() => {
+2272:                                 setSelectedHistorySupplier(sup);
+2273:                                 setShowSupplierHistoryModal(true);
+2274:                               }}
+2275:                               className="col-span-2 bg-white/5 text-slate-300 p-2 rounded-lg hover:bg-white/10 hover:text-white transition-colors cursor-pointer text-xs font-bold mt-1 shadow-md shadow-black/20"
+2276:                             >
+2277:                               كشف حساب المورد / تفاصيل
+2278:                             </button>
+2279:                           </div>
+2280:                         </div>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

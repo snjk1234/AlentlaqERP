@@ -1,0 +1,64 @@
+Created At: 2026-06-22T10:19:47Z
+Completed At: 2026-06-22T10:19:48Z
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 1975
+Total Bytes: 105056
+Showing lines 1095 to 1150
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1095:                           {cust.orders && cust.orders.length > 0 && (
+1096:                             <div>
+1097:                               <div className="max-h-24 overflow-y-auto space-y-1 custom-scrollbar pr-1">
+1098:                                 {cust.orders.map((ord: any) => (
+1099:                                   <div 
+1100:                                     key={ord.id}
+1101:                                     onClick={() => {
+1102:                                       setInvoice(ord);
+1103:                                       if (ord.qrCode) {
+1104:                                         QRCode.toDataURL(ord.qrCode, { width: 160, margin: 1 })
+1105:                                           .then(url => setQrCodeUrl(url))
+1106:                                           .catch(err => console.error(err));
+1107:                                       } else {
+1108:                                         setQrCodeUrl('');
+1109:                                       }
+1110:                                       setShowModal(true);
+1111:                                     }}
+1112:                                     className="flex justify-between items-center text-xs bg-white/5 hover:bg-white/10 p-1.5 rounded-lg cursor-pointer border border-transparent hover:border-white/10 transition-all font-mono"
+1113:                                   >
+1114:                                     <span className="text-slate-300 font-bold">{ord.invoiceNumber}</span>
+1115:                                     <span className="text-emerald-400 font-bold">{ord.netAmount.toFixed(2)} ج.م</span>
+1116:                                   </div>
+1117:                                 ))}
+1118:                               </div>
+1119:                             </div>
+1120:                           )}
+1121:                         </div>
+1122:                       </div>
+1123:                     );
+1124:                   })}
+1125:                 </div>
+1126:               )}
+1127:             </div>
+1128:           </div>
+1129:         )}
+1130: 
+1131:         {/* TAB 3: INVENTORY TAB */}
+1132:         {activeTab === 'INVENTORY' && (
+1133:           <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+1134:             
+1135:             {/* Header */}
+1136:             <div>
+1137:               <h2 className="text-xl font-bold text-white">إدارة المخزن والأسعار</h2>
+1138:               <p className="text-xs text-slate-400 mt-0.5">مراقبة كميات البضائع، تعديل الأسعار، ومقارنة تكلفة الإنتاج بالبيع وحساب الأرباح</p>
+1139:             </div>
+1140: 
+1141:             {/* Filter, Search & Add Bar */}
+1142:             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+1143:               
+1144:               {/* Search & Add row */}
+1145:               <div className="flex gap-3 items-center w-full max-w-md">
+1146:                 <div className="relative group flex-1">
+1147:                   <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+1148:                     <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+1149:                   </div>
+1150:                   <input 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

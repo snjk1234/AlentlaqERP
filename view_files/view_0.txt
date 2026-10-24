@@ -1,0 +1,258 @@
+Created At: 2026-06-22T10:16:33Z
+Completed At: 2026-06-22T10:16:33Z
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 1934
+Total Bytes: 102597
+Showing lines 1 to 250
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: "use client";
+2: 
+3: import React, { useState, useEffect } from 'react';
+4: import QRCode from 'qrcode';
+5: import { 
+6:   ShoppingCartIcon, 
+7:   SearchIcon, 
+8:   Trash2Icon, 
+9:   PauseCircleIcon,
+10:   CheckCircle2Icon,
+11:   PackageSearchIcon,
+12:   PrinterIcon,
+13:   FlameIcon,
+14:   PipetteIcon,
+15:   BoxIcon,
+16:   Loader2Icon,
+17:   XIcon,
+18:   MinusIcon,
+19:   SquareIcon,
+20:   UsersIcon,
+21:   PlusIcon,
+22:   PencilIcon,
+23:   PackageIcon,
+24:   TrendingUpIcon,
+25:   DollarSignIcon,
+26:   PercentIcon,
+27:   LandmarkIcon
+28: } from 'lucide-react';
+29: 
+30: const getProductImage = (type: string) => {
+31:   switch (type) {
+32:     case 'PIPE':
+33:       return '/images/pipes.png';
+34:     case 'HOSE':
+35:       return '/images/hoses.png';
+36:     case 'ACCESSORY':
+37:       return '/images/accessories.png';
+38:     default:
+39:       return '/images/pipes.png';
+40:   }
+41: };
+42: 
+43: const getCategoryNameAr = (type: string) => {
+44:   switch (type) {
+45:     case 'PIPE':
+46:       return 'مواسير UPVC';
+47:     case 'HOSE':
+48:       return 'خراطيم حريق';
+49:     case 'ACCESSORY':
+50:       return 'إكسسوارات وبواطات';
+51:     default:
+52:       return 'أخرى';
+53:   }
+54: };
+55: 
+56: const getCategoryBadgeClass = (type: string) => {
+57:   switch (type) {
+58:     case 'PIPE':
+59:       return 'bg-sky-500/10 text-sky-400 border border-sky-500/20';
+60:     case 'HOSE':
+61:       return 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+62:     case 'ACCESSORY':
+63:       return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+64:     default:
+65:       return 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
+66:   }
+67: };
+68: 
+69: const getProductDescription = (type: string, name: string) => {
+70:   if (type === 'PIPE') {
+71:     return 'مواسير الإنطلاق UPVC مصنعة بأعلى معايير الجودة لمقاومة الصدمات والضغط الميكانيكي، ومصممة خصيصاً لتمديدات شبكات الكهرباء ومقاومة للأحماض والقلويات والحرائق.';
+72:   } else if (type === 'HOSE') {
+73:     return 'خراطيم الإنطلاق المرنة المقاومة للحريق ومصممة خصيصاً لتحمل درجات الحرارة العالية وسهولة الانحناء والتمديد داخل الجدران والأسقف الخرسانية والجبسية.';
+74:   } else {
+75:     return `إكسسوارات وقطع غيار ${name} من مصنع الانطلاق، مصنعة من مواد UPVC عالية الجودة والمضادة للحريق لضمان عزل وتوصيل آمن للمواسير والوصلات الكهربائية.`;
+76:   }
+77: };
+78: 
+79: export default function POSDashboard() {
+80:   const [isMounted, setIsMounted] = useState(false);
+81:   const [products, setProducts] = useState<any[]>([]);
+82:   const [customers, setCustomers] = useState<any[]>([]);
+83: 
+84:   const [banks, setBanks] = useState<any[]>([]);
+85:   const [payments, setPayments] = useState<any[]>([]);
+86:   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+87:   const [paymentCustomer, setPaymentCustomer] = useState<any>(null);
+88:   const [paymentForm, setPaymentForm] = useState({ amount: '', bankId: '', reference: '', notes: '' });
+89:   const [bankForm, setBankForm] = useState({ name: '', accountNumber: '', balance: '' });
+90:   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+91: 
+92:   
+93:   // Navigation active tab
+94:   const [activeTab, setActiveTab] = useState<'POS' | 'CUSTOMERS' | 'INVENTORY' | 'BANKS'>('POS');
+95:   
+96:   // Search & Filter states
+97:   const [activeCategory, setActiveCategory] = useState('ALL');
+98:   const [searchQuery, setSearchQuery] = useState('');
+99:   const [customerSearch, setCustomerSearch] = useState('');
+100:   const [selectedCustomerId, setSelectedCustomerId] = useState('CASH');
+101:   
+102:   // Loading and submission states
+103:   const [loading, setLoading] = useState(true);
+104:   const [submitting, setSubmitting] = useState(false);
+105:   const [cart, setCart] = useState<any[]>([]);
+106: 
+107:   // Invoice Modal states
+108:   const [showModal, setShowModal] = useState(false);
+109:   const [invoice, setInvoice] = useState<any>(null);
+110:   const [qrCodeUrl, setQrCodeUrl] = useState('');
+111: 
+112:   // Product Detail Modal states
+113:   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+114:   const [showProductModal, setShowProductModal] = useState(false);
+115: 
+116:   // Customer Form Modal states
+117:   const [showCustomerModal, setShowCustomerModal] = useState(false);
+118:   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+119:   const [customerForm, setCustomerForm] = useState({
+120:     id: '',
+121:     name: '',
+122:     phone: '',
+123:     location: '',
+124:     buildingsCount: '0',
+125:     cr: '',
+126:     trn: '',
+127:     customerType: 'CASH',
+128:     discount: '0'
+129:   });
+130: 
+131:   // Product Form Modal states
+132:   const [showProductFormModal, setShowProductFormModal] = useState(false);
+133:   const [isEditingProduct, setIsEditingProduct] = useState(false);
+134:   const [productForm, setProductForm] = useState({
+135:     id: '',
+136:     code: '',
+137:     barcode: '',
+138:     name: '',
+139:     type: 'PIPE',
+140:     size: '',
+141:     gauge: '',
+142:     color: '',
+143:     length: '',
+144:     weight: '',
+145:     costPrice: '',
+146:     markup: '30',
+147:     price: '',
+148:     stockQty: '',
+149:     minStockQty: '10',
+150:     maxStockQty: '1000'
+151:   });
+152: 
+153:   // Fix hydration issues by setting mounted state
+154:   useEffect(() => {
+155:     setIsMounted(true);
+156:   }, []);
+157: 
+158:   // Fetch products from database
+159: 
+160:   const fetchBanks = () => {
+161:     if (typeof window !== 'undefined' && (window as any).electronAPI) {
+162:       (window as any).electronAPI.getBanks().then((data: any) => setBanks(data)).catch(console.error);
+163:     }
+164:   };
+165: 
+166:   const fetchPayments = () => {
+167:     if (typeof window !== 'undefined' && (window as any).electronAPI) {
+168:       (window as any).electronAPI.getPayments().then((data: any) => setPayments(data)).catch(console.error);
+169:     }
+170:   };
+171: 
+172:   const fetchProducts = () => {
+173:     setLoading(true);
+174:     if (typeof window !== 'undefined' && (window as any).electronAPI) {
+175:       (window as any).electronAPI.getProducts()
+176:         .then((data: any) => {
+177:           setProducts(data);
+178:           setLoading(false);
+179:         })
+180:         .catch((err: any) => {
+181:           console.error(err);
+182:           setLoading(false);
+183:         });
+184:     } else {
+185:       fetch('/api/products')
+186:         .then(res => res.json())
+187:         .then(data => {
+188:           setProducts(data);
+189:           setLoading(false);
+190:         })
+191:         .catch(err => {
+192:           console.error(err);
+193:           setLoading(false);
+194:           // Fallback dummy products for web view
+195:           setProducts([
+196:             { id: 'p1', code: '3020', barcode: '622001', name: 'ماسورة UPVC قطر 20مم فئة خفيفة', type: 'PIPE', gauge: 'Light', size: '20 mm', color: 'أبيض', costPrice: 12, price: 18, taxRate: 0.14, stockQty: 120, minStockQty: 10 },
+197:             { id: 'p2', code: '3025', barcode: '622002', name: 'ماسورة UPVC قطر 25مم فئة متوسطة', type: 'PIPE', gauge: 'Medium', size: '25 mm', color: 'أبيض', costPrice: 16, price: 24, taxRate: 0.14, stockQty: 85, minStockQty: 10 },
+198:             { id: 'p3', code: '5010', barcode: '622003', name: 'خرطوم حريق مرن مقاس 1 إنش طول 30م', type: 'HOSE', gauge: 'Heavy', size: '1 inch', color: 'أحمر', costPrice: 150, price: 210, taxRate: 0.14, stockQty: 15, minStockQty: 5 }
+199:           ]);
+200:         });
+201:     }
+202:   };
+203: 
+204:   // Fetch customers from database
+205:   const fetchCustomers = () => {
+206:     if (typeof window !== 'undefined' && (window as any).electronAPI) {
+207:       (window as any).electronAPI.getCustomers()
+208:         .then((data: any) => {
+209:           setCustomers(data);
+210:         })
+211:         .catch((err: any) => {
+212:           console.error(err);
+213:         });
+214:     } else {
+215:       fetch('/api/customers')
+216:         .then(res => res.json())
+217:         .then(data => {
+218:           setCustomers(data);
+219:         })
+220:         .catch(err => {
+221:           console.error(err);
+222:           // Fallback dummy customers for web view
+223:           setCustomers([
+224:             { id: 'cust-1', name: 'شركة المقاولون العرب', phone: '01012345678', email: 'info@arabco.com', address: 'القاهرة، مصر', trn: '310122345600003', orders: [] },
+225:             { id: 'cust-2', name: 'أوراسكوم للإنشاءات', phone: '01298765432', email: 'contact@orascom.com', address: 'الجيزة، مصر', trn: '320011223300003', orders: [] },
+226:             { id: 'cust-3', name: 'السويدي إليكتريك', phone: '01123456789', email: 'sales@elsewedy.com', address: 'العاشر من رمضان، مصر', trn: '330044556600003', orders: [] }
+227:           ]);
+228:         });
+229:     }
+230:   };
+231: 
+232:   useEffect(() => {
+233:     if (isMounted) {
+234:       fetchProducts();
+235:       fetchCustomers();
+236:       fetchBanks();
+237:       fetchPayments();
+238:     }
+239:   }, [isMounted]);
+240: 
+241:   // Apply customer default discount to all cart items when selected customer changes
+242:   useEffect(() => {
+243:     if (selectedCustomerId && customers.length > 0) {
+244:       const customer = selectedCustomerId === 'CASH' ? null : customers.find(c => c.id === selectedCustomerId);
+245:       const defaultDiscount = customer ? (customer.discount || 0) : 0;
+246:       setCart(prev => {
+247:         const needsUpdate = prev.some(item => item.discountPercent !== defaultDiscount);
+248:         if (!needsUpdate) return prev;
+249:         return prev.map(item => {
+250:           const product = products.find(p => p.id === item.id);
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

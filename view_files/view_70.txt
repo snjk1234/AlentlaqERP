@@ -1,0 +1,68 @@
+Created At: 2026-07-30T17:13:46+03:00
+Completed At: 2026-07-30T17:13:46+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4412
+Total Bytes: 253203
+Showing lines 1891 to 1950
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1891:                         i + 1,
+1892:                         p.code,
+1893:                         p.name,
+1894:                         p.size,
+1895:                         p.color || '-',
+1896:                         `${p.price.toFixed(2)} ج.م`,
+1897:                         p.stockQty
+1898:                       ])
+1899:                     });
+1900:                   }}
+1901:                   className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+1902:                 >
+1903:                   <PrinterIcon className="w-4 h-4" />
+1904:                   <span>طباعة الجدول</span>
+1905:                 </button>
+1906:               </div>
+1907: 
+1908:               {/* Categories Navigation */}
+1909:               <div className="flex gap-2 w-full md:w-auto overflow-x-auto py-1">
+1910:                 <button 
+1911:                   onClick={() => setInventoryCategory('ALL')}
+1912:                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${inventoryCategory === 'ALL' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+1913:                 >
+1914:                   الكل
+1915:                 </button>
+1916:                 <button 
+1917:                   onClick={() => setInventoryCategory('PIPE')}
+1918:                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${inventoryCategory === 'PIPE' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+1919:                 >
+1920:                   مواسير UPVC
+1921:                 </button>
+1922:                 <button 
+1923:                   onClick={() => setInventoryCategory('HOSE')}
+1924:                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${inventoryCategory === 'HOSE' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+1925:                 >
+1926:                   خراطيم حريق
+1927:                 </button>
+1928:                 <button 
+1929:                   onClick={() => setInventoryCategory('ACCESSORY')}
+1930:                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${inventoryCategory === 'ACCESSORY' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+1931:                 >
+1932:                   إكسسوارات وبواطات
+1933:                 </button>
+1934:               </div>
+1935:             </div>
+1936: 
+1937:             {/* Products Bento Cards Grid */}
+1938:             <div className="flex-1 overflow-y-auto pb-10 custom-scrollbar pr-2">
+1939:               {filteredInventoryProducts.length === 0 ? (
+1940:                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
+1941:                   <PackageIcon className="h-16 w-16 text-slate-600" />
+1942:                   <div>
+1943:                     <h3 className="text-lg font-bold text-slate-300">لا توجد منتجات متطابقة</h3>
+1944:                     <p className="text-sm text-slate-500 mt-1">أضف منتج جديد لتسجيله في المخزن</p>
+1945:                   </div>
+1946:                 </div>
+1947:               ) : (
+1948:                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+1949:                   {filteredInventoryProducts.map((p) => {
+1950:                     const isLowStock = p.stockQty <= p.minStockQty;
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

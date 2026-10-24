@@ -1,0 +1,69 @@
+Created At: 2026-07-30T17:13:54+03:00
+Completed At: 2026-07-30T17:13:54+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4448
+Total Bytes: 255971
+Showing lines 1915 to 1975
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1915:                   }}
+1916:                   className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+1917:                 >
+1918:                   <PlusIcon className="w-4 h-4" />
+1919:                   <span>إضافة منتج جديد</span>
+1920:                 </button>
+1921:                 <button 
+1922:                   onClick={() => {
+1923:                     setPrintTableData({
+1924:                       title: 'كشف جرد المخزون والأسعار الحالي',
+1925:                       headers: ['م', 'كود الصنف', 'اسم المنتج', 'المقاس', 'اللون', 'سعر البيع', 'المخزون الحالي'],
+1926:                       rows: filteredInventoryProducts.map((p, i) => [
+1927:                         i + 1,
+1928:                         p.code,
+1929:                         p.name,
+1930:                         p.size,
+1931:                         p.color || '-',
+1932:                         `${p.price.toFixed(2)} ج.م`,
+1933:                         p.stockQty
+1934:                       ])
+1935:                     });
+1936:                   }}
+1937:                   className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+1938:                 >
+1939:                   <PrinterIcon className="w-4 h-4" />
+1940:                   <span>طباعة الجدول</span>
+1941:                 </button>
+1942:               </div>
+1943: 
+1944:               {/* Categories Navigation */}
+1945:               <div className="flex gap-2 w-full md:w-auto overflow-x-auto py-1">
+1946:                 <button 
+1947:                   onClick={() => setInventoryCategory('ALL')}
+1948:                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${inventoryCategory === 'ALL' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+1949:                 >
+1950:                   الكل
+1951:                 </button>
+1952:                 <button 
+1953:                   onClick={() => setInventoryCategory('PIPE')}
+1954:                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${inventoryCategory === 'PIPE' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+1955:                 >
+1956:                   مواسير UPVC
+1957:                 </button>
+1958:                 <button 
+1959:                   onClick={() => setInventoryCategory('HOSE')}
+1960:                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${inventoryCategory === 'HOSE' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+1961:                 >
+1962:                   خراطيم حريق
+1963:                 </button>
+1964:                 <button 
+1965:                   onClick={() => setInventoryCategory('ACCESSORY')}
+1966:                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${inventoryCategory === 'ACCESSORY' ? 'bg-entlaq-red text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+1967:                 >
+1968:                   إكسسوارات وبواطات
+1969:                 </button>
+1970:               </div>
+1971:             </div>
+1972: 
+1973:             {/* Products Bento Cards Grid */}
+1974:             <div className="flex-1 overflow-y-auto pb-10 custom-scrollbar pr-2">
+1975:               {filteredInventoryProducts.length === 0 ? (
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

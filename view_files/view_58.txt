@@ -1,0 +1,59 @@
+Created At: 2026-07-30T16:46:39+03:00
+Completed At: 2026-07-30T16:46:39+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 251498
+Showing lines 2110 to 2160
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2110:                           <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs text-slate-300 mb-2 border-t border-white/5 pt-2 font-semibold">
+2111:                             {sup.phone && <p>📱 <span className="text-white font-mono font-bold">{sup.phone}</span></p>}
+2112:                             {sup.address && <p>📍 <span className="text-white">{sup.address}</span></p>}
+2113:                             {sup.cr && <p>📜 سجل: <span className="text-white font-mono font-bold">{sup.cr}</span></p>}
+2114:                             {sup.trn && <p className="col-span-2">📋 ضريبي: <span className="text-white font-mono font-bold text-xs">{sup.trn}</span></p>}
+2115:                           </div>
+2116:                         </div>
+2117: 
+2118:                         <div className="border-t border-white/5 pt-2">
+2119:                           <div className="grid grid-cols-2 gap-2 mb-2">
+2120:                             <div className="bg-black/25 px-2 py-1 rounded-lg text-center">
+2121:                               <span className="text-[10px] text-slate-400 block font-bold">فواتير التوريد</span>
+2122:                               <span className="text-sm font-black text-red-400 font-mono">{totalPurchased.toFixed(2)} ج.م</span>
+2123:                             </div>
+2124:                             <div className="bg-black/25 px-2 py-1 rounded-lg text-center">
+2125:                               <span className="text-[10px] text-slate-400 block font-bold">المبالغ المصروفة</span>
+2126:                               <span className="text-sm font-black text-emerald-400 font-mono">{totalPaid.toFixed(2)} ج.م</span>
+2127:                             </div>
+2128:                             <div className="col-span-2 bg-black/25 px-2 py-2 rounded-lg text-center border border-white/5">
+2129:                               <span className="text-[10px] text-slate-400 block font-bold">الرصيد المتبقي له (المديونية)</span>
+2130:                               <span className={`text-base font-black font-mono ${remainingDebt > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+2131:                                 {remainingDebt.toFixed(2)} ج.م
+2132:                               </span>
+2133:                             </div>
+2134:                             <button
+2135:                               onClick={() => {
+2136:                                 setSelectedHistorySupplier(sup);
+2137:                                 setShowSupplierHistoryModal(true);
+2138:                               }}
+2139:                               className="col-span-2 bg-white/5 text-slate-300 p-2 rounded-lg hover:bg-white/10 hover:text-white transition-colors cursor-pointer text-xs font-bold mt-1 shadow-md shadow-black/20"
+2140:                             >
+2141:                               كشف حساب المورد / تفاصيل
+2142:                             </button>
+2143:                           </div>
+2144:                         </div>
+2145:                       </div>
+2146:                     );
+2147:                   })}
+2148:                 </div>
+2149:               )}
+2150:             </div>
+2151:           </div>
+2152:         )}
+2153: 
+2154:         {/* TAB 8: PURCHASES */}
+2155:         {activeTab === 'PURCHASES' && (
+2156:           <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+2157:             <div>
+2158:               <h2 className="text-xl font-bold text-white">فواتير المشتريات والوارد للمخزن</h2>
+2159:               <p className="text-xs text-slate-400 mt-0.5">تسجيل الكميات والمنتجات الواردة من الموردين وتنزيلها تلقائياً للمخزن</p>
+2160:             </div>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

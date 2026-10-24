@@ -1,0 +1,69 @@
+Created At: 2026-07-30T18:56:17+03:00
+Completed At: 2026-07-30T18:56:17+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 251498
+Showing lines 1435 to 1495
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1435:                 </button>
+1436:               </div>
+1437: 
+1438:               {/* Cart Items */}
+1439:               {cart.length === 0 ? (
+1440:                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+1441:                   <ShoppingCartIcon className="h-16 w-16 text-slate-600 animate-pulse" />
+1442:                   <div>
+1443:                     <h3 className="text-lg font-bold text-slate-300">سلة المبيعات فارغة</h3>
+1444:                     <p className="text-sm text-slate-500 mt-1">اضغط على أي صنف لإضافته إلى الفاتورة</p>
+1445:                   </div>
+1446:                 </div>
+1447:               ) : (
+1448:                 <div className="flex-1 overflow-y-auto p-2.5 space-y-2 custom-scrollbar">
+1449:                   {cart.map((item) => (
+1450:                     <div key={item.id} className="bg-slate-800/40 border border-white/5 rounded-lg p-2.5 flex gap-2.5 hover:border-white/10 transition-colors">
+1451:                       <div className="flex-1 flex flex-col justify-between">
+1452:                         <div className="flex justify-between items-start">
+1453:                             <h4 className="font-bold text-slate-200 mb-1 text-sm">{item.name}</h4>
+1454:                             <span className="text-xs px-2 py-0.5 bg-white/10 rounded text-slate-300 font-mono font-bold">{item.size}</span>
+1455:                         </div>
+1456:                         {item.originalPrice <= 0 && (
+1457:                           <div className="mt-1.5 mb-1 text-[10px] font-black text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1.5 rounded-lg text-center">
+1458:                             ⚠️ لم يتم وضع التسعير من المدير بعد!
+1459:                           </div>
+1460:                         )}
+1461: 
+1462:                         {/* Editable Discount Section */}
+1463:                         <div className="flex items-center gap-3 mt-1.5 select-none">
+1464:                           <div className="flex items-center gap-1 bg-white/5 border border-white/10 px-2 py-0.5 rounded-lg">
+1465:                             <span className="text-[10px] text-slate-400 font-bold">خصم:</span>
+1466:                             <input 
+1467:                               type="number"
+1468:                               value={item.discountPercent !== undefined ? item.discountPercent : 0}
+1469:                               onChange={(e) => {
+1470:                                 const val = parseFloat(e.target.value);
+1471:                                 updateItemDiscount(item.id, isNaN(val) ? 0 : val);
+1472:                               }}
+1473:                               className="bg-transparent text-white font-mono text-xs w-8 text-center focus:outline-none focus:bg-white/5 rounded font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+1474:                               min="0"
+1475:                               max="100"
+1476:                               step="0.1"
+1477:                             />
+1478:                             <span className="text-[10px] text-slate-400 font-bold">%</span>
+1479:                           </div>
+1480:                           {item.discountPercent > 0 && (
+1481:                             <span className="text-[10px] text-slate-500 line-through font-mono">
+1482:                               {(item.originalPrice * item.qty).toFixed(2)} ج.م
+1483:                             </span>
+1484:                           )}
+1485:                         </div>
+1486: 
+1487:                         <div className="flex justify-between items-center mt-2">
+1488:                           <span className="text-entlaq-red font-bold font-mono text-sm">{(item.price * item.qty).toFixed(2)} ج.م</span>
+1489:                           <button 
+1490:                             onClick={() => removeFromCart(item.id)}
+1491:                             className="text-xs text-slate-500 hover:text-red-400 transition-colors cursor-pointer"
+1492:                           >
+1493:                             حذف
+1494:                           </button>
+1495:                         </div>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

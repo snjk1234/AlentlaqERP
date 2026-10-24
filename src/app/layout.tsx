@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Cairo } from "next/font/google";
+import { Tajawal } from "next/font/google";
 import "./globals.css";
 
-const cairo = Cairo({
-  variable: "--font-cairo",
+const tajawal = Tajawal({
+  variable: "--font-tajawal",
   subsets: ["arabic", "latin"],
+  weight: ["200", "300", "400", "500", "700", "800", "900"],
 });
 
 export const metadata: Metadata = {
   title: "الانطلاق - نظام إدارة المبيعات",
-  description: "نظام ERP و POS مخصص لشركة الانطلاق لتصنيع وتوريد خراطيم ومواسير الكهرباء",
+  description: "نظام ERP و POS مخصص لشركة الانطلاق لتصنيع وتوريد خراطيم ومواسير وأسلاك الكهرباء",
 };
 
 export default function RootLayout({
@@ -19,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl">
-      <body className={`${cairo.variable} antialiased`}>
+      <body className={`${tajawal.variable} antialiased`}>
         {children}
       </body>
     </html>

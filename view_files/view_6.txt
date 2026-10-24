@@ -1,0 +1,259 @@
+Created At: 2026-06-22T10:20:27Z
+Completed At: 2026-06-22T10:20:27Z
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 1991
+Total Bytes: 106346
+Showing lines 1450 to 1700
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1450:               <div className="flex justify-between items-center pt-4 border-t border-slate-700">
+1451:                 
+1452:                 {/* ZATCA compliant QR Code (Offline-ready) */}
+1453:                 <div className="bg-white p-3 rounded-md flex flex-col items-center justify-center shadow-lg border border-slate-300">
+1454:                   {qrCodeUrl ? (
+1455:                     <img src={qrCodeUrl} alt="ZATCA E-Invoicing QR Code" className="w-32 h-32" />
+1456:                   ) : (
+1457:                     <div className="w-32 h-32 border border-slate-300 rounded flex items-center justify-center text-[10px] text-slate-500 font-bold text-center">
+1458:                       عرض سعر<br/>(لا يحتاج رمز QR)
+1459:                     </div>
+1460:                   )}
+1461:                 </div>
+1462: 
+1463:                 {/* Summaries */}
+1464:                 <div className="w-72 space-y-3 bg-slate-950/40 p-5 rounded-md border border-slate-700">
+1465:                   <div className="flex justify-between text-xs text-slate-400 font-mono">
+1466:                     <span>الإجمالي (غير شامل الضريبة)</span>
+1467:                     <span>{invoice.totalAmount.toFixed(2)} ج.م</span>
+1468:                   </div>
+1469:                   <div className="flex justify-between text-xs text-slate-400 font-mono">
+1470:                     <span>ضريبة القيمة المضافة (14%)</span>
+1471:                     <span>{invoice.taxAmount.toFixed(2)} ج.م</span>
+1472:                   </div>
+1473:                   <div className="h-px bg-slate-700 w-full"></div>
+1474:                   <div className="flex justify-between items-end">
+1475:                     <span className="text-sm font-bold text-white">الإجمالي المستحق</span>
+1476:                     <span className="text-2xl font-black text-emerald-400 font-mono">
+1477:                       {invoice.netAmount.toFixed(2)} <span className="text-xs font-normal text-emerald-500">ج.م</span>
+1478:                     </span>
+1479:                   </div>
+1480:                 </div>
+1481:               </div>
+1482: 
+1483:               {/* Thank you note & Contacts */}
+1484:               <div className="pt-6 border-t border-slate-700 flex flex-col items-center text-center space-y-3">
+1485:                 <p className="text-sm font-bold text-white tracking-wide">
+1486:                   💚 شكراً لتعاملكم مع مصنع الانطلاق ونتطلع لخدمتكم دائماً!
+1487:                 </p>
+1488:                 <div className="flex justify-center gap-6 text-xs text-slate-400 font-mono">
+1489:                   <span>هاتف: 01030099400 / 01021683030</span>
+1490:                   <span>|</span>
+1491:                   <span>إيميل: info@al-entlaq.com</span>
+1492:                   <span>|</span>
+1493:                   <span>ويب: www.al-entlaq.com</span>
+1494:                 </div>
+1495:               </div>
+1496: 
+1497:             </div>
+1498: 
+1499:             {/* Modal Footer */}
+1500:             <div className="p-6 bg-slate-950 border-t border-slate-700 flex gap-4 no-print">
+1501:               <button 
+1502:                 onClick={() => window.print()}
+1503:                 className="flex-1 bg-entlaq-red text-white py-3.5 rounded-xl font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 cursor-pointer"
+1504:               >
+1505:                 <PrinterIcon size={18} />
+1506:                 طباعة الفاتورة
+1507:               </button>
+1508:               <button 
+1509:                 onClick={() => setShowModal(false)}
+1510:                 className="flex-1 bg-white/5 text-slate-300 py-3.5 rounded-xl font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
+1511:               >
+1512:                 إغلاق
+1513:               </button>
+1514:             </div>
+1515: 
+1516:           </div>
+1517:         </div>
+1518:       )}
+1519: 
+1520:       {/* MODAL 2: PRODUCT IN-GRID DETAIL PREVIEW */}
+1521:       {showProductModal && selectedProduct && (
+1522:         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
+1523:           <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+1524:             
+1525:             {/* Modal Header */}
+1526:             <div className="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+1527:               <div>
+1528:                 <span className="px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded text-[10px] font-bold">
+1529:                   {getCategoryNameAr(selectedProduct.type)}
+1530:                 </span>
+1531:                 <h3 className="text-lg font-bold text-white mt-1">{selectedProduct.name}</h3>
+1532:               </div>
+1533:               <button 
+1534:                 onClick={() => setShowProductModal(false)}
+1535:                 className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+1536:               >
+1537:                 <XIcon size={18} />
+1538:               </button>
+1539:             </div>
+1540: 
+1541:             {/* Modal Body */}
+1542:             <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+1543:               <div className="w-full aspect-video rounded-2xl overflow-hidden bg-black/30 border border-white/5 relative group">
+1544:                 <img 
+1545:                   src={getProductImage(selectedProduct.type)} 
+1546:                   alt={selectedProduct.name}
+1547:                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+1548:                 />
+1549:               </div>
+1550: 
+1551:               {/* Product Info Grid */}
+1552:               <div className="grid grid-cols-2 gap-4">
+1553:                 <div className="bg-white/5 border border-white/5 p-3 rounded-2xl">
+1554:                   <span className="text-[10px] text-slate-400 block">كود الصنف (Code)</span>
+1555:                   <span className="text-sm font-bold text-white font-mono">{selectedProduct.code}</span>
+1556:                 </div>
+1557:                 <div className="bg-white/5 border border-white/5 p-3 rounded-2xl">
+1558:                   <span className="text-[10px] text-slate-400 block">المقاس (Size)</span>
+1559:                   <span className="text-sm font-bold text-white font-mono">{selectedProduct.size}</span>
+1560:                 </div>
+1561:                 <div className="bg-white/5 border border-white/5 p-3 rounded-2xl">
+1562:                   <span className="text-[10px] text-slate-400 block">اللون (Color)</span>
+1563:                   <span className="text-sm font-bold text-white">{selectedProduct.color || '-'}</span>
+1564:                 </div>
+1565:                 <div className="bg-white/5 border border-white/5 p-3 rounded-2xl">
+1566:                   <span className="text-[10px] text-slate-400 block">الطول (Length)</span>
+1567:                   <span className="text-sm font-bold text-white font-mono">{selectedProduct.length || '-'}</span>
+1568:                 </div>
+1569:                 <div className="bg-white/5 border border-white/5 p-3 rounded-2xl">
+1570:                   <span className="text-[10px] text-slate-400 block">الوزن (Weight)</span>
+1571:                   <span className="text-sm font-bold text-white font-mono">{selectedProduct.weight || '-'}</span>
+1572:                 </div>
+1573:                 <div className="bg-white/5 border border-white/5 p-3 rounded-2xl">
+1574:                   <span className="text-[10px] text-slate-400 block">سعر البيع</span>
+1575:                   <span className="text-sm font-bold text-emerald-400 font-mono">{selectedProduct.price} ج.م</span>
+1576:                 </div>
+1577:                 <div className="bg-white/5 border border-white/5 p-3 rounded-2xl col-span-2 text-center">
+1578:                   <span className="text-[10px] text-slate-400 block">المخزون المتاح</span>
+1579:                   <span className={`text-base font-bold font-mono ${selectedProduct.stockQty <= 0 ? 'text-red-500' : selectedProduct.stockQty <= selectedProduct.minStockQty ? 'text-amber-400' : 'text-emerald-400'}`}>
+1580:                     {selectedProduct.stockQty} وحدة
+1581:                   </span>
+1582:                 </div>
+1583:               </div>
+1584: 
+1585:               {/* Description */}
+1586:               <div className="space-y-2">
+1587:                 <h4 className="text-xs font-bold text-slate-400">الوصف والمواصفات الفنية</h4>
+1588:                 <p className="text-xs text-slate-300 leading-relaxed bg-white/5 p-3 rounded-2xl border border-white/5">
+1589:                   {getProductDescription(selectedProduct.type, selectedProduct.name)}
+1590:                 </p>
+1591:               </div>
+1592:             </div>
+1593: 
+1594:             {/* Modal Footer */}
+1595:             <div className="p-5 bg-slate-950 border-t border-slate-800 flex gap-3">
+1596:               <button 
+1597:                 disabled={selectedProduct.stockQty <= 0}
+1598:                 onClick={() => {
+1599:                   addToCart(selectedProduct);
+1600:                   setShowProductModal(false);
+1601:                 }}
+1602:                 className="flex-1 bg-entlaq-red text-white py-3 rounded-xl font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all disabled:opacity-40 disabled:hover:bg-entlaq-red cursor-pointer"
+1603:               >
+1604:                 <ShoppingCartIcon size={16} />
+1605:                 إضافة إلى الفاتورة
+1606:               </button>
+1607:               <button 
+1608:                 onClick={() => setShowProductModal(false)}
+1609:                 className="bg-white/5 text-slate-300 px-6 py-3 rounded-xl font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
+1610:               >
+1611:                 إغلاق
+1612:               </button>
+1613:             </div>
+1614: 
+1615:           </div>
+1616:         </div>
+1617:       )}
+1618: 
+1619:       {/* MODAL 3: CUSTOMER FORM MODAL */}
+1620:       {showCustomerModal && (
+1621:         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
+1622:           <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+1623:             
+1624:             <div className="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+1625:               <div>
+1626:                 <h3 className="text-lg font-bold text-white">
+1627:                   {isEditingCustomer ? 'تعديل بيانات العميل' : 'إضافة عميل جديد'}
+1628:                 </h3>
+1629:                 <p className="text-xs text-slate-400 mt-1">أدخل تفاصيل العميل لتسجيل الفواتير المخصصة والشركات</p>
+1630:               </div>
+1631:               <button 
+1632:                 onClick={() => setShowCustomerModal(false)}
+1633:                 className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+1634:               >
+1635:                 <XIcon size={18} />
+1636:               </button>
+1637:             </div>
+1638: 
+1639:             <form onSubmit={handleSaveCustomer} className="p-6 space-y-4 overflow-y-auto custom-scrollbar text-right" dir="rtl">
+1640:               <div className="space-y-1">
+1641:                 <label className="text-xs text-slate-400 block font-bold">اسم العميل / الشركة *</label>
+1642:                 <input 
+1643:                   type="text"
+1644:                   required
+1645:                   value={customerForm.name}
+1646:                   onChange={(e) => setCustomerForm(prev => ({ ...prev, name: e.target.value }))}
+1647:                   placeholder="مثال: شركة المقاولون العرب"
+1648:                   className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1649:                 />
+1650:               </div>
+1651: 
+1652:               <div className="grid grid-cols-2 gap-4">
+1653:                 <div className="space-y-1">
+1654:                   <label className="text-xs text-slate-400 block font-bold">رقم التلفون</label>
+1655:                   <input 
+1656:                     type="text"
+1657:                     value={customerForm.phone}
+1658:                     onChange={(e) => setCustomerForm(prev => ({ ...prev, phone: e.target.value }))}
+1659:                     placeholder="مثال: 01021683030"
+1660:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1661:                   />
+1662:                 </div>
+1663:                 <div className="space-y-1">
+1664:                   <label className="text-xs text-slate-400 block font-bold">الموقع</label>
+1665:                   <input 
+1666:                     type="text"
+1667:                     value={customerForm.location}
+1668:                     onChange={(e) => setCustomerForm(prev => ({ ...prev, location: e.target.value }))}
+1669:                     placeholder="مثال: القاهرة - مدينة نصر"
+1670:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1671:                   />
+1672:                 </div>
+1673:               </div>
+1674: 
+1675:               <div className="grid grid-cols-2 gap-4">
+1676:                 <div className="space-y-1">
+1677:                   <label className="text-xs text-slate-400 block font-bold">عدد العماير</label>
+1678:                   <input 
+1679:                     type="number"
+1680:                     value={customerForm.buildingsCount}
+1681:                     onChange={(e) => setCustomerForm(prev => ({ ...prev, buildingsCount: e.target.value }))}
+1682:                     placeholder="مثال: 5"
+1683:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1684:                   />
+1685:                 </div>
+1686:                 <div className="space-y-1">
+1687:                   <label className="text-xs text-slate-400 block font-bold">السجل التجاري</label>
+1688:                   <input 
+1689:                     type="text"
+1690:                     value={customerForm.cr}
+1691:                     onChange={(e) => setCustomerForm(prev => ({ ...prev, cr: e.target.value }))}
+1692:                     placeholder="مثال: 1010123456"
+1693:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1694:                   />
+1695:                 </div>
+1696:               </div>
+1697: 
+1698:               <div className="grid grid-cols-3 gap-4">
+1699:                 <div className="space-y-1">
+1700:                   <label className="text-xs text-slate-400 block font-bold">الرقم الضريبي</label>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

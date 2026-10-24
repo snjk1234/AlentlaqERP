@@ -5,7 +5,9 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const products = await prisma.product.findMany();
+    const products = await prisma.product.findMany({
+      include: { supplier: true }
+    });
     return NextResponse.json(products);
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -16,14 +18,31 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    if (!body.code || !body.name || !body.price) {
-      return NextResponse.json({ error: 'كود الصنف والاسم والسعر مطلوبين' }, { status: 400 });
+    if (!body.code || !body.name || body.price === undefined) {
+      return NextResponse.json({ error: 'كود الصنف والاسم مطلوبين' }, { status: 400 });
+    }
+
+    // Check for uniqueness based on (code, color, gauge, weight, supplierId)
+    const existingProducts = await prisma.product.findMany({
+      where: { code: body.code }
+    });
+    
+    if (existingProducts.length > 0) {
+      const isDuplicate = existingProducts.some(p => 
+        (p.supplierId || null) === (body.supplierId || null) &&
+        (p.color || null) === (body.color || null) &&
+        (p.gauge || null) === (body.gauge || null) &&
+        (p.weight || null) === (body.weight || null)
+      );
+      if (isDuplicate) {
+        return NextResponse.json({ error: 'هذا الكود مسجل مسبقاً بنفس المواصفات لنفس المورد. قم بتغيير المواصفات أو المورد أو تغيير الكود.' }, { status: 400 });
+      }
     }
 
     const product = await prisma.product.create({
       data: {
         code: body.code,
-        barcode: body.barcode || null,
+        barcode: (body.barcode && body.barcode.trim() !== '') ? body.barcode.trim() : null,
         name: body.name,
         type: body.type,
         gauge: body.gauge || null,
@@ -31,6 +50,8 @@ export async function POST(request: Request) {
         color: body.color || null,
         length: body.length || null,
         weight: body.weight || null,
+        pricePerKilo: isNaN(Number(body.pricePerKilo)) ? 0 : Number(body.pricePerKilo),
+        supplierId: body.supplierId || null,
         costPrice: isNaN(Number(body.costPrice)) ? 0 : Number(body.costPrice),
         markup: isNaN(Number(body.markup)) ? 1.3 : Number(body.markup),
         price: isNaN(Number(body.price)) ? 0 : Number(body.price),
@@ -38,6 +59,7 @@ export async function POST(request: Request) {
         stockQty: isNaN(Number(body.stockQty)) ? 0 : Number(body.stockQty),
         minStockQty: isNaN(Number(body.minStockQty)) ? 10 : Number(body.minStockQty),
         maxStockQty: isNaN(Number(body.maxStockQty)) ? 1000 : Number(body.maxStockQty),
+        imageUrl: body.imageUrl || null,
       }
     });
 
@@ -57,12 +79,38 @@ export async function PUT(request: Request) {
     if (!body.id) {
       return NextResponse.json({ error: 'معرف الصنف مطلوب للتعديل' }, { status: 400 });
     }
+    if (Object.keys(body).length === 2 && body.imageUrl !== undefined) {
+      if (typeof body.imageUrl !== 'string' || body.imageUrl.length > 2800000
+        || !/^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/]+=*$/.test(body.imageUrl)) {
+        return NextResponse.json({ error: 'ملف الصورة غير صالح أو يتجاوز الحجم المسموح' }, { status: 400 });
+      }
+      const product = await prisma.product.update({ where: { id: body.id }, data: { imageUrl: body.imageUrl } });
+      return NextResponse.json(product);
+    }
+
+    if (body.code) {
+      const existingProducts = await prisma.product.findMany({
+        where: { code: body.code, id: { not: body.id } }
+      });
+      
+      if (existingProducts.length > 0) {
+        const isDuplicate = existingProducts.some(p => 
+          (p.supplierId || null) === (body.supplierId || null) &&
+          (p.color || null) === (body.color || null) &&
+          (p.gauge || null) === (body.gauge || null) &&
+          (p.weight || null) === (body.weight || null)
+        );
+        if (isDuplicate) {
+          return NextResponse.json({ error: 'هذا الكود مسجل مسبقاً بنفس المواصفات لنفس المورد. قم بتغيير المواصفات أو تغيير المورد أو الكود.' }, { status: 400 });
+        }
+      }
+    }
 
     const product = await prisma.product.update({
       where: { id: body.id },
       data: {
         code: body.code,
-        barcode: body.barcode || null,
+        barcode: (body.barcode && body.barcode.trim() !== '') ? body.barcode.trim() : null,
         name: body.name,
         type: body.type,
         gauge: body.gauge || null,
@@ -70,6 +118,8 @@ export async function PUT(request: Request) {
         color: body.color || null,
         length: body.length || null,
         weight: body.weight || null,
+        pricePerKilo: isNaN(Number(body.pricePerKilo)) ? 0 : Number(body.pricePerKilo),
+        supplierId: body.supplierId || null,
         costPrice: isNaN(Number(body.costPrice)) ? 0 : Number(body.costPrice),
         markup: isNaN(Number(body.markup)) ? 1.3 : Number(body.markup),
         price: isNaN(Number(body.price)) ? 0 : Number(body.price),
@@ -77,6 +127,7 @@ export async function PUT(request: Request) {
         stockQty: isNaN(Number(body.stockQty)) ? 0 : Number(body.stockQty),
         minStockQty: isNaN(Number(body.minStockQty)) ? 10 : Number(body.minStockQty),
         maxStockQty: isNaN(Number(body.maxStockQty)) ? 1000 : Number(body.maxStockQty),
+        imageUrl: body.imageUrl !== undefined ? body.imageUrl : undefined,
       }
     });
 
@@ -89,4 +140,3 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
   }
 }
-

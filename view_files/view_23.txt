@@ -1,0 +1,68 @@
+Created At: 2026-07-29T18:36:59+03:00
+Completed At: 2026-07-29T18:36:59+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 191 to 250
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+191: 
+192:   // Product Form Modal states
+193:   const [showProductFormModal, setShowProductFormModal] = useState(false);
+194:   const [isEditingProduct, setIsEditingProduct] = useState(false);
+195:   const [productForm, setProductForm] = useState({
+196:     id: '',
+197:     code: '',
+198:     barcode: '',
+199:     name: '',
+200:     type: 'PIPE',
+201:     size: '',
+202:     gauge: '',
+203:     color: '',
+204:     length: '',
+205:     weight: '',
+206:     costPrice: '',
+207:     markup: '30',
+208:     price: '',
+209:     stockQty: '',
+210:     minStockQty: '10',
+211:     maxStockQty: '1000'
+212:   });
+213: 
+214:   // Fix hydration issues by setting mounted state
+215:   useEffect(() => {
+216:     setIsMounted(true);
+217:   }, []);
+218: 
+219:   useEffect(() => {
+220:     if (isMounted) {
+221:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+222:         (window as any).electronAPI.getUsers()
+223:           .then((users: any) => {
+224:             if (Array.isArray(users) && users.length > 0) {
+225:               setDbUsers(users);
+226:             }
+227:           })
+228:           .catch(console.error);
+229:       } else {
+230:         // Browser mock users
+231:         setDbUsers([
+232:           { id: 'admin-id', username: 'admin', name: 'مدير النظام', role: 'ADMIN' },
+233:           { id: 'cashier-id', username: 'cashier', name: 'كاشير الانطلاق', role: 'CASHIER' },
+234:           { id: 'storekeeper-id', username: 'storekeeper', name: 'أمين المخزن', role: 'STOREKEEPER' }
+235:         ]);
+236:       }
+237:     }
+238:   }, [isMounted]);
+239: 
+240:   const handleLogin = async (e: React.FormEvent) => {
+241:     e.preventDefault();
+242:     setLoginError('');
+243:     try {
+244:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+245:         const user = await (window as any).electronAPI.login({ username: loginUsername, password: loginPassword });
+246:         if (user) {
+247:           setCurrentUser(user);
+248:           if (user.role === 'CASHIER') {
+249:             setActiveTab('POS');
+250:           } else if (user.role === 'STOREKEEPER') {
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

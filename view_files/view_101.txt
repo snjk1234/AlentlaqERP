@@ -1,0 +1,95 @@
+Created At: 2026-07-30T18:56:51+03:00
+Completed At: 2026-07-30T18:56:51+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4361
+Total Bytes: 252330
+Showing lines 2564 to 2650
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2564:       {/* MODAL 1: INVOICE & QUOTATION PRINT MODAL */}
+2565:       {showModal && invoice && (
+2566:         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in">
+2567:           <div id="printable-invoice" className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+2568:             
+2569:             {/* Modal Header */}
+2570:             <div className="p-6 bg-slate-950 border-b border-slate-700 flex justify-between items-center no-print">
+2571:               <div>
+2572:                 <h3 className="text-xl font-bold flex gap-2 items-center text-white">
+2573:                   <PrinterIcon className="text-entlaq-red h-6 w-6" />
+2574:                   {invoice.isQuotation ? 'عرض سعر توريد' : 'فاتورة ضريبية مبسطة'}
+2575:                 </h3>
+2576:                 <p className="text-xs text-slate-400 mt-1">الرقم: {invoice.invoiceNumber}</p>
+2577:               </div>
+2578:               <button 
+2579:                 onClick={() => setShowModal(false)}
+2580:                 className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all no-print cursor-pointer"
+2581:               >
+2582:                 <XIcon size={20} />
+2583:               </button>
+2584:             </div>
+2585: 
+2586:             {/* Modal Body (Printable Area) */}
+2587:             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-white text-black">
+2588:               
+2589:               {/* Printed Letterhead / Logo */}
+2590:               <div className="flex justify-between items-center border-b border-gray-300 pb-6">
+2591:                 <div className="flex items-center gap-4">
+2592:                   <div className="w-16 h-16 flex items-center justify-center bg-gray-50 rounded-xl border border-gray-200 p-1">
+2593:                     <img src="/images/logo.png" alt="الإنطلاق" className="w-full h-full object-contain" />
+2594:                   </div>
+2595:                   <div>
+2596:                     <h2 className="text-xl font-bold text-black tracking-wide">شركة الإنطلاق</h2>
+2597:                     <p className="text-xs text-gray-500">لتصنيع وتوريد خراطيم ومواسير الكهرباء</p>
+2598:                     <p className="text-[10px] text-gray-400">العاشر من رمضان - المنطقة الصناعية الثالثة</p>
+2599:                   </div>
+2600:                 </div>
+2601:                 <div className="text-left text-sm">
+2602:                   <span className="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-md text-xs font-bold">
+2603:                     {invoice.isQuotation ? 'عرض سعر' : 'فاتورة ضريبية'}
+2604:                   </span>
+2605:                   <p className="text-xs text-slate-400 mt-2 font-mono">الرقم: {invoice.invoiceNumber}</p>
+2606:                   <p className="text-xs text-slate-400 font-mono">التاريخ: {new Date(invoice.createdAt).toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</p>
+2607:                 </div>
+2608:               </div>
+2609: 
+2610:               {/* Vendor & Customer Info */}
+2611:               <div className="grid grid-cols-2 gap-6 text-sm bg-gray-50 p-4 rounded-md border border-gray-200">
+2612:                 <div>
+2613:                   <h4 className="font-bold text-gray-500 mb-1 text-xs">بيانات المورد (البائع)</h4>
+2614:                   <p className="font-bold text-black">مصنع الانطلاق للصناعات البلاستيكية</p>
+2615:                   <p className="text-xs text-gray-500 mt-0.5">الرقم الضريبي: 310122345600003</p>
+2616:                   <p className="text-xs text-gray-500">السجل التجاري: 12056-أ</p>
+2617:                 </div>
+2618:                 <div>
+2619:                   <h4 className="font-bold text-gray-500 mb-1 text-xs">بيانات العميل (المشتري)</h4>
+2620:                   <p className="font-bold text-black">{invoice.customerName}</p>
+2621:                   <p className="text-xs text-gray-500 mt-0.5">النشاط: مقاولات وتوريدات كهربائية</p>
+2622:                   <p className="text-xs text-gray-500">حالة الدفع: نقدي</p>
+2623:                 </div>
+2624:               </div>
+2625: 
+2626:               {/* Items List - Outlined grid styled table as requested */}
+2627:               <div className="border border-gray-200 rounded-md overflow-hidden bg-gray-50/50">
+2628:                 <table className="w-full text-right border-collapse text-sm">
+2629:                   <thead>
+2630:                     <tr className="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
+2631:                       <th className="p-3 border-l border-gray-200">الصنف</th>
+2632:                       <th className="p-3 border-l border-gray-200">الكود</th>
+2633:                       <th className="p-3 border-l border-gray-200">الكمية</th>
+2634:                       <th className="p-3 border-l border-gray-200">سعر الوحدة</th>
+2635:                       <th className="p-3 border-l border-gray-200">الضريبة</th>
+2636:                       <th className="p-3">الإجمالي</th>
+2637:                     </tr>
+2638:                   </thead>
+2639:                   <tbody className="divide-y divide-gray-200 bg-white">
+2640:                     {invoice.items && invoice.items.map((item: any, idx: number) => (
+2641:                       <tr key={idx} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
+2642:                         <td className="p-3 border-l border-gray-200 font-bold text-black">{item.product.name} ({item.product.size})</td>
+2643:                         <td className="p-3 border-l border-gray-200 font-mono text-xs text-gray-600">{item.product.code}</td>
+2644:                         <td className="p-3 border-l border-gray-200 font-mono text-black">{item.quantity}</td>
+2645:                         <td className="p-3 border-l border-gray-200 font-mono text-black">{item.unitPrice.toFixed(2)} ج.م</td>
+2646:                         <td className="p-3 border-l border-gray-200 font-mono text-black">{item.taxAmount.toFixed(2)} ج.م</td>
+2647:                         <td className="p-3 font-mono font-bold text-black">{item.total.toFixed(2)} ج.م</td>
+2648:                       </tr>
+2649:                     ))}
+2650:                   </tbody>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

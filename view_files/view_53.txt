@@ -1,0 +1,138 @@
+Created At: 2026-07-30T16:44:08+03:00
+Completed At: 2026-07-30T16:44:08+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4496
+Total Bytes: 254660
+Showing lines 3731 to 3860
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3731:                                 }}
+3732:                                 className="text-slate-400 hover:text-white bg-white/5 p-1.5 rounded-lg transition-colors cursor-pointer"
+3733:                               ><PrinterIcon size={14} /></button>
+3734:                             </td>
+3735:                           </tr>
+3736:                         ))}
+3737:                       </tbody>
+3738:                     </table>
+3739:                   </div>
+3740:                 ) : (
+3741:                   <div className="text-center py-6 text-slate-500 font-bold text-sm">لا توجد سندات قبض مسجلة لهذا العميل</div>
+3742:                 )}
+3743:               </div>
+3744: 
+3745:             </div>
+3746:           </div>
+3747:         </div>
+3748:       )}
+3749:   
+3750:       {/* MODAL 8.5: SUPPLIER HISTORY MODAL */}
+3751:       {showSupplierHistoryModal && selectedHistorySupplier && (
+3752:         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in">
+3753:           <div id="printable-statement" className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] print:max-h-none print:shadow-none print:bg-white print:border-none print:w-full">
+3754:             <div className="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+3755:               <div>
+3756:                 <h3 className="text-lg font-bold text-white flex gap-2 items-center">
+3757:                   <FileTextIcon className="text-purple-400 animate-pulse" />
+3758:                   كشف حساب تفصيلي للمورد: {selectedHistorySupplier.name}
+3759:                 </h3>
+3760:               </div>
+3761:               <div className="flex gap-2 items-center no-print">
+3762:                 <button 
+3763:                   onClick={() => window.print()}
+3764:                   className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex gap-1.5 items-center transition-all duration-300 cursor-pointer shadow-lg"
+3765:                 >
+3766:                   <PrinterIcon size={14} />
+3767:                   <span>طباعة الكشف</span>
+3768:                 </button>
+3769:                 <button onClick={() => setShowSupplierHistoryModal(false)} className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+3770:                   <XIcon size={18} />
+3771:                 </button>
+3772:               </div>
+3773:             </div>
+3774:             
+3775:             <div className="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6" dir="rtl">
+3776:               
+3777:               {/* Purchases List */}
+3778:               <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+3779:                 <h4 className="text-md font-bold text-white mb-4 border-b border-white/5 pb-2">سجل فواتير الشراء والتوريد</h4>
+3780:                 {selectedHistorySupplier.purchaseOrders && selectedHistorySupplier.purchaseOrders.length > 0 ? (
+3781:                   <div className="max-h-60 overflow-y-auto custom-scrollbar">
+3782:                     <table className="w-full text-right text-sm">
+3783:                       <thead className="bg-slate-900 text-slate-400">
+3784:                         <tr>
+3785:                           <th className="p-3">رقم الفاتورة</th>
+3786:                           <th className="p-3">التاريخ</th>
+3787:                           <th className="p-3">الإجمالي قبل الضريبة</th>
+3788:                           <th className="p-3">قيمة الضريبة</th>
+3789:                           <th className="p-3">الإجمالي الصافي</th>
+3790:                           <th className="p-3 text-center no-print">طباعة</th>
+3791:                         </tr>
+3792:                       </thead>
+3793:                       <tbody className="divide-y divide-slate-800/50">
+3794:                         {selectedHistorySupplier.purchaseOrders.map((ord: any) => (
+3795:                           <tr key={ord.id} className="hover:bg-white/5">
+3796:                             <td className="p-3 font-mono font-bold text-white">{ord.billNumber}</td>
+3797:                             <td className="p-3 font-mono text-xs text-slate-300">{new Date(ord.date || ord.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit' })}</td>
+3798:                             <td className="p-3 font-mono text-slate-300">{ord.totalAmount.toFixed(2)} ج.م</td>
+3799:                             <td className="p-3 font-mono text-slate-400">{ord.taxAmount.toFixed(2)} ج.م</td>
+3800:                             <td className="p-3 font-mono text-purple-400 font-bold">{ord.netAmount.toFixed(2)} ج.م</td>
+3801:                             <td className="p-3 text-center no-print">
+3802:                               <button 
+3803:                                 onClick={() => {
+3804:                                   setSelectedPurchase({ ...ord, supplier: selectedHistorySupplier });
+3805:                                   setShowPurchaseDetailModal(true);
+3806:                                 }}
+3807:                                 className="text-slate-400 hover:text-white bg-white/5 p-1.5 rounded-lg transition-colors cursor-pointer"
+3808:                               ><PrinterIcon size={14} /></button>
+3809:                             </td>
+3810:                           </tr>
+3811:                         ))}
+3812:                       </tbody>
+3813:                     </table>
+3814:                   </div>
+3815:                 ) : (
+3816:                   <div className="text-center py-6 text-slate-500 font-bold text-sm">لا توجد فواتير شراء مسجلة لهذا المورد</div>
+3817:                 )}
+3818:               </div>
+3819: 
+3820:               {/* Payments/Expenses List */}
+3821:               <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+3822:                 <h4 className="text-md font-bold text-white mb-4 border-b border-white/5 pb-2">سجل سندات الصرف والمدفوعات للمورد</h4>
+3823:                 {selectedHistorySupplier.expenses && selectedHistorySupplier.expenses.length > 0 ? (
+3824:                   <div className="max-h-60 overflow-y-auto custom-scrollbar">
+3825:                     <table className="w-full text-right text-sm">
+3826:                       <thead className="bg-slate-900 text-slate-400">
+3827:                         <tr>
+3828:                           <th className="p-3">رقم سند الصرف</th>
+3829:                           <th className="p-3">التاريخ</th>
+3830:                           <th className="p-3">البنك/الخزينة</th>
+3831:                           <th className="p-3">ملاحظات</th>
+3832:                           <th className="p-3">المبلغ الصادر</th>
+3833:                           <th className="p-3 text-center">طباعة</th>
+3834:                         </tr>
+3835:                       </thead>
+3836:                       <tbody className="divide-y divide-slate-800/50">
+3837:                         {selectedHistorySupplier.expenses.map((exp: any) => (
+3838:                           <tr key={exp.id} className="hover:bg-white/5">
+3839:                             <td className="p-3 font-mono font-bold text-white">{exp.expenseNumber}</td>
+3840:                             <td className="p-3 font-mono text-xs text-slate-300">{new Date(exp.date || exp.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit' })}</td>
+3841:                             <td className="p-3 font-bold text-slate-300">{exp.bank?.name || 'الخزينة/البنك'}</td>
+3842:                             <td className="p-3 text-slate-400 text-xs">{exp.notes || '-'}</td>
+3843:                             <td className="p-3 font-mono text-red-400 font-bold">{exp.amount.toFixed(2)} ج.م</td>
+3844:                             <td className="p-3 text-center">
+3845:                               <button 
+3846:                                 onClick={() => {
+3847:                                   setSelectedExpense({ ...exp, supplier: selectedHistorySupplier });
+3848:                                   setShowExpenseReceiptModal(true);
+3849:                                 }}
+3850:                                 className="text-slate-400 hover:text-white bg-white/5 p-1.5 rounded-lg transition-colors cursor-pointer"
+3851:                               ><PrinterIcon size={14} /></button>
+3852:                             </td>
+3853:                           </tr>
+3854:                         ))}
+3855:                       </tbody>
+3856:                     </table>
+3857:                   </div>
+3858:                 ) : (
+3859:                   <div className="text-center py-6 text-slate-500 font-bold text-sm">لا توجد سندات صرف مسجلة لهذا المورد</div>
+3860:                 )}
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

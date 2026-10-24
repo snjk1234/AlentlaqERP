@@ -1,0 +1,109 @@
+Created At: 2026-07-30T17:13:50+03:00
+Completed At: 2026-07-30T17:13:50+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4412
+Total Bytes: 253203
+Showing lines 3100 to 3200
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3100:               </button>
+3101:             </div>
+3102: 
+3103:             <form onSubmit={handleSaveProduct} className="p-4 space-y-3 overflow-y-auto custom-scrollbar text-right" dir="rtl">
+3104:               
+3105:               <div className="grid grid-cols-2 gap-4">
+3106:                 <div className="space-y-1">
+3107:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">كود الصنف *</label>
+3108:                   <input 
+3109:                     type="text"
+3110:                     required
+3111:                     value={productForm.code}
+3112:                     onChange={(e) => setProductForm(prev => ({ ...prev, code: e.target.value }))}
+3113:                     placeholder="مثال: 3020"
+3114:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3115:                   />
+3116:                 </div>
+3117:                 <div className="space-y-1">
+3118:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الباركود (اختياري)</label>
+3119:                   <input 
+3120:                     type="text"
+3121:                     value={productForm.barcode}
+3122:                     onChange={(e) => setProductForm(prev => ({ ...prev, barcode: e.target.value }))}
+3123:                     placeholder="مثال: 6221234567890"
+3124:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3125:                   />
+3126:                 </div>
+3127:               </div>
+3128: 
+3129:               <div className="grid grid-cols-2 gap-4">
+3130:                 <div className="space-y-1">
+3131:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">اسم المنتج *</label>
+3132:                   <input 
+3133:                     type="text"
+3134:                     required
+3135:                     value={productForm.name}
+3136:                     onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+3137:                     placeholder="مثال: ماسورة كهرباء UPVC"
+3138:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3139:                   />
+3140:                 </div>
+3141:                 <div className="space-y-1">
+3142:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">النوع *</label>
+3143:                   <select 
+3144:                     value={productForm.type}
+3145:                     onChange={(e) => setProductForm(prev => ({ ...prev, type: e.target.value }))}
+3146:                     className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3147:                   >
+3148:                     <option value="PIPE">مواسير UPVC</option>
+3149:                     <option value="HOSE">خراطيم حريق</option>
+3150:                     <option value="ACCESSORY">إكسسوارات وبواطات</option>
+3151:                   </select>
+3152:                 </div>
+3153:               </div>
+3154: 
+3155:               <div className="grid grid-cols-2 gap-4">
+3156:                 <div className="space-y-1">
+3157:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">المقاس *</label>
+3158:                   <input 
+3159:                     type="text"
+3160:                     required
+3161:                     value={productForm.size}
+3162:                     onChange={(e) => setProductForm(prev => ({ ...prev, size: e.target.value }))}
+3163:                     placeholder="مثال: 20 mm"
+3164:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3165:                   />
+3166:                 </div>
+3167:                 <div className="space-y-1">
+3168:                   <label className="text-xs text-slate-400 block mb-1 mb-1">اللون</label>
+3169:                   <select 
+3170:                     value={productForm.color || ''}
+3171:                     onChange={(e) => setProductForm(prev => ({ ...prev, color: e.target.value }))}
+3172:                     className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3173:                   >
+3174:                     <option value="">بدون لون</option>
+3175:                     <option value="أبيض">أبيض</option>
+3176:                     <option value="أسود">أسود</option>
+3177:                     <option value="رمادي">رمادي</option>
+3178:                     <option value="رصاصي">رصاصي</option>
+3179:                     <option value="شفاف">شفاف</option>
+3180:                     <option value="أحمر">أحمر</option>
+3181:                     <option value="أزرق">أزرق</option>
+3182:                     <option value="أزرق داكن">أزرق داكن</option>
+3183:                     <option value="أخضر">أخضر</option>
+3184:                     <option value="أخضر داكن">أخضر داكن</option>
+3185:                     <option value="أصفر">أصفر</option>
+3186:                     <option value="برتقالي">برتقالي</option>
+3187:                     <option value="بني">بني</option>
+3188:                   </select>
+3189:                 </div>
+3190:               </div>
+3191: 
+3192:               <div className="grid grid-cols-2 gap-4">
+3193:                 <div className="space-y-1">
+3194:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الطول</label>
+3195:                   <input 
+3196:                     type="text"
+3197:                     value={productForm.length}
+3198:                     onChange={(e) => setProductForm(prev => ({ ...prev, length: e.target.value }))}
+3199:                     placeholder="مثال: 45 m"
+3200:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

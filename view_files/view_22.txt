@@ -1,0 +1,99 @@
+Created At: 2026-07-29T18:36:56+03:00
+Completed At: 2026-07-29T18:36:56+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 110 to 200
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+110:   const [banks, setBanks] = useState<any[]>([]);
+111:   const [payments, setPayments] = useState<any[]>([]);
+112:   const [invoices, setInvoices] = useState<any[]>([]);
+113:   const [showCustomerHistoryModal, setShowCustomerHistoryModal] = useState(false);
+114:   const [selectedHistoryCustomer, setSelectedHistoryCustomer] = useState<any>(null);
+115: 
+116:   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+117:   const [paymentCustomer, setPaymentCustomer] = useState<any>(null);
+118:   const [paymentForm, setPaymentForm] = useState({ customerId: '', amount: '', bankId: '', reference: '', notes: '' });
+119:   const [bankForm, setBankForm] = useState<{ id?: string; name: string; accountNumber: string; balance: string }>({ name: '', accountNumber: '', balance: '' });
+120:   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+121:   const [isEditingBank, setIsEditingBank] = useState(false);
+122: 
+123:   
+124:   // Suppliers, Purchases and Expenses states
+125:   const [suppliers, setSuppliers] = useState<any[]>([]);
+126:   const [purchases, setPurchases] = useState<any[]>([]);
+127:   const [expenses, setExpenses] = useState<any[]>([]);
+128:   const [supplierSearch, setSupplierSearch] = useState('');
+129:   const [bankSearch, setBankSearch] = useState('');
+130:   const [paymentSearch, setPaymentSearch] = useState('');
+131:   const [invoiceSearch, setInvoiceSearch] = useState('');
+132:   const [purchaseSearch, setPurchaseSearch] = useState('');
+133:   const [expenseSearch, setExpenseSearch] = useState('');
+134:   
+135:   const [showSupplierModal, setShowSupplierModal] = useState(false);
+136:   const [isEditingSupplier, setIsEditingSupplier] = useState(false);
+137:   const [supplierForm, setSupplierForm] = useState({ id: '', name: '', phone: '', address: '', cr: '', trn: '', balance: '0' });
+138:   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+139:   const [purchaseForm, setPurchaseForm] = useState<any>({ billNumber: '', supplierId: '', items: [] });
+140:   const [showExpenseModal, setShowExpenseModal] = useState(false);
+141:   const [expenseForm, setExpenseForm] = useState({ supplierId: '', bankId: '', amount: '', notes: '', reference: '' });
+142:   const [showExpenseReceiptModal, setShowExpenseReceiptModal] = useState(false);
+143:   const [selectedExpense, setSelectedExpense] = useState<any>(null);
+144:   const [showSupplierHistoryModal, setShowSupplierHistoryModal] = useState(false);
+145:   const [selectedHistorySupplier, setSelectedHistorySupplier] = useState<any>(null);
+146:   const [showPurchaseDetailModal, setShowPurchaseDetailModal] = useState(false);
+147:   const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
+148:   const [printTableData, setPrintTableData] = useState<{ title: string; headers: string[]; rows: any[][] } | null>(null);
+149: 
+150:   // Navigation active tab
+151:   const [activeTab, setActiveTab] = useState<'POS' | 'CUSTOMERS' | 'INVENTORY' | 'BANKS' | 'PAYMENTS' | 'INVOICES' | 'SUPPLIERS' | 'PURCHASES' | 'EXPENSES'>('POS');
+152:   const [showReceiptModal, setShowReceiptModal] = useState(false);
+153:   const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+154:   
+155:   // Search & Filter states
+156:   const [activeCategory, setActiveCategory] = useState('ALL');
+157:   const [searchQuery, setSearchQuery] = useState('');
+158:   const [inventorySearchQuery, setInventorySearchQuery] = useState('');
+159:   const [inventoryCategory, setInventoryCategory] = useState('ALL');
+160:   const [customerSearch, setCustomerSearch] = useState('');
+161:   const [selectedCustomerId, setSelectedCustomerId] = useState('CASH');
+162:   
+163:   // Loading and submission states
+164:   const [loading, setLoading] = useState(true);
+165:   const [submitting, setSubmitting] = useState(false);
+166:   const [cart, setCart] = useState<any[]>([]);
+167: 
+168:   // Invoice Modal states
+169:   const [showModal, setShowModal] = useState(false);
+170:   const [invoice, setInvoice] = useState<any>(null);
+171:   const [qrCodeUrl, setQrCodeUrl] = useState('');
+172: 
+173:   // Product Detail Modal states
+174:   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+175:   const [showProductModal, setShowProductModal] = useState(false);
+176: 
+177:   // Customer Form Modal states
+178:   const [showCustomerModal, setShowCustomerModal] = useState(false);
+179:   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+180:   const [customerForm, setCustomerForm] = useState({
+181:     id: '',
+182:     name: '',
+183:     phone: '',
+184:     location: '',
+185:     buildingsCount: '0',
+186:     cr: '',
+187:     trn: '',
+188:     customerType: 'CASH',
+189:     discount: '0'
+190:   });
+191: 
+192:   // Product Form Modal states
+193:   const [showProductFormModal, setShowProductFormModal] = useState(false);
+194:   const [isEditingProduct, setIsEditingProduct] = useState(false);
+195:   const [productForm, setProductForm] = useState({
+196:     id: '',
+197:     code: '',
+198:     barcode: '',
+199:     name: '',
+200:     type: 'PIPE',
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

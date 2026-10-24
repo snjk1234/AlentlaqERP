@@ -1,0 +1,53 @@
+Created At: 2026-07-29T18:42:22+03:00
+Completed At: 2026-07-29T18:42:22+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 680 to 724
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+680:       ...customerForm,
+681:       buildingsCount: parseInt(customerForm.buildingsCount) || 0,
+682:       discount: parseFloat(customerForm.discount) || 0
+683:     };
+684:     
+685:     try {
+686:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+687:         if (isEditingCustomer) {
+688:           await (window as any).electronAPI.updateCustomer(formattedData);
+689:         } else {
+690:           const newCust = await (window as any).electronAPI.createCustomer(formattedData);
+691:           // If created from POS cart flow, automatically select it!
+692:           if (activeTab === 'POS' && newCust && newCust.id) {
+693:             setSelectedCustomerId(newCust.id);
+694:           }
+695:         }
+696:         setShowCustomerModal(false);
+697:         fetchCustomers();
+698:       } else {
+699:         // Browser fallback: Make actual fetch call to DB!
+700:         const response = await fetch('/api/customers', {
+701:           method: isEditingCustomer ? 'PUT' : 'POST',
+702:           headers: { 'Content-Type': 'application/json' },
+703:           body: JSON.stringify(formattedData)
+704:         });
+705:         const saved = await response.json();
+706:         if (!response.ok) throw new Error(saved.error || 'Failed to save customer');
+707:         fetchCustomers();
+708:         if (activeTab === 'POS' && !isEditingCustomer && saved && saved.id) {
+709:           setSelectedCustomerId(saved.id);
+710:         }
+711:         setShowCustomerModal(false);
+712:       }
+713:     } catch (err: any) {
+714:       alert(`خطأ أثناء حفظ العميل: ${err.message}`);
+715:     }
+716:   };
+717: 
+718:   // Product Save handler
+719:   const handleSaveProduct = async (e: React.FormEvent) => {
+720:     e.preventDefault();
+721:     if (!productForm.code || !productForm.name || !productForm.size || !productForm.price) {
+722:       alert("يرجى ملء الحقول الأساسية: الكود، الاسم، المقاس، وسعر البيع!");
+723:       return;
+724:     }
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

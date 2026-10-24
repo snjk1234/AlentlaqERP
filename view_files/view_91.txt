@@ -1,0 +1,190 @@
+Created At: 2026-07-30T18:55:34+03:00
+Completed At: 2026-07-30T18:55:34+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4535
+Total Bytes: 261807
+Showing lines 1390 to 1480
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1390:                 <button 
+
+1391:                   onClick={() => setActiveCategory('بواط')}
+
+1392:                   className={`px-4 py-2 rounded-full text-xs font-bold flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 ${activeCategory === 'بواط' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+
+1393:                 >
+
+1394:                   بواط
+
+1395:                 </button>
+
+1396:                 <button 
+
+1397:                   onClick={() => setActiveCategory('سسته')}
+
+1398:                   className={`px-4 py-2 rounded-full text-xs font-bold flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 ${activeCategory === 'سسته' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+
+1399:                 >
+
+1400:                   سسته
+
+1401:                 </button>
+
+1402:                 <button 
+
+1403:                   onClick={() => setActiveCategory('أكواع')}
+
+1404:                   className={`px-4 py-2 rounded-full text-xs font-bold flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 ${activeCategory === 'أكواع' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+
+1405:                 >
+
+1406:                   أكواع
+
+1407:                 </button>
+
+1408:                 <button 
+
+1409:                   onClick={() => setActiveCategory('علب')}
+
+1410:                   className={`px-4 py-2 rounded-full text-xs font-bold flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 ${activeCategory === 'علب' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+
+1411:                 >
+
+1412:                   علب
+
+1413:                 </button>
+
+1414:                 <button 
+
+1415:                   onClick={() => setActiveCategory('أفيز')}
+
+1416:                   className={`px-4 py-2 rounded-full text-xs font-bold flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 ${activeCategory === 'أفيز' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+
+1417:                 >
+
+1418:                   أفيز
+
+1419:                 </button>
+
+1420:                 <button 
+
+1421:                   onClick={() => setActiveCategory('جلب')}
+
+1422:                   className={`px-4 py-2 rounded-full text-xs font-bold flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 ${activeCategory === 'جلب' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+
+1423:                 >
+
+1424:                   جلب
+
+1425:                 </button>
+
+1426:                 <button 
+
+1427:                   onClick={() => setActiveCategory('اسلاك')}
+
+1428:                   className={`px-4 py-2 rounded-full text-xs font-bold flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 ${activeCategory === 'اسلاك' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+
+1429:                 >
+
+1430:                   اسلاك
+
+1431:                 </button>
+
+1432:               </div>
+
+1433: 
+
+1434:               {/* Product Grid */}
+
+1435:               {loading ? (
+
+1436:                 <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+
+1437:                   <Loader2Icon className="h-10 w-10 text-entlaq-red animate-spin" />
+
+1438:                   <p className="text-slate-400 text-xs">جاري تحميل بيانات المخزون...</p>
+
+1439:                 </div>
+
+1440:               ) : (
+
+1441:                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 overflow-y-auto pb-10 custom-scrollbar pr-2 flex-1">
+
+1442:                   {filteredProducts.map((item) => {
+
+1443:                     const isLowStock = item.stockQty <= item.minStockQty;
+
+1444:                     const isOutOfStock = item.stockQty <= 0;
+
+1445:                     return (
+
+1446:                       <div 
+
+1447:                         key={item.id} 
+
+1448:                         onClick={() => {
+
+1449:                           setSelectedProduct(item);
+
+1450:                           setShowProductModal(true);
+
+1451:                         }}
+
+1452:                         className={`glass-card rounded-xl p-2.5 cursor-pointer group flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] hover:border-red-500/20 ${isOutOfStock ? 'opacity-40 cursor-not-allowed' : ''}`}
+
+1453:                       >
+
+1454:                         <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden mb-3 bg-black/20 border border-white/5">
+
+1455:                           <img 
+
+1456:                             src={getProductImage(item.type)} 
+
+1457:                             alt={item.name}
+
+1458:                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+
+1459:                           />
+
+1460:                           {isLowStock && !isOutOfStock && (
+
+1461:                             <span className="absolute top-2 right-2 px-2 py-0.5 bg-amber-500/90 text-slate-900 rounded-lg text-[10px] font-bold animate-pulse">
+
+1462:                               منخفض
+
+1463:                             </span>
+
+1464:                           )}
+
+1465:                           {isOutOfStock && (
+
+1466:                             <span className="absolute top-2 right-2 px-2 py-0.5 bg-red-600/90 text-white rounded-lg text-[10px] font-bold">
+
+1467:                               نافذ
+
+1468:                             </span>
+
+1469:                           )}
+
+1470:                         </div>
+
+1471:                         <div className="flex-1 flex flex-col justify-between">
+
+1472:                           <div>
+
+1473:                             <div className="flex justify-between items-center mb-1">
+
+1474:                               <span className="text-[10px] font-mono text-slate-400">كود: {item.code}</span>
+
+1475:                               <div className="flex items-center gap-1 select-none">
+
+1476:                                 <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${getCategoryBadgeClass(item.type)}`}>
+
+1477:                                   {getCategoryNameAr(item.type)}
+
+1478:                                 </span>
+
+1479:                                 <span className="text-[10px] px-1.5 py-0.2 bg-white/10 text-slate-300 rounded font-bold">{item.size}</span>
+
+1480:                               </div>
+
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

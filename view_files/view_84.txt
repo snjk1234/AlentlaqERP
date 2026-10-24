@@ -1,0 +1,170 @@
+Created At: 2026-07-30T18:48:14+03:00
+Completed At: 2026-07-30T18:48:14+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4503
+Total Bytes: 259774
+Showing lines 3170 to 3250
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3170:                 <h3 className="text-lg font-bold text-white">
+
+3171:                   {isEditingProduct ? 'تعديل بيانات الصنف' : 'إضافة صنف جديد بالمخزن'}
+
+3172:                 </h3>
+
+3173:                 <p className="text-xs text-slate-400 mt-1">أدخل المواصفات الفنية والمالية للصنف بدقة</p>
+
+3174:               </div>
+
+3175:               <button 
+
+3176:                 onClick={() => setShowProductFormModal(false)}
+
+3177:                 className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+
+3178:               >
+
+3179:                 <XIcon size={18} />
+
+3180:               </button>
+
+3181:             </div>
+
+3182: 
+
+3183:             <form onSubmit={handleSaveProduct} className="p-4 space-y-3 overflow-y-auto custom-scrollbar text-right" dir="rtl">
+
+3184:               
+
+3185:               <div className="grid grid-cols-2 gap-4">
+
+3186:                 <div className="space-y-1">
+
+3187:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">كود الصنف *</label>
+
+3188:                   <input 
+
+3189:                     type="text"
+
+3190:                     required
+
+3191:                     value={productForm.code}
+
+3192:                     onChange={(e) => setProductForm(prev => ({ ...prev, code: e.target.value }))}
+
+3193:                     placeholder="مثال: 3020"
+
+3194:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+
+3195:                   />
+
+3196:                 </div>
+
+3197:                 <div className="space-y-1">
+
+3198:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الباركود (اختياري)</label>
+
+3199:                   <input 
+
+3200:                     type="text"
+
+3201:                     value={productForm.barcode}
+
+3202:                     onChange={(e) => setProductForm(prev => ({ ...prev, barcode: e.target.value }))}
+
+3203:                     placeholder="مثال: 6221234567890"
+
+3204:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+
+3205:                   />
+
+3206:                 </div>
+
+3207:               </div>
+
+3208: 
+
+3209:               <div className="grid grid-cols-2 gap-4">
+
+3210:                 <div className="space-y-1">
+
+3211:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">اسم المنتج *</label>
+
+3212:                   <input 
+
+3213:                     type="text"
+
+3214:                     required
+
+3215:                     value={productForm.name}
+
+3216:                     onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+
+3217:                     placeholder="مثال: ماسورة كهرباء UPVC"
+
+3218:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+
+3219:                   />
+
+3220:                 </div>
+
+3221:                 <div className="space-y-1">
+
+3222:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">النوع *</label>
+
+3223:                   <select 
+
+3224:                     value={productForm.type}
+
+3225:                     onChange={(e) => setProductForm(prev => ({ ...prev, type: e.target.value }))}
+
+3226:                     className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+
+3227:                   >
+
+3228:                     <option value="مواسير">مواسير</option>
+
+3229:                     <option value="خراطيم">خراطيم</option>
+
+3230:                     <option value="بواط">بواط</option>
+
+3231:                     <option value="سسته">سسته</option>
+
+3232:                     <option value="أكواع">أكواع</option>
+
+3233:                     <option value="علب">علب</option>
+
+3234:                     <option value="أفيز">أفيز</option>
+
+3235:                     <option value="جلب">جلب</option>
+
+3236:                     <option value="اسلاك">اسلاك</option>
+
+3237:                   </select>
+
+3238:                 </div>
+
+3239:               </div>
+
+3240: 
+
+3241:               <div className="grid grid-cols-2 gap-4">
+
+3242:                 <div className="space-y-1">
+
+3243:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">المقاس *</label>
+
+3244:                   <input 
+
+3245:                     type="text"
+
+3246:                     required
+
+3247:                     value={productForm.size}
+
+3248:                     onChange={(e) => setProductForm(prev => ({ ...prev, size: e.target.value }))}
+
+3249:                     placeholder="مثال: 20 mm"
+
+3250:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

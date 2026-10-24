@@ -1,0 +1,59 @@
+Created At: 2026-07-30T16:46:11+03:00
+Completed At: 2026-07-30T16:46:11+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 251498
+Showing lines 2240 to 2290
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2240:                   <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+2241:                 </div>
+2242:                 <input 
+2243:                   type="text" 
+2244:                   value={expenseSearch}
+2245:                   onChange={(e) => setExpenseSearch(e.target.value)}
+2246:                   placeholder="ابحث برقم السند أو اسم المورد..." 
+2247:                   className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-10 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+2248:                 />
+2249:                 {expenseSearch && (
+2250:                   <button 
+2251:                     onClick={() => setExpenseSearch('')}
+2252:                     className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+2253:                   >
+2254:                     <XIcon size={14} />
+2255:                   </button>
+2256:                 )}
+2257:               </div>
+2258:               <button 
+2259:                 onClick={() => {
+2260:                   setExpenseForm({ supplierId: '', bankId: '', amount: '', notes: '', reference: '' });
+2261:                   setShowExpenseModal(true);
+2262:                 }}
+2263:                 className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+2264:               >
+2265:                 <PlusIcon className="w-4 h-4" />
+2266:                 <span>إصدار سند صرف</span>
+2267:               </button>
+2268:             </div>
+2269:             
+2270:             <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex-1 overflow-y-auto custom-scrollbar">
+2271:               <table className="w-full text-right text-sm">
+2272:                 <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
+2273:                   <tr>
+2274:                     <th className="p-4 font-bold">رقم السند</th>
+2275:                     <th className="p-4 font-bold">التاريخ</th>
+2276:                     <th className="p-4 font-bold">المستلم (المورد)</th>
+2277:                     <th className="p-4 font-bold">المخصوم من (الخزينة)</th>
+2278:                     <th className="p-4 font-bold">البيان</th>
+2279:                     <th className="p-4 font-bold">المبلغ المصروف</th>
+2280:                   </tr>
+2281:                 </thead>
+2282:                 <tbody className="divide-y divide-slate-800/50">
+2283:                   {expenses.filter(e => (e.expenseNumber || '').includes(expenseSearch) || (e.supplier?.name || '').includes(expenseSearch)).map(expense => (
+2284:                     <tr key={expense.id} className="hover:bg-white/5 transition-colors cursor-pointer" onClick={() => { setSelectedExpense(expense); setShowExpenseReceiptModal(true); }}>
+2285:                       <td className="p-4 font-mono text-slate-300 font-bold">{expense.expenseNumber}</td>
+2286:                       <td className="p-4 text-slate-300 font-mono text-xs">{new Date(expense.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+2287:                       <td className="p-4 font-bold text-white">{expense.supplier?.name || 'غير معروف'}</td>
+2288:                       <td className="p-4 text-slate-300">{expense.bank?.name || 'غير معروف'}</td>
+2289:                       <td className="p-4 text-slate-400 text-xs">{expense.notes || '-'}</td>
+2290:                       <td className="p-4 font-mono font-bold text-red-400" dir="ltr">{expense.amount.toFixed(2)} ج.م</td>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

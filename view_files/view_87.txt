@@ -1,0 +1,58 @@
+Created At: 2026-07-30T18:48:20+03:00
+Completed At: 2026-07-30T18:48:20+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4503
+Total Bytes: 259774
+Showing lines 251 to 300
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+251:   const [showProductFormModal, setShowProductFormModal] = useState(false);
+252:   const [isEditingProduct, setIsEditingProduct] = useState(false);
+253:   const [productForm, setProductForm] = useState({
+254:     id: '',
+255:     code: '',
+256:     barcode: '',
+257:     name: '',
+258:     type: 'PIPE',
+259:     size: '',
+260:     gauge: '',
+261:     color: '',
+262:     length: '',
+263:     weight: '',
+264:     costPrice: '',
+265:     markup: '30',
+266:     price: '',
+267:     stockQty: '',
+268:     minStockQty: '10',
+269:     maxStockQty: '1000'
+270:   });
+271: 
+272:   // Fix hydration issues by setting mounted state
+273:   useEffect(() => {
+274:     setIsMounted(true);
+275:   }, []);
+276: 
+277:   useEffect(() => {
+278:     if (isMounted) {
+279:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+280:         (window as any).electronAPI.getUsers()
+281:           .then((users: any) => {
+282:             if (Array.isArray(users) && users.length > 0) {
+283:               setDbUsers(users);
+284:             }
+285:           })
+286:           .catch(console.error);
+287:       } else {
+288:         // Browser mock users
+289:         setDbUsers([
+290:           { id: 'admin-id', username: 'admin', name: 'مدير النظام', role: 'ADMIN' },
+291:           { id: 'cashier-id', username: 'cashier', name: 'كاشير الانطلاق', role: 'CASHIER' },
+292:           { id: 'storekeeper-id', username: 'storekeeper', name: 'أمين المخزن', role: 'STOREKEEPER' }
+293:         ]);
+294:       }
+295:     }
+296:   }, [isMounted]);
+297: 
+298:   const handleLogin = async (e: React.FormEvent) => {
+299:     e.preventDefault();
+300:     setLoginError('');
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

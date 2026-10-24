@@ -1,0 +1,178 @@
+Created At: 2026-07-29T18:36:53+03:00
+Completed At: 2026-07-29T18:36:53+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 451 to 620
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+451:     setSearchQuery('');
+452:     setInventorySearchQuery('');
+453:     setCustomerSearch('');
+454:     setSupplierSearch('');
+455:     setPurchaseSearch('');
+456:     setExpenseSearch('');
+457:     setBankSearch('');
+458:     setPaymentSearch('');
+459:     setInvoiceSearch('');
+460:   }, [activeTab]);
+461: 
+462:   // Periodic background polling every 5 seconds for real-time online updates
+463:   useEffect(() => {
+464:     if (!isMounted) return;
+465:     const interval = setInterval(() => {
+466:       fetchProducts(true); // silent refresh (no full-page loader spinner)
+467:       fetchCustomers();
+468:       fetchBanks();
+469:       fetchPayments();
+470:       fetchInvoices();
+471:       fetchSuppliers();
+472:       fetchPurchases();
+473:       fetchExpenses();
+474:     }, 5000);
+475:     return () => clearInterval(interval);
+476:   }, [isMounted]);
+477: 
+478:   // Apply customer default discount to all cart items when selected customer changes
+479:   useEffect(() => {
+480:     if (selectedCustomerId && customers.length > 0) {
+481:       const customer = selectedCustomerId === 'CASH' ? null : customers.find(c => c.id === selectedCustomerId);
+482:       const defaultDiscount = customer ? (customer.discount || 0) : 0;
+483:       setCart(prev => {
+484:         const needsUpdate = prev.some(item => item.discountPercent !== defaultDiscount);
+485:         if (!needsUpdate) return prev;
+486:         return prev.map(item => {
+487:           const product = products.find(p => p.id === item.id);
+488:           const taxRate = product ? product.taxRate : 0.14;
+489:           const newPrice = item.originalPrice * (1 - defaultDiscount / 100);
+490:           return { 
+491:             ...item, 
+492:             discountPercent: defaultDiscount, 
+493:             price: newPrice, 
+494:             tax: newPrice * taxRate 
+495:           };
+496:         });
+497:       });
+498:     }
+499:   }, [selectedCustomerId, customers, products]);
+500: 
+501:   const addToCart = (product: any) => {
+502:     if (product.stockQty <= 0) {
+503:       alert("عذراً، هذا المنتج غير متوفر في المخزن حالياً!");
+504:       return;
+505:     }
+506: 
+507:     const customer = selectedCustomerId === 'CASH'
+508:       ? null
+509:       : customers.find(c => c.id === selectedCustomerId);
+510:     const defaultDiscount = customer ? (customer.discount || 0) : 0;
+511: 
+512:     setCart(prev => {
+513:       const existing = prev.find(item => item.id === product.id);
+514:       if (existing) {
+515:         if (existing.qty >= product.stockQty) {
+516:           alert("عذراً، لقد تجاوزت الكمية المتاحة في المخزن!");
+517:           return prev;
+518:         }
+519:         return prev.map(item => 
+520:           item.id === product.id 
+521:             ? { ...item, qty: item.qty + 1 }
+522:             : item
+523:         );
+524:       }
+525:       
+526:       const discountedPrice = product.price * (1 - defaultDiscount / 100);
+527:       return [...prev, { 
+528:         id: product.id, 
+529:         code: product.code,
+530:         name: product.name,
+531:         size: product.size,
+532:         originalPrice: product.price,
+533:         discountPercent: defaultDiscount,
+534:         price: discountedPrice,
+535:         tax: discountedPrice * product.taxRate,
+536:         qty: 1
+537:       }];
+538:     });
+539:   };
+540: 
+541:   const updateQty = (id: string, delta: number) => {
+542:     const product = products.find((p: any) => p.id === id);
+543:     setCart(prev => prev.map(item => {
+544:       if (item.id === id) {
+545:         const newQty = item.qty + delta;
+546:         if (delta > 0 && product && newQty > product.stockQty) {
+547:           alert("عذراً، لقد تجاوزت الكمية المتاحة في المخزن!");
+548:           return item;
+549:         }
+550:         return newQty > 0 ? { ...item, qty: newQty } : item;
+551:       }
+552:       return item;
+553:     }));
+554:   };
+555: 
+556:   const removeFromCart = (id: string) => {
+557:     setCart(prev => prev.filter(item => item.id !== id));
+558:   };
+559: 
+560:   const updateItemDiscount = (id: string, discountVal: number) => {
+561:     const val = Math.min(100, Math.max(0, discountVal));
+562:     setCart(prev => prev.map(item => {
+563:       if (item.id === id) {
+564:         const product = products.find(p => p.id === id);
+565:         const taxRate = product ? product.taxRate : 0.14;
+566:         const newPrice = item.originalPrice * (1 - val / 100);
+567:         return {
+568:           ...item,
+569:           discountPercent: val,
+570:           price: newPrice,
+571:           tax: newPrice * taxRate
+572:         };
+573:       }
+574:       return item;
+575:     }));
+576:   };
+577: 
+578:   const clearCart = () => setCart([]);
+579: 
+580:   const subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+581:   const totalTax = cart.reduce((acc, item) => acc + (item.tax * item.qty), 0);
+582:   const total = subtotal + totalTax;
+583: 
+584:   // Filter products by type and search query
+585:   const filteredProducts = (Array.isArray(products) ? products : []).filter(p => {
+586:     const matchesCategory = activeCategory === 'ALL' || p.type === activeCategory;
+587:     const matchesSearch = (p.name || '').includes(searchQuery) || (p.code || '').includes(searchQuery);
+588:     return matchesCategory && matchesSearch;
+589:   });
+590: 
+591:   // Filter products by type and search query for Inventory tab
+592:   const filteredInventoryProducts = (Array.isArray(products) ? products : []).filter(p => {
+593:     const matchesCategory = inventoryCategory === 'ALL' || p.type === inventoryCategory;
+594:     const matchesSearch = (p.name || '').includes(inventorySearchQuery) || (p.code || '').includes(inventorySearchQuery);
+595:     return matchesCategory && matchesSearch;
+596:   });
+597: 
+598:   // Filter customers by search query
+599:   const filteredCustomers = (Array.isArray(customers) ? customers : []).filter(c => {
+600:     const matchesSearch = (c.name || '').includes(customerSearch) || (c.trn && c.trn.includes(customerSearch));
+601:     return matchesSearch;
+602:   });
+603: 
+604:   const selectedCustomer = selectedCustomerId === 'CASH'
+605:     ? { id: 'CASH', name: 'عميل نقدي', trn: null }
+606:     : customers.find(c => c.id === selectedCustomerId);
+607: 
+608:   // Helper to generate a unique bill number for purchase invoices
+609:   const generateBillNumber = () => `PUR-${Date.now()}`;
+610: 
+611:   // Handle Checkout (Invoice or Quotation)
+612:   const handleCheckout = async (isQuotation: boolean) => {
+613:     if (cart.length === 0) return;
+614:     
+615:     const hasUnpriced = cart.some(item => item.originalPrice <= 0);
+616:     if (hasUnpriced) {
+617:       alert("لا يمكن إتمام العملية! بعض الأصناف في السلة لم يتم تسعيرها من قبل المدير بعد.");
+618:       return;
+619:     }
+620: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

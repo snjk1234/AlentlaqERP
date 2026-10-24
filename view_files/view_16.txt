@@ -1,0 +1,158 @@
+Created At: 2026-07-29T18:36:38+03:00
+Completed At: 2026-07-29T18:36:39+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 1151 to 1300
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1151:             </button>
+1152:           )}
+1153:         
+1154:           {isRoleAllowed('BANKS') && (
+1155:             <button 
+1156:               onClick={() => setActiveTab('BANKS')}
+1157:               className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'BANKS' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+1158:             >
+1159:               <BuildingIcon className="h-5 w-5" />
+1160:               <span>البنوك والخزائن</span>
+1161:             </button>
+1162:           )}
+1163:           
+1164:           {isRoleAllowed('PAYMENTS') && (
+1165:             <button 
+1166:               onClick={() => setActiveTab('PAYMENTS')}
+1167:               className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'PAYMENTS' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+1168:             >
+1169:               <BanknoteIcon className="h-5 w-5" />
+1170:               <span>سداد / دفعات</span>
+1171:             </button>
+1172:           )}
+1173:           
+1174:           {isRoleAllowed('SUPPLIERS') && (
+1175:             <button 
+1176:               onClick={() => setActiveTab('SUPPLIERS')}
+1177:               className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'SUPPLIERS' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+1178:             >
+1179:               <TruckIcon className="h-5 w-5" />
+1180:               <span>إدارة الموردين</span>
+1181:             </button>
+1182:           )}
+1183: 
+1184:           {isRoleAllowed('PURCHASES') && (
+1185:             <button 
+1186:               onClick={() => setActiveTab('PURCHASES')}
+1187:               className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'PURCHASES' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+1188:             >
+1189:               <ShoppingBagIcon className="h-5 w-5" />
+1190:               <span>فاتورة مشتريات (وارد)</span>
+1191:             </button>
+1192:           )}
+1193: 
+1194:           {isRoleAllowed('EXPENSES') && (
+1195:             <button 
+1196:               onClick={() => setActiveTab('EXPENSES')}
+1197:               className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'EXPENSES' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+1198:             >
+1199:               <ReceiptIcon className="h-5 w-5" />
+1200:               <span>سندات الصرف (مصروف)</span>
+1201:             </button>
+1202:           )}
+1203:   
+1204:           {isRoleAllowed('INVOICES') && (
+1205:             <button onClick={() => setActiveTab('INVOICES')}
+1206:               className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer ${activeTab === 'INVOICES' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+1207:             >
+1208:               <FileTextIcon className="h-5 w-5" />
+1209:               <span>الفواتير وعروض الأسعار</span>
+1210:             </button>
+1211:           )}
+1212:         </div>
+1213: 
+1214:         {/* User Info & Actions */}
+1215:         <div className="pt-3 border-t border-white/5 space-y-2">
+1216:           <div className="flex flex-col px-3 py-2 bg-white/5 rounded-xl border border-white/5">
+1217:             <span className="text-xs font-black text-white">{currentUser?.name}</span>
+1218:             <span className="text-[9px] text-slate-400 font-bold mt-0.5">
+1219:               {currentUser?.role === 'ADMIN' ? 'مدير النظام' : currentUser?.role === 'CASHIER' ? 'كاشير' : 'أمين المخزن'}
+1220:             </span>
+1221:           </div>
+1222: 
+1223:           <div className="flex gap-1.5">
+1224:             <button 
+1225:               onClick={() => {
+1226:                 setChangePasswordForm({ userId: currentUser.id, newPassword: '', confirmPassword: '' });
+1227:                 setShowChangePasswordModal(true);
+1228:               }}
+1229:               className="flex-1 text-[10px] bg-slate-900 border border-white/10 hover:bg-slate-800 text-slate-300 font-bold py-2 rounded-xl text-center cursor-pointer transition-all"
+1230:             >
+1231:               كلمة المرور
+1232:             </button>
+1233:             <button 
+1234:               onClick={() => setCurrentUser(null)}
+1235:               className="flex-1 text-[10px] bg-red-950/40 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-400 font-bold py-2 rounded-xl text-center cursor-pointer transition-all"
+1236:             >
+1237:               خروج
+1238:             </button>
+1239:           </div>
+1240:         </div>
+1241: 
+1242:         {/* Footer Info */}
+1243:         <div className="pt-2 border-t border-white/5 text-[9px] text-slate-500 text-center font-mono">
+1244:           <span>الإصدار 1.3.0</span>
+1245:         </div>
+1246:       </div>
+1247: 
+1248:       {/* Main Content Area */}
+1249:       <div className="flex-1 flex overflow-hidden" dir="rtl">
+1250:         
+1251:         {/* TAB 1: POS DASHBOARD */}
+1252:         {activeTab === 'POS' && (
+1253:           <React.Fragment>
+1254:             {/* Products & Search Section */}
+1255:             <div className="flex-1 flex flex-col p-3 space-y-3 no-print">
+1256:               
+1257:               {/* Header Search */}
+1258:               <div className="flex items-center justify-between mb-2">
+1259:                 <div>
+1260:                   <h1 className="text-xl font-bold text-white tracking-wide">صالة المنتجات والمبيعات</h1>
+1261:                   <p className="text-xs text-slate-400">اختر من المنتجات أدناه لإدراجها في الفاتورة أو عرض السعر</p>
+1262:                 </div>
+1263:                 
+1264:                 {/* Search Bar */}
+1265:                 <div className="relative group w-1/2">
+1266:                   <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+1267:                     <SearchIcon className="h-5 w-5 text-slate-400 group-focus-within:text-entlaq-red transition-colors" />
+1268:                   </div>
+1269:                   <input 
+1270:                     type="text" 
+1271:                     value={searchQuery}
+1272:                     onChange={(e) => setSearchQuery(e.target.value)}
+1273:                     placeholder="ابحث عن منتج بالاسم أو الكود (مثال: 3020)..." 
+1274:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pr-12 pl-10 text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all shadow-lg"
+1275:                   />
+1276:                   {searchQuery && (
+1277:                     <button 
+1278:                       onClick={() => setSearchQuery('')}
+1279:                       className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+1280:                     >
+1281:                       <XIcon size={16} />
+1282:                     </button>
+1283:                   )}
+1284:                 </div>
+1285:               </div>
+1286: 
+1287:               {/* Categories Navigation */}
+1288:               <div className="flex gap-3 mb-2">
+1289:                 <button 
+1290:                   onClick={() => setActiveCategory('ALL')}
+1291:                   className={`px-6 py-2.5 rounded-full font-bold flex gap-2 items-center transition-all duration-300 cursor-pointer ${activeCategory === 'ALL' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+1292:                 >
+1293:                   <PackageSearchIcon size={18} /> الكل
+1294:                 </button>
+1295:                 <button 
+1296:                   onClick={() => setActiveCategory('PIPE')}
+1297:                   className={`px-6 py-2.5 rounded-full font-bold flex gap-2 items-center transition-all duration-300 cursor-pointer ${activeCategory === 'PIPE' ? 'bg-entlaq-red text-white shadow-lg shadow-red-500/20' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+1298:                 >
+1299:                   <PipetteIcon size={18} /> مواسير UPVC
+1300:                 </button>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

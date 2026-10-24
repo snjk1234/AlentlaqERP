@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-tajawal), ui-sans-serif, system-ui, sans-serif;
   
-  --color-entlaq-red: #da291c;
+  --color-entlaq-primary: #0d9488; /* Teal 600 */
+  --color-entlaq-danger: #ef4444; /* Red 500 */
   --color-entlaq-dark: #1f2937;
   --color-entlaq-darker: #111827;
 }
@@ -35,6 +36,218 @@ body {
   @apply bg-entlaq-darker text-white;
 }
 
+.product-cards-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+.pos-product-cards-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, max(220px, calc((100% - 36px) / 4))), 1fr)); }
+.product-data-card { font-size: 11px; line-height: 1.6; min-width: 0; overflow-wrap: anywhere; }
+.product-data-card :is(span, p, h3, div) { font-size: inherit; }
+.product-data-card .product-card-name { font-size: 14px; line-height: 1.5; margin: 0; }
+.product-data-card .product-card-price { font-size: 11px; }
+.product-card-data-row { display: flex; flex-direction: column; gap: 8px; width: 100%; min-width: 0; }
+.product-card-inline-details { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; overflow-x: auto; white-space: nowrap; text-align: right; }
+.product-card-inline-details > * { flex-shrink: 0; }
+.product-card-header { margin-bottom: 6px; }
+.product-card-stock { flex-shrink: 0; margin: 0; white-space: nowrap; text-align: left; }
+.product-card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding-top: 6px; border-top: 1px solid rgb(255 255 255 / 10%); }
+.product-card-bottom > * { flex-shrink: 0; white-space: nowrap; }
+.pos-product-cards-grid .product-card-bottom { gap: 4px; }
+.pos-product-cards-grid .product-card-bottom > :is(span, p) { flex: 1; min-width: 0; white-space: normal; }
+.product-color-badge { padding: 1px 6px; border: 1px solid rgb(255 255 255 / 25%); border-radius: 4px; }
+
+.collapsible-panel { position: relative; flex-shrink: 0; min-height: 0; z-index: 10; transition: width 300ms ease-in-out; }
+.collapsible-panel-surface { display: flex; flex-direction: column; height: 100%; overflow: hidden; background: #0f172a; border: 1px solid rgb(255 255 255 / 10%); transition: width 300ms ease-in-out, box-shadow 300ms ease-in-out; }
+.collapsible-panel-controls { display: flex; align-items: center; gap: 8px; min-height: 42px; padding: 4px; color: #cbd5e1; border-bottom: 1px solid rgb(255 255 255 / 10%); flex-shrink: 0; }
+.collapsible-panel-controls span { flex: 1; font-size: 12px; }
+.collapsible-panel-controls button { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 4px; cursor: pointer; flex-shrink: 0; }
+.collapsible-panel-controls button:hover { background: rgb(255 255 255 / 10%); color: white; }
+.collapsible-panel-controls button:focus-visible,
+.collapsible-panel-rail:focus-visible { outline: 2px solid #14b8a6; outline-offset: -2px; }
+.collapsible-panel-controls button[aria-pressed="true"] { color: #2dd4bf; }
+.collapsible-panel-content { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.collapsible-panel-content[hidden] { display: none; }
+.collapsible-panel-rail { writing-mode: vertical-rl; padding: 16px 10px; color: #cbd5e1; font-size: 13px; cursor: pointer; }
+.panel-floating { z-index: 30; }
+.panel-floating .collapsible-panel-surface { position: absolute; top: 0; bottom: 0; width: min(var(--panel-width), calc(100vw - 64px)); }
+.panel-floating .panel-open { box-shadow: 0 12px 40px rgb(0 0 0 / 50%); }
+.panel-floating .panel-collapsed { width: 44px; }
+.panel-floating .panel-side-right { right: 0; }
+.panel-floating .panel-side-left { left: 0; }
+.sales-quotation-panel { margin: 6px; }
+.main-navigation-panel .panel-collapsed .collapsible-panel-content > :not(.navigation-items) { display: none; }
+.main-navigation-panel .panel-collapsed .navigation-items button { justify-content: center; padding: 12px 0; position: relative; }
+.main-navigation-panel .panel-collapsed .navigation-items button svg { flex-shrink: 0; }
+.main-navigation-panel .panel-collapsed .navigation-items button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+  .collapsible-panel, .collapsible-panel-surface { transition: none; }
+}
+
+.account-statement-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgb(2 6 23 / 78%);
+  backdrop-filter: blur(8px);
+}
+
+.account-statement-shell {
+  width: min(1120px, 100%);
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 14px;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 30%);
+}
+
+.account-statement-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  background: #0f172a;
+  color: #e2e8f0;
+  flex-shrink: 0;
+}
+
+.account-statement-toolbar h3 { font-size: 15px; font-weight: 500; }
+.account-statement-actions { display: flex; gap: 10px; margin-inline-start: auto; }
+.account-statement-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  background: #1e293b;
+  font-size: 13px;
+}
+.account-statement-actions .account-statement-print { background: #0d9488; color: white; }
+.account-statement-actions button:hover { filter: brightness(1.15); }
+.account-statement-actions button:focus-visible,
+.statement-reference button:focus-visible { outline: 2px solid #14b8a6; outline-offset: 3px; }
+.account-statement-scroll { overflow: auto; background: #e8edf2; padding: 24px; }
+
+@media screen {
+  .account-history-shell {
+    width: min(1280px, 100%);
+    border: 1px solid #334155;
+    border-radius: 4px;
+    background: #0f172a;
+  }
+  .account-history-shell .account-statement-toolbar {
+    padding: 8px;
+    background: #020617;
+    border-bottom: 1px solid #1e293b;
+    gap: 8px;
+  }
+  .account-history-shell .account-statement-toolbar h3 { font-size: 18px; font-weight: 700; }
+  .account-history-scroll { background: #0f172a; padding: 12px; }
+  .account-history-print { display: none; }
+}
+
+.account-statement {
+  --statement-ink: #253549;
+  --statement-muted: #64748b;
+  --statement-line: #e3eaf0;
+  --statement-teal: #0f766e;
+  background: white;
+  color: var(--statement-ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.7;
+  padding: 28px 30px 20px;
+  min-width: 760px;
+}
+.statement-ledger { width: 100%; border-collapse: collapse; table-layout: fixed; text-align: right; }
+.statement-ledger th { font-weight: 500; }
+.statement-ledger th, .statement-ledger td {
+  padding: 13px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--statement-line);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.statement-ledger .statement-document-heading th { padding: 0 0 24px; border: 0; }
+.statement-brand-row { display: flex; justify-content: space-between; gap: 24px; align-items: center; padding-bottom: 22px; }
+.statement-brand { display: flex; gap: 14px; align-items: center; }
+.statement-brand img { width: 64px; height: 64px; object-fit: contain; }
+.statement-eyebrow { display: block; font-size: 9px; letter-spacing: 1.4px; color: var(--statement-teal); font-weight: 500; }
+.statement-brand h1 { font-size: 28px; font-weight: 500; line-height: 1.4; margin: 3px 0; color: #0f172a; }
+.statement-brand p, .statement-document-label p { font-size: 11px; color: var(--statement-muted); font-weight: 400; }
+.statement-document-label { text-align: left; }
+.statement-document-label h2 { font-size: 22px; font-weight: 400; margin: 4px 0 6px; color: var(--statement-teal); }
+.statement-account-row { display: flex; gap: 26px; padding: 16px 18px; background: #f3f8f9; border-radius: 8px; border-inline-start: 3px solid #14b8a6; }
+.statement-account-row div:first-child { flex: 1; }
+.statement-account-row span { display: block; color: var(--statement-muted); font-size: 10px; margin-bottom: 3px; }
+.statement-account-row strong { font-size: 13px; font-weight: 500; }
+.statement-ledger .statement-column-heading th {
+  background: #f0f5f8;
+  color: #52667a;
+  padding-block: 11px;
+  font-size: 11px;
+  border-bottom-color: #cbd9e2;
+}
+.statement-tag { font-size: 10px; display: inline-block; color: #52667a; }
+.statement-opening { background: #f6fbfa; }
+.statement-opening .statement-tag, .statement-payment .statement-tag { color: var(--statement-teal); }
+.statement-invoice .statement-tag { color: #5565a8; }
+.statement-reference { font-size: 11px; }
+.statement-reference button { color: #385b8b; cursor: pointer; text-align: right; }
+.statement-reference button:hover { text-decoration: underline; }
+.statement-print-reference { display: none; }
+.statement-date { font-size: 10px; color: var(--statement-muted); }
+.statement-description { font-size: 11px; color: #52667a; line-height: 1.8; }
+.statement-ledger .statement-number { direction: ltr; text-align: left; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 12px; }
+.statement-payment .statement-number { color: var(--statement-teal); }
+.statement-ledger .statement-empty { text-align: center; color: var(--statement-muted); padding-block: 24px; }
+.statement-ledger .statement-total th, .statement-ledger .statement-total td { padding-block: 10px; background: #f8fafc; font-size: 12px; }
+.statement-ledger .statement-total th { font-weight: 400; }
+.statement-ledger .statement-closing th, .statement-ledger .statement-closing td { padding-block: 15px; background: #e9f6f3; color: var(--statement-teal); border-bottom: 2px solid #0d9488; font-weight: 500; }
+.statement-closing th span { font-size: 10px; font-weight: 400; }
+.statement-ledger .statement-closing .statement-number { font-size: 17px; }
+.statement-footer { display: flex; justify-content: space-between; gap: 12px; padding-top: 18px; color: var(--statement-muted); font-size: 10px; }
+
+@page account-statement {
+  size: A4;
+  margin: 2mm 2mm 14mm;
+}
+
+.print-document-overlay { z-index: 60; }
+.print-document {
+  width: 190mm;
+  min-width: 190mm;
+  margin-inline: auto;
+  padding: 8mm 5mm;
+}
+.statement-compact .statement-ledger > tbody > tr > th,
+.statement-compact .statement-ledger > tbody > tr > td { padding: 6px; }
+.statement-compact .statement-ledger .statement-closing th,
+.statement-compact .statement-ledger .statement-closing td { padding-block: 9px; }
+.document-header .statement-document-label { max-width: 45%; }
+.document-parties > div { flex: 1; min-width: 0; }
+.document-parties strong { display: block; }
+.document-parties p { color: var(--statement-muted); font-size: 10px; line-height: 1.6; }
+.document-meta { display: flex; flex-wrap: wrap; gap: 8px 20px; padding-top: 8px; color: var(--statement-muted); font-size: 11px; }
+.stocktake-print-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; break-inside: avoid; }
+.document-invoice-note { display: flex; align-items: center; gap: 16px; padding-top: 12px; color: var(--statement-muted); font-size: 11px; break-inside: avoid; }
+.document-invoice-note img { width: 24mm; height: 24mm; object-fit: contain; flex-shrink: 0; }
+.document-signatures { display: flex; justify-content: space-between; gap: 30px; padding: 16px 6px 8px; color: var(--statement-muted); font-size: 11px; break-inside: avoid; }
+.document-signatures > div { min-width: 160px; text-align: center; }
+.document-signatures p { margin-top: 22px; border-top: 1px solid var(--statement-line); padding-top: 4px; }
+.document-stub { border-top: 1px dashed #94a3b8; margin-top: 16px; padding-top: 12px; break-inside: avoid; }
+.document-stub-heading { display: flex; justify-content: space-between; gap: 18px; color: var(--statement-teal); font-size: 12px; padding-bottom: 10px; }
+.document-stub-heading h3 { font-size: 13px; font-weight: 500; }
+.document-footer { flex-wrap: wrap; }
+.statement-ledger.document-report-table > tbody > tr > td { font-size: 11px; }
+.statement-ledger.document-report-dense > tbody > tr > td,
+.statement-ledger.document-report-dense .statement-column-heading th { font-size: 9px; padding-inline: 3px; }
+
 @media print {
   /* Hide background content completely */
   body * {
@@ -42,46 +255,9 @@ body {
   }
   
   /* Show only the targeted printable containers */
-  #printable-invoice, #printable-invoice *,
-  #printable-receipt, #printable-receipt *,
-  #printable-expense-receipt, #printable-expense-receipt *,
-  #printable-statement, #printable-statement *,
-  #printable-table, #printable-table * {
+  .print-document, .print-document *,
+  .account-statement, .account-statement * {
     visibility: visible;
-  }
-  
-  #printable-invoice,
-  #printable-receipt,
-  #printable-expense-receipt,
-  #printable-statement,
-  #printable-table {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    background: white !important;
-    color: black !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 20px !important;
-    margin: 0 !important;
-  }
-  
-  /* Print-friendly color overrides */
-  h1, h2, h3, h4, p, span, td, th, div {
-    color: black !important;
-  }
-
-  /* Table borders in print */
-  .border, td, th {
-    border: 1px solid #000000 !important;
-  }
-
-  table th {
-    background-color: #f1f5f9 !important; /* slate-100 */
-    color: black !important;
   }
   
   /* Hide all buttons & control headers */
@@ -91,4 +267,104 @@ body {
     padding: 0 !important;
     margin: 0 !important;
   }
+
+  body:has(.account-statement, .print-document) { background: white !important; }
+  body:has(.account-statement, .print-document) div:has(> .account-statement-overlay) {
+    display: block;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0;
+  }
+  body:has(.account-statement, .print-document) div:has(> .account-statement-overlay) > :not(.account-statement-overlay) {
+    display: none !important;
+  }
+  .account-statement-overlay {
+    position: static;
+    inset: 0;
+    display: block;
+    padding: 0;
+    height: auto;
+    background: transparent;
+    backdrop-filter: none;
+  }
+  .account-statement-shell, .account-statement-scroll {
+    display: block;
+    width: 100%;
+    max-height: none;
+    height: auto;
+    overflow: visible;
+    padding: 0;
+    background: white;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .account-statement {
+    page: account-statement;
+    position: static;
+    min-width: 0;
+    font-size: 12px;
+    padding: 0 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .account-statement,
+  .account-statement * {
+    color: var(--statement-ink) !important;
+    border: 0 !important;
+    font-weight: 400;
+    box-shadow: none !important;
+  }
+  .account-statement .statement-ledger thead { display: table-header-group; }
+  .account-statement .statement-ledger tr { break-inside: avoid; page-break-inside: avoid; }
+  .account-statement .statement-totals { break-inside: avoid; page-break-inside: avoid; }
+  .account-statement .statement-ledger td,
+  .account-statement .statement-column-heading th,
+  .account-statement .statement-total th,
+  .account-statement .statement-closing th,
+  .account-statement .document-receipt tbody th,
+  .account-statement .document-stub tbody th {
+    border-bottom: 0.5pt solid var(--statement-line) !important;
+    padding: 9px 6px;
+  }
+  .account-statement .statement-ledger th { background: transparent !important; }
+  .account-statement .statement-column-heading th { background: #f0f5f8 !important; color: #52667a !important; font-size: 11px; }
+  .account-statement .statement-document-heading th { padding-bottom: 18px; }
+  .account-statement .statement-account-row { border-inline-start: 2px solid #14b8a6 !important; }
+  .account-statement .statement-document-label h2,
+  .account-statement .statement-eyebrow,
+  .account-statement .statement-payment .statement-tag,
+  .account-statement .statement-payment .statement-number { color: var(--statement-teal) !important; }
+  .account-statement .statement-brand h1 { font-size: 25px; font-weight: 500; }
+  .account-statement .statement-document-label h2 { font-size: 20px; }
+  .account-statement .statement-ledger .statement-number { font-size: 12px; }
+  .account-statement .statement-date { font-size: 11px; }
+  .account-statement .statement-total th,
+  .account-statement .statement-total td { background: #f8fafc !important; font-size: 11px; }
+  .account-statement .statement-closing th,
+  .account-statement .statement-closing td { background: #e9f6f3 !important; color: var(--statement-teal) !important; border-bottom: 1pt solid #0d9488 !important; font-size: 12px; font-weight: 500; padding-block: 11px; }
+  .account-statement .statement-closing .statement-number { font-size: 16px; }
+  .account-statement .statement-print-reference { display: inline; }
+  .account-statement .statement-footer { break-inside: avoid; }
+  .account-statement .document-footer {
+    position: fixed !important;
+    right: 0;
+    bottom: 0 !important;
+    left: 0;
+    width: auto;
+    min-height: 7mm;
+    margin: 0;
+    padding: 2mm 0 0;
+    border-top: 0.5pt solid var(--statement-line) !important;
+    background: white;
+  }
+  .account-statement.statement-compact .statement-ledger > tbody > tr > th,
+  .account-statement.statement-compact .statement-ledger > tbody > tr > td { padding: 6px; }
+  .account-statement.statement-compact .statement-ledger .statement-closing th,
+  .account-statement.statement-compact .statement-ledger .statement-closing td { padding-block: 11px; }
+  .account-statement .document-report-dense > tbody > tr > td,
+  .account-statement .document-report-dense .statement-column-heading th { font-size: 9px; padding-inline: 3px; }
+  .account-statement .document-signatures p { border-top: 0.5pt solid var(--statement-line) !important; }
+  .account-statement .document-stub { border-top: 0.5pt dashed #94a3b8 !important; }
+  .print-document { width: 100%; margin: 0; }
 }

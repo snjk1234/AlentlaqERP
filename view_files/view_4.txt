@@ -1,0 +1,218 @@
+Created At: 2026-06-22T10:20:21Z
+Completed At: 2026-06-22T10:20:21Z
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 1991
+Total Bytes: 106346
+Showing lines 1700 to 1909
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1700:                   <label className="text-xs text-slate-400 block font-bold">الرقم الضريبي</label>
+1701:                   <input 
+1702:                     type="text"
+1703:                     value={customerForm.trn}
+1704:                     onChange={(e) => setCustomerForm(prev => ({ ...prev, trn: e.target.value }))}
+1705:                     placeholder="مثال: 310122345600003"
+1706:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs"
+1707:                   />
+1708:                 </div>
+1709:                 <div className="space-y-1">
+1710:                   <label className="text-xs text-slate-400 block font-bold">طبيعة العميل</label>
+1711:                   <select 
+1712:                     value={customerForm.customerType}
+1713:                     onChange={(e) => setCustomerForm(prev => ({ ...prev, customerType: e.target.value }))}
+1714:                     className="w-full bg-slate-900 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs font-bold"
+1715:                   >
+1716:                     <option value="CASH">نقدي</option>
+1717:                     <option value="CREDIT">آجل</option>
+1718:                   </select>
+1719:                 </div>
+1720:                 <div className="space-y-1">
+1721:                   <label className="text-xs text-slate-400 block font-bold">نسبة الخصم (%)</label>
+1722:                   <input 
+1723:                     type="number"
+1724:                     step="0.1"
+1725:                     value={customerForm.discount}
+1726:                     onChange={(e) => setCustomerForm(prev => ({ ...prev, discount: e.target.value }))}
+1727:                     placeholder="مثال: 10"
+1728:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs"
+1729:                   />
+1730:                 </div>
+1731:               </div>
+1732: 
+1733:               <div className="pt-4 border-t border-slate-800 flex gap-3">
+1734:                 <button 
+1735:                   type="submit"
+1736:                   className="flex-1 bg-entlaq-red text-white py-3 rounded-2xl font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10"
+1737:                 >
+1738:                   حفظ البيانات
+1739:                 </button>
+1740:                 <button 
+1741:                   type="button"
+1742:                   onClick={() => setShowCustomerModal(false)}
+1743:                   className="bg-white/5 text-slate-300 px-6 py-3 rounded-2xl font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
+1744:                 >
+1745:                   إلغاء
+1746:                 </button>
+1747:               </div>
+1748:             </form>
+1749: 
+1750:           </div>
+1751:         </div>
+1752:       )}
+1753:         {/* MODAL 4: PRODUCT FORM MODAL */}
+1754:       {showProductFormModal && (
+1755:         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
+1756:           <div className="bg-slate-900 border border-slate-700 w-full max-w-xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+1757:             
+1758:             <div className="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+1759:               <div>
+1760:                 <h3 className="text-lg font-bold text-white">
+1761:                   {isEditingProduct ? 'تعديل بيانات الصنف' : 'إضافة صنف جديد بالمخزن'}
+1762:                 </h3>
+1763:                 <p className="text-xs text-slate-400 mt-1">أدخل المواصفات الفنية والمالية للصنف بدقة</p>
+1764:               </div>
+1765:               <button 
+1766:                 onClick={() => setShowProductFormModal(false)}
+1767:                 className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+1768:               >
+1769:                 <XIcon size={18} />
+1770:               </button>
+1771:             </div>
+1772: 
+1773:             <form onSubmit={handleSaveProduct} className="p-6 space-y-4 overflow-y-auto custom-scrollbar text-right" dir="rtl">
+1774:               
+1775:               <div className="grid grid-cols-2 gap-4">
+1776:                 <div className="space-y-1">
+1777:                   <label className="text-xs text-slate-400 block font-bold">كود الصنف *</label>
+1778:                   <input 
+1779:                     type="text"
+1780:                     required
+1781:                     value={productForm.code}
+1782:                     onChange={(e) => setProductForm(prev => ({ ...prev, code: e.target.value }))}
+1783:                     placeholder="مثال: 3020"
+1784:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1785:                   />
+1786:                 </div>
+1787:                 <div className="space-y-1">
+1788:                   <label className="text-xs text-slate-400 block font-bold">الباركود (اختياري)</label>
+1789:                   <input 
+1790:                     type="text"
+1791:                     value={productForm.barcode}
+1792:                     onChange={(e) => setProductForm(prev => ({ ...prev, barcode: e.target.value }))}
+1793:                     placeholder="مثال: 6221234567890"
+1794:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1795:                   />
+1796:                 </div>
+1797:               </div>
+1798: 
+1799:               <div className="grid grid-cols-2 gap-4">
+1800:                 <div className="space-y-1">
+1801:                   <label className="text-xs text-slate-400 block font-bold">اسم المنتج *</label>
+1802:                   <input 
+1803:                     type="text"
+1804:                     required
+1805:                     value={productForm.name}
+1806:                     onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+1807:                     placeholder="مثال: ماسورة كهرباء UPVC"
+1808:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1809:                   />
+1810:                 </div>
+1811:                 <div className="space-y-1">
+1812:                   <label className="text-xs text-slate-400 block font-bold">النوع *</label>
+1813:                   <select 
+1814:                     value={productForm.type}
+1815:                     onChange={(e) => setProductForm(prev => ({ ...prev, type: e.target.value }))}
+1816:                     className="w-full bg-slate-900 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1817:                   >
+1818:                     <option value="PIPE">مواسير UPVC</option>
+1819:                     <option value="HOSE">خراطيم حريق</option>
+1820:                     <option value="ACCESSORY">إكسسوارات وبواطات</option>
+1821:                   </select>
+1822:                 </div>
+1823:               </div>
+1824: 
+1825:               <div className="grid grid-cols-2 gap-4">
+1826:                 <div className="space-y-1">
+1827:                   <label className="text-xs text-slate-400 block font-bold">المقاس *</label>
+1828:                   <input 
+1829:                     type="text"
+1830:                     required
+1831:                     value={productForm.size}
+1832:                     onChange={(e) => setProductForm(prev => ({ ...prev, size: e.target.value }))}
+1833:                     placeholder="مثال: 20 mm"
+1834:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1835:                   />
+1836:                 </div>
+1837:                 <div className="space-y-1">
+1838:                   <label className="text-xs text-slate-400 block">اللون</label>
+1839:                   <input 
+1840:                     type="text"
+1841:                     value={productForm.color}
+1842:                     onChange={(e) => setProductForm(prev => ({ ...prev, color: e.target.value }))}
+1843:                     placeholder="مثال: أبيض"
+1844:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1845:                   />
+1846:                 </div>
+1847:               </div>
+1848: 
+1849:               <div className="grid grid-cols-2 gap-4">
+1850:                 <div className="space-y-1">
+1851:                   <label className="text-xs text-slate-400 block font-bold">الطول</label>
+1852:                   <input 
+1853:                     type="text"
+1854:                     value={productForm.length}
+1855:                     onChange={(e) => setProductForm(prev => ({ ...prev, length: e.target.value }))}
+1856:                     placeholder="مثال: 45 m"
+1857:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1858:                   />
+1859:                 </div>
+1860:                 <div className="space-y-1">
+1861:                   <label className="text-xs text-slate-400 block font-bold">الوزن</label>
+1862:                   <input 
+1863:                     type="text"
+1864:                     value={productForm.weight}
+1865:                     onChange={(e) => setProductForm(prev => ({ ...prev, weight: e.target.value }))}
+1866:                     placeholder="مثال: 5.050 kg"
+1867:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1868:                   />
+1869:                 </div>
+1870:               </div>
+1871: 
+1872:               <div className="grid grid-cols-3 gap-4">
+1873:                 <div className="space-y-1">
+1874:                   <label className="text-xs text-slate-400 block font-bold">سعر الشراء (التكلفة) *</label>
+1875:                   <input 
+1876:                     type="number"
+1877:                     step="0.01"
+1878:                     required
+1879:                     value={productForm.costPrice}
+1880:                     onChange={(e) => {
+1881:                       const cost = e.target.value;
+1882:                       setProductForm(prev => {
+1883:                         const computed = (parseFloat(cost) || 0) * (1 + (parseFloat(prev.markup) || 30) / 100);
+1884:                         return {
+1885:                           ...prev,
+1886:                           costPrice: cost,
+1887:                           price: computed > 0 ? computed.toFixed(2) : prev.price
+1888:                         };
+1889:                       });
+1890:                     }}
+1891:                     placeholder="سعر التكلفة"
+1892:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1893:                   />
+1894:                 </div>
+1895:                 <div className="space-y-1">
+1896:                   <label className="text-xs text-slate-400 block font-bold">النسبة *</label>
+1897:                   <input 
+1898:                     type="number"
+1899:                     step="0.01"
+1900:                     required
+1901:                     value={productForm.markup}
+1902:                     onChange={(e) => {
+1903:                       const markup = e.target.value;
+1904:                       setProductForm(prev => {
+1905:                         const computed = (parseFloat(prev.costPrice) || 0) * (1 + (parseFloat(markup) || 30) / 100);
+1906:                         return {
+1907:                           ...prev,
+1908:                           markup: markup,
+1909:                           price: computed > 0 ? computed.toFixed(2) : prev.price
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

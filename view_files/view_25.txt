@@ -1,0 +1,158 @@
+Created At: 2026-07-29T18:37:04+03:00
+Completed At: 2026-07-29T18:37:04+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 3001 to 3150
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3001:                   />
+3002:                 </div>
+3003:               </div>
+3004: 
+3005:               <div className="pt-4 border-t border-slate-800 flex gap-3">
+3006:                 <button 
+3007:                   type="submit"
+3008:                   className="flex-1 bg-entlaq-red text-white py-2 rounded-lg font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10"
+3009:                 >
+3010:                   حفظ البيانات
+3011:                 </button>
+3012:                 <button 
+3013:                   type="button"
+3014:                   onClick={() => setShowCustomerModal(false)}
+3015:                   className="bg-white/5 text-slate-300 px-6 py-2 rounded-lg font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
+3016:                 >
+3017:                   إلغاء
+3018:                 </button>
+3019:               </div>
+3020:             </form>
+3021: 
+3022:           </div>
+3023:         </div>
+3024:       )}
+3025:         {/* MODAL 4: PRODUCT FORM MODAL */}
+3026:       {showProductFormModal && (
+3027:         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
+3028:           <div className="bg-slate-900 border border-slate-700 w-full max-w-xl rounded-xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+3029:             
+3030:             <div className="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+3031:               <div>
+3032:                 <h3 className="text-lg font-bold text-white">
+3033:                   {isEditingProduct ? 'تعديل بيانات الصنف' : 'إضافة صنف جديد بالمخزن'}
+3034:                 </h3>
+3035:                 <p className="text-xs text-slate-400 mt-1">أدخل المواصفات الفنية والمالية للصنف بدقة</p>
+3036:               </div>
+3037:               <button 
+3038:                 onClick={() => setShowProductFormModal(false)}
+3039:                 className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+3040:               >
+3041:                 <XIcon size={18} />
+3042:               </button>
+3043:             </div>
+3044: 
+3045:             <form onSubmit={handleSaveProduct} className="p-4 space-y-3 overflow-y-auto custom-scrollbar text-right" dir="rtl">
+3046:               
+3047:               <div className="grid grid-cols-2 gap-4">
+3048:                 <div className="space-y-1">
+3049:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">كود الصنف *</label>
+3050:                   <input 
+3051:                     type="text"
+3052:                     required
+3053:                     value={productForm.code}
+3054:                     onChange={(e) => setProductForm(prev => ({ ...prev, code: e.target.value }))}
+3055:                     placeholder="مثال: 3020"
+3056:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3057:                   />
+3058:                 </div>
+3059:                 <div className="space-y-1">
+3060:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الباركود (اختياري)</label>
+3061:                   <input 
+3062:                     type="text"
+3063:                     value={productForm.barcode}
+3064:                     onChange={(e) => setProductForm(prev => ({ ...prev, barcode: e.target.value }))}
+3065:                     placeholder="مثال: 6221234567890"
+3066:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3067:                   />
+3068:                 </div>
+3069:               </div>
+3070: 
+3071:               <div className="grid grid-cols-2 gap-4">
+3072:                 <div className="space-y-1">
+3073:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">اسم المنتج *</label>
+3074:                   <input 
+3075:                     type="text"
+3076:                     required
+3077:                     value={productForm.name}
+3078:                     onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+3079:                     placeholder="مثال: ماسورة كهرباء UPVC"
+3080:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3081:                   />
+3082:                 </div>
+3083:                 <div className="space-y-1">
+3084:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">النوع *</label>
+3085:                   <select 
+3086:                     value={productForm.type}
+3087:                     onChange={(e) => setProductForm(prev => ({ ...prev, type: e.target.value }))}
+3088:                     className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3089:                   >
+3090:                     <option value="PIPE">مواسير UPVC</option>
+3091:                     <option value="HOSE">خراطيم حريق</option>
+3092:                     <option value="ACCESSORY">إكسسوارات وبواطات</option>
+3093:                   </select>
+3094:                 </div>
+3095:               </div>
+3096: 
+3097:               <div className="grid grid-cols-2 gap-4">
+3098:                 <div className="space-y-1">
+3099:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">المقاس *</label>
+3100:                   <input 
+3101:                     type="text"
+3102:                     required
+3103:                     value={productForm.size}
+3104:                     onChange={(e) => setProductForm(prev => ({ ...prev, size: e.target.value }))}
+3105:                     placeholder="مثال: 20 mm"
+3106:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3107:                   />
+3108:                 </div>
+3109:                 <div className="space-y-1">
+3110:                   <label className="text-xs text-slate-400 block mb-1 mb-1">اللون</label>
+3111:                   <select 
+3112:                     value={productForm.color || ''}
+3113:                     onChange={(e) => setProductForm(prev => ({ ...prev, color: e.target.value }))}
+3114:                     className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3115:                   >
+3116:                     <option value="">بدون لون</option>
+3117:                     <option value="أبيض">أبيض</option>
+3118:                     <option value="أسود">أسود</option>
+3119:                     <option value="رمادي">رمادي</option>
+3120:                     <option value="رصاصي">رصاصي</option>
+3121:                     <option value="شفاف">شفاف</option>
+3122:                     <option value="أحمر">أحمر</option>
+3123:                     <option value="أزرق">أزرق</option>
+3124:                     <option value="أزرق داكن">أزرق داكن</option>
+3125:                     <option value="أخضر">أخضر</option>
+3126:                     <option value="أخضر داكن">أخضر داكن</option>
+3127:                     <option value="أصفر">أصفر</option>
+3128:                     <option value="برتقالي">برتقالي</option>
+3129:                     <option value="بني">بني</option>
+3130:                   </select>
+3131:                 </div>
+3132:               </div>
+3133: 
+3134:               <div className="grid grid-cols-2 gap-4">
+3135:                 <div className="space-y-1">
+3136:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الطول</label>
+3137:                   <input 
+3138:                     type="text"
+3139:                     value={productForm.length}
+3140:                     onChange={(e) => setProductForm(prev => ({ ...prev, length: e.target.value }))}
+3141:                     placeholder="مثال: 45 m"
+3142:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3143:                   />
+3144:                 </div>
+3145:                 <div className="space-y-1">
+3146:                   <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الوزن</label>
+3147:                   <input 
+3148:                     type="text"
+3149:                     value={productForm.weight}
+3150:                     onChange={(e) => setProductForm(prev => ({ ...prev, weight: e.target.value }))}
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

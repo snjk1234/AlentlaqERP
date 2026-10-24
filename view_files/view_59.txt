@@ -1,0 +1,29 @@
+Created At: 2026-07-30T16:46:44+03:00
+Completed At: 2026-07-30T16:46:44+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4356
+Total Bytes: 251641
+Showing lines 3940 to 3960
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3940:                           }}
+3941:                           placeholder="سعر التكلفة"
+3942:                           className="bg-white/5 border border-white/10 rounded-lg py-1.5 px-2 text-slate-200 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+3943:                         />
+3944:                         <button
+3945:                           type="button"
+3946:                           onClick={() => {
+3947:                             const newItems = purchaseForm.items.filter((_: any, i: number) => i !== idx);
+3948:                             setPurchaseForm((prev: any) => ({ ...prev, items: newItems }));
+3949:                           }}
+3950:                           className="bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg p-1.5 hover:bg-red-500/20 transition-all cursor-pointer"
+3951:                         >
+3952:                           <Trash2Icon size={12} />
+3953:                         </button>
+3954:                       </div>
+3955:                     ))}
+3956:                   </div>
+3957:                 </div>
+3958: 
+3959:                 {/* Summary */}
+3960:                 {purchaseForm.items.length > 0 && (
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

@@ -1,0 +1,57 @@
+Created At: 2026-07-29T18:36:45+03:00
+Completed At: 2026-07-29T18:36:45+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 30 to 78
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+30:   TrendingUpIcon,
+31:   DollarSignIcon,
+32:   PercentIcon,
+33:   LandmarkIcon
+34: } from 'lucide-react';
+35: 
+36: const getProductImage = (type: string) => {
+37:   switch (type) {
+38:     case 'PIPE':
+39:       return '/images/pipes.png';
+40:     case 'HOSE':
+41:       return '/images/hoses.png';
+42:     case 'ACCESSORY':
+43:       return '/images/accessories.png';
+44:     default:
+45:       return '/images/pipes.png';
+46:   }
+47: };
+48: 
+49: const getCategoryNameAr = (type: string) => {
+50:   switch (type) {
+51:     case 'PIPE':
+52:       return 'مواسير UPVC';
+53:     case 'HOSE':
+54:       return 'خراطيم حريق';
+55:     case 'ACCESSORY':
+56:       return 'إكسسوارات وبواطات';
+57:     default:
+58:       return 'أخرى';
+59:   }
+60: };
+61: 
+62: const getCategoryBadgeClass = (type: string) => {
+63:   switch (type) {
+64:     case 'PIPE':
+65:       return 'bg-sky-500/10 text-sky-400 border border-sky-500/20';
+66:     case 'HOSE':
+67:       return 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+68:     case 'ACCESSORY':
+69:       return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+70:     default:
+71:       return 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
+72:   }
+73: };
+74: 
+75: const getProductDescription = (type: string, name: string) => {
+76:   if (type === 'PIPE') {
+77:     return 'مواسير الإنطلاق UPVC مصنعة بأعلى معايير الجودة لمقاومة الصدمات والضغط الميكانيكي، ومصممة خصيصاً لتمديدات شبكات الكهرباء ومقاومة للأحماض والقلويات والحرائق.';
+78:   } else if (type === 'HOSE') {
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

@@ -1,12 +1,12 @@
-datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/client"
+}
+
+datasource db {
+  // Used only to generate TypeScript types; the app stores its data in Microsoft Access.
+  provider = "sqlite"
+  url      = "file:./unused.db"
 }
 
 model User {
@@ -14,86 +14,189 @@ model User {
   username  String   @unique
   name      String
   password  String
-  role      String   // "ADMIN" | "CASHIER"
+  role      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   orders    Order[]
+  orderReturns OrderReturn[]
 }
 
 model Product {
-  id            String   @id @default(cuid())
-  code          String   @unique // كود الصنف (مثال: 3020)
-  barcode       String?  @unique // الباركود للبحث السريع باللمس أو القارئ
-  name          String   // اسم المنتج (مثال: مواسير UPVC)
-  type          String   // "PIPE" | "HOSE" | "ACCESSORY"
-  gauge         String?  // السمك/الفئة (Light, Medium, Heavy, Extra Heavy)
-  size          String   // المقاس (مثال: 20 mm)
-  color         String?  // اللون
-  length        String?  // الطول (مثال: 45 m)
-  weight        String?  // الوزن (مثال: 5.050 kg)
-  costPrice     Float    @default(0) // سعر التكلفة الفعلي للإنتاج (سعر الشراء)
-  markup        Float    @default(1.3) // نسبة الربح المضاعف (يضرب في سعر التكلفة ليعطي سعر البيع)
-  price         Float    // السعر الأساسي للبيع
-  taxRate       Float    @default(0.14) // ضريبة القيمة المضافة (14% أو 15%)
-  stockQty      Int      @default(0) // كمية المخزون الحالي
-  minStockQty   Int      @default(10) // التنبيه باللون الأحمر عند الوصول لهذا الحد (الحد الأدنى)
-  maxStockQty   Int      @default(1000) // الحد الأقصى للمخزون
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id            String              @id @default(cuid())
+  code          String
+  barcode       String?
+  name          String
+  type          String
+  gauge         String?
+  size          String
+  color         String?
+  length        String?
+  weight        String?
+  pricePerKilo  Float?              @default(0)
+  costPrice     Float               @default(0)
+  markup        Float               @default(1.3)
+  price         Float
+  taxRate       Float               @default(0.14)
+  stockQty      Int                 @default(0)
+  minStockQty   Int                 @default(10)
+  maxStockQty   Int                 @default(1000)
+  supplierId    String?
+  imageUrl      String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
   orderItems    OrderItem[]
+  orderReturnItems OrderReturnItem[]
   purchaseItems PurchaseOrderItem[]
+  customPrices  CustomerPrice[]
+  ceilingQuotas CustomerCeilingQuota[]
+  stocktakeItems StocktakeItem[]
+  supplier      Supplier?           @relation(fields: [supplierId], references: [id])
 }
 
 model Category {
-  id    String @id @default(cuid())
-  name  String @unique
+  id   String @id @default(cuid())
+  name String @unique
+}
+
+model StocktakeSetting {
+  id           String   @id @default(cuid())
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Stocktake {
+  id             String   @id @default(cuid())
+  documentNumber String   @unique
+  status         String   @default("DRAFT")
+  notes          String?
+  revision       Int      @default(1)
+  createdBy      String
+  approvedBy     String?
+  approvedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  items          StocktakeItem[]
+}
+
+model StocktakeItem {
+  id           String   @id @default(cuid())
+  stocktakeId  String
+  productId    String
+  position     Int
+  productLabel String
+  bookQty      Int
+  countedQty   Int?
+  unitCost     Float?
+  stocktake    Stocktake @relation(fields: [stocktakeId], references: [id])
+  product      Product  @relation(fields: [productId], references: [id])
+  @@unique([stocktakeId, productId])
 }
 
 model Order {
   id            String      @id @default(cuid())
-  invoiceNumber String      @unique // رقم الفاتورة/عرض السعر التسلسلي
-  isQuotation   Boolean     @default(false) // تحديد إذا كان عرض سعر أو فاتورة نهائية
-  customerName  String?     // اسم العميل/الشركة (مثال: المقاولون العرب)
+  invoiceNumber String      @unique
+  isQuotation   Boolean     @default(false)
+  customerName  String?
   customerId    String?
+  totalAmount   Float
+  taxAmount     Float
+  netAmount     Float
+  qrCode            String?
+  siteReceiptNumber String?
+  receiverName      String?
+  invoiceType       String      @default("فاتورة ضريبية")
+  status            String      @default("COMPLETED")
+  userId            String
+  createdAt         DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   customer      Customer?   @relation(fields: [customerId], references: [id])
-  totalAmount   Float       // المجموع قبل الضريبة
-  taxAmount     Float       // قيمة الضريبة
-  netAmount     Float       // الإجمالي الصافي شامل الضريبة
-  qrCode        String?     // رمز الاستجابة السريعة المشفر
-  status        String      @default("COMPLETED") // "COMPLETED" | "DRAFT" | "CANCELLED"
-  userId        String
   user          User        @relation(fields: [userId], references: [id])
   items         OrderItem[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  orderReturns  OrderReturn[]
 }
 
 model Customer {
-  id             String   @id @default(cuid())
-  name           String   @unique // اسم العميل/الشركة
-  location       String?  // الموقع
-  buildingsCount Int      @default(0) // عدد العماير
-  cr             String?  // السجل التجاري
-  trn            String?  // الرقم الضريبي للعميل
-  customerType   String   @default("CASH") // طبيعة العميل: "CASH" (نقدي) | "CREDIT" (آجل)
-  phone          String?  // رقم التلفون
-  discount       Float    @default(0) // نسبة الخصم
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id             String    @id @default(cuid())
+  name           String    @unique
+  location       String?
+  buildingsCount Int       @default(0)
+  cr             String?
+  trn            String?
+  customerType   String    @default("CASH")
+  phone          String?
+  discount       Float     @default(0)
+  openingBalance Float     @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
   orders         Order[]
+  orderReturns   OrderReturn[]
   payments       Payment[]
+  customPrices   CustomerPrice[]
+  ceilingQuotas  CustomerCeilingQuota[]
+}
+
+model CustomerPrice {
+  id         String   @id @default(cuid())
+  customerId String
+  productId  String
+  price      Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productId])
 }
 
 model OrderItem {
   id        String  @id @default(cuid())
   orderId   String
-  order     Order   @relation(fields: [orderId], references: [id])
   productId String
-  product   Product @relation(fields: [productId], references: [id])
+  position  Int?
   quantity  Int
   unitPrice Float
   taxAmount Float
   total     Float
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  returnItems OrderReturnItem[]
+}
+
+model OrderReturn {
+  id           String            @id @default(cuid())
+  returnNumber String            @unique
+  orderId      String
+  customerId   String?
+  userId       String?
+  totalAmount  Float
+  taxAmount    Float
+  netAmount    Float
+  refundAmount Float             @default(0)
+  refundMethod String            @default("NONE")
+  bankId       String?
+  notes        String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  order        Order             @relation(fields: [orderId], references: [id])
+  customer     Customer?         @relation(fields: [customerId], references: [id])
+  user         User?             @relation(fields: [userId], references: [id])
+  bank         Bank?             @relation(fields: [bankId], references: [id])
+  items        OrderReturnItem[]
+}
+
+model OrderReturnItem {
+  id            String      @id @default(cuid())
+  orderReturnId String
+  orderItemId   String
+  productId     String
+  quantity      Int
+  unitPrice     Float
+  taxAmount     Float
+  total         Float
+  orderReturn   OrderReturn @relation(fields: [orderReturnId], references: [id], onDelete: Cascade)
+  orderItem     OrderItem   @relation(fields: [orderItemId], references: [id])
+  product       Product     @relation(fields: [productId], references: [id])
 }
 
 model Bank {
@@ -103,76 +206,125 @@ model Bank {
   balance       Float            @default(0)
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
-  payments      Payment[]
-  expenses      ExpensePayment[]
+  expenses        ExpensePayment[]
+  payments        Payment[]
+  generalExpenses GeneralExpense[]
+  orderReturns    OrderReturn[]
 }
+
+model CustomerCeilingQuota {
+  id               String   @id @default(cuid())
+  customerId       String
+  productId        String
+  buildingsCount   Int
+  floorsCount      Int      @default(6)
+  quantityPerFloor Int
+  totalQuantity    Int
+  deliveredQuantity Int     @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  customer         Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productId])
+}
+
 
 model Payment {
   id            String   @id @default(cuid())
   customerId    String
-  customer      Customer @relation(fields: [customerId], references: [id])
   bankId        String
-  bank          Bank     @relation(fields: [bankId], references: [id])
   amount        Float
   reference     String?
-  receiptNumber String?  // رقم تسلسلي للمقبوضات
+  receiptNumber String?
   date          DateTime @default(now())
   notes         String?
+  correctionHistory String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  bank          Bank     @relation(fields: [bankId], references: [id])
+  customer      Customer @relation(fields: [customerId], references: [id])
 }
 
 model Supplier {
   id             String           @id @default(cuid())
-  name           String           @unique // اسم المورد
-  phone          String?          // رقم الهاتف
-  address        String?          // العنوان
-  cr             String?          // السجل التجاري
-  trn            String?          // الرقم الضريبي
-  balance        Float            @default(0) // مديونية المورد (الرصيد المتبقي له)
+  name           String           @unique
+  phone          String?
+  address        String?
+  cr             String?
+  trn            String?
+  balance        Float            @default(0)
+  openingBalance Float            @default(0)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
-  purchaseOrders PurchaseOrder[]
   expenses       ExpensePayment[]
+  purchaseOrders PurchaseOrder[]
+  products       Product[]
 }
 
 model PurchaseOrder {
-  id            String              @id @default(cuid())
-  billNumber    String              @unique // رقم فاتورة المشتريات/التوريد
-  supplierId    String
-  supplier      Supplier            @relation(fields: [supplierId], references: [id])
-  totalAmount   Float               // الإجمالي قبل الضريبة
-  taxAmount     Float               // قيمة الضريبة
-  netAmount     Float               // الإجمالي الصافي شامل الضريبة
-  date          DateTime            @default(now())
-  items         PurchaseOrderItem[]
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
+  id          String              @id @default(cuid())
+  billNumber  String              @unique
+  supplierId  String
+  invoiceType String              @default("فاتورة ضريبية")
+  totalAmount Float
+  taxAmount   Float
+  netAmount   Float
+  date        DateTime            @default(now())
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  supplier    Supplier            @relation(fields: [supplierId], references: [id])
+  items       PurchaseOrderItem[]
 }
 
 model PurchaseOrderItem {
   id              String        @id @default(cuid())
   purchaseOrderId String
-  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
   productId       String
-  product         Product       @relation(fields: [productId], references: [id])
-  quantity        Int           // الكمية الواردة
-  unitCost        Float         // سعر التكلفة للوحدة
+  quantity        Int
+  unitCost        Float
   taxAmount       Float
   total           Float
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
 }
 
 model ExpensePayment {
   id            String   @id @default(cuid())
-  expenseNumber String   @unique // رقم سند الصرف التسلسلي (مثال: EXP-2026-0001)
+  expenseNumber String   @unique
   supplierId    String
-  supplier      Supplier @relation(fields: [supplierId], references: [id])
   bankId        String
-  bank          Bank     @relation(fields: [bankId], references: [id])
-  amount        Float    // قيمة المبلغ المصروف
+  amount        Float
   reference     String?
   date          DateTime @default(now())
   notes         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  bank          Bank     @relation(fields: [bankId], references: [id])
+  supplier      Supplier @relation(fields: [supplierId], references: [id])
+}
+
+model ExpenseCategory {
+  id        String           @id @default(cuid())
+  name      String           @unique
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  expenses  GeneralExpense[]
+}
+
+model GeneralExpense {
+  id            String          @id @default(cuid())
+  expenseNumber String          @unique
+  bankId        String
+  categoryId    String
+  amount        Float
+  reference     String?
+  date          DateTime        @default(now())
+  notes         String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  bank          Bank            @relation(fields: [bankId], references: [id])
+  category      ExpenseCategory @relation(fields: [categoryId], references: [id])
 }

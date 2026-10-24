@@ -1,0 +1,139 @@
+Created At: 2026-06-22T10:21:05Z
+Completed At: 2026-06-22T10:21:06Z
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 1991
+Total Bytes: 106346
+Showing lines 900 to 1030
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+900:                             } else if (e.target.value === "") {
+901:                               setCart(prev => prev.map(c => c.id === item.id ? { ...c, qty: "" as any } : c));
+902:                             }
+903:                           }}
+904:                           onBlur={() => {
+905:                             if (item.qty === "" || isNaN(item.qty)) {
+906:                               setCart(prev => prev.map(c => c.id === item.id ? { ...c, qty: 1 } : c));
+907:                             }
+908:                           }}
+909:                           className="w-10 text-center font-bold text-white bg-transparent font-mono focus:outline-none focus:bg-white/5 rounded text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+910:                         />
+911:                         <button 
+912:                           onClick={() => updateQty(item.id, -1)}
+913:                           className="w-8 h-6 flex items-center justify-center text-slate-300 hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+914:                         >
+915:                           -
+916:                         </button>
+917:                       </div>
+918:                     </div>
+919:                   ))}
+920:                 </div>
+921:               )}
+922: 
+923:               {/* Cart Summary */}
+924:               <div className="p-4 bg-black/40 border-t border-white/10 space-y-3 backdrop-blur-xl">
+925:                 <div className="flex justify-between text-slate-400 font-mono text-xs">
+926:                   <span>المجموع (غير شامل الضريبة)</span>
+927:                   <span>{subtotal.toFixed(2)} ج.م</span>
+928:                 </div>
+929:                 <div className="flex justify-between text-slate-400 font-mono text-xs">
+930:                   <span>ضريبة القيمة المضافة (14%)</span>
+931:                   <span>{totalTax.toFixed(2)} ج.م</span>
+932:                 </div>
+933:                 
+934:                 <div className="h-px bg-white/10 w-full my-1"></div>
+935:                 
+936:                 <div className="flex justify-between items-end mb-4">
+937:                   <span className="text-sm font-bold text-slate-200">الإجمالي المستحق</span>
+938:                   <span className="text-2xl font-black text-white font-mono">
+939:                     {total.toFixed(2)} <span className="text-xs font-normal text-slate-400">ج.م</span>
+940:                   </span>
+941:                 </div>
+942: 
+943:                 {/* Checkout Actions */}
+944:                 <div className="grid grid-cols-2 gap-2.5">
+945:                   <button 
+946:                     disabled={cart.length === 0 || submitting}
+947:                     onClick={() => handleCheckout(true)}
+948:                     className="bg-white/5 text-white border border-white/10 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent transition-all duration-300 cursor-pointer"
+949:                   >
+950:                     {submitting ? <Loader2Icon className="animate-spin h-4 w-4" /> : <PauseCircleIcon className="h-5 w-5" />}
+951:                     حفظ كعرض سعر
+952:                   </button>
+953:                   <button 
+954:                     disabled={cart.length === 0 || submitting}
+955:                     onClick={() => handleCheckout(false)}
+956:                     className="bg-entlaq-red text-white shadow-lg shadow-red-500/30 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 hover:bg-red-600 hover:scale-[1.02] disabled:opacity-40 disabled:hover:bg-entlaq-red disabled:hover:scale-100 transition-all duration-300 cursor-pointer"
+957:                   >
+958:                     {submitting ? <Loader2Icon className="animate-spin h-4 w-4" /> : <CheckCircle2Icon className="h-5 w-5" />}
+959:                     إصدار فاتورة
+960:                   </button>
+961:                 </div>
+962:               </div>
+963:             </div>
+964:           </React.Fragment>
+965:         )}
+966: 
+967:         {/* TAB 2: CUSTOMERS TAB */}
+968:         {activeTab === 'CUSTOMERS' && (
+969:           <div className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden no-print">
+970:             
+971:             {/* Header */}
+972:             <div>
+973:               <h2 className="text-xl font-bold text-white">إدارة العملاء والشركات</h2>
+974:               <p className="text-xs text-slate-400 mt-0.5">إدارة بيانات العملاء والشركات ومتابعة فواتيرهم وحساباتهم</p>
+975:             </div>
+976: 
+977:             {/* Search & Add Row */}
+978:             <div className="flex gap-3 items-center max-w-xl">
+979:               <div className="relative group flex-1">
+980:                 <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+981:                   <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-slate-200 transition-colors" />
+982:                 </div>
+983:                 <input 
+984:                   type="text" 
+985:                   value={customerSearch}
+986:                   onChange={(e) => setCustomerSearch(e.target.value)}
+987:                   placeholder="ابحث عن العميل بالاسم أو الرقم الضريبي..." 
+988:                   className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-slate-200 text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-all shadow-lg"
+989:                 />
+990:               </div>
+991:               <button 
+992:                 onClick={() => {
+993:                   setCustomerForm({ id: '', name: '', phone: '', location: '', buildingsCount: '0', cr: '', trn: '', customerType: 'CASH', discount: '0' });
+994:                   setIsEditingCustomer(false);
+995:                   setShowCustomerModal(true);
+996:                 }}
+997:                 className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-xl font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+998:               >
+999:                 <PlusIcon className="w-4 h-4" />
+1000:                 <span>إضافة عميل جديد</span>
+1001:               </button>
+1002:             </div>
+1003: 
+1004:             {/* Customer Cards Grid */}
+1005:             <div className="flex-1 overflow-y-auto pb-10 custom-scrollbar pr-2">
+1006:               {filteredCustomers.length === 0 ? (
+1007:                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
+1008:                   <UsersIcon className="h-16 w-16 text-slate-600" />
+1009:                   <div>
+1010:                     <h3 className="text-lg font-bold text-slate-300">لا يوجد عملاء متطابقين</h3>
+1011:                     <p className="text-sm text-slate-500 mt-1">أضف عميل جديد لبدء تسجيل الفواتير باسمه</p>
+1012:                   </div>
+1013:                 </div>
+1014:               ) : (
+1015:                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+1016:                   {filteredCustomers.map((cust) => {
+1017:                     const totalSpent = cust.orders ? cust.orders.reduce((sum: number, o: any) => sum + o.netAmount, 0) : 0;
+1018:                     return (
+1019:                       <div key={cust.id} className="glass-card rounded-xl p-3 flex flex-col justify-between border border-white/5 hover:border-red-500/20 transition-all duration-300 text-right" dir="rtl">
+1020:                         <div>
+1021:                           <div className="flex justify-between items-start mb-2">
+1022:                             <div>
+1023:                               <h3 className="text-[15px] font-bold text-white leading-snug">{cust.name}</h3>
+1024:                               <div className="flex items-center gap-1 mt-1 select-none">
+1025:                                 <span className={`px-1.5 py-0.2 rounded text-[11px] font-bold ${cust.customerType === 'CREDIT' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/10' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/10'}`}>
+1026:                                   {cust.customerType === 'CREDIT' ? 'آجل' : 'نقدي'}
+1027:                                 </span>
+1028:                                 {cust.discount > 0 && (
+1029:                                   <span className="px-1.5 py-0.2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/10 rounded text-[11px] font-bold">
+1030:                                     خصم {cust.discount}%
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

@@ -1,0 +1,68 @@
+Created At: 2026-07-30T17:21:44+03:00
+Completed At: 2026-07-30T17:21:44+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4490
+Total Bytes: 258823
+Showing lines 791 to 850
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+791:       maxStockQty: parseInt(productForm.maxStockQty) || 1000
+792:     };
+793:     
+794:     try {
+795:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+796:         if (isEditingProduct) {
+797:           await (window as any).electronAPI.updateProduct(formattedData);
+798:         } else {
+799:           await (window as any).electronAPI.createProduct(formattedData);
+800:         }
+801:         setShowProductFormModal(false);
+802:         fetchProducts();
+803:       } else {
+804:         // Browser fallback: Make actual fetch call to DB!
+805:         const response = await fetch('/api/products', {
+806:           method: isEditingProduct ? 'PUT' : 'POST',
+807:           headers: { 'Content-Type': 'application/json' },
+808:           body: JSON.stringify(formattedData)
+809:         });
+810:         const saved = await response.json();
+811:         if (!response.ok) throw new Error(saved.error || 'Failed to save product');
+812:         fetchProducts();
+813:         setShowProductFormModal(false);
+814:       }
+815:     } catch (err: any) {
+816:       alert(`خطأ أثناء حفظ المنتج: ${err.message}`);
+817:     }
+818:   };
+819: 
+820:   // Quick stock adjuster
+821:   
+822:   const handleSaveBank = async (e: React.FormEvent) => {
+823:     e.preventDefault();
+824:     if (!bankForm.name) return;
+825:     setSubmitting(true);
+826:     try {
+827:       const data = { ...bankForm, balance: parseFloat(bankForm.balance) || 0 };
+828:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+829:         await (window as any).electronAPI.createBank(data);
+830:         fetchBanks();
+831:       } else {
+832:         const response = await fetch('/api/banks', {
+833:           method: 'POST',
+834:           headers: { 'Content-Type': 'application/json' },
+835:           body: JSON.stringify(data)
+836:         });
+837:         const savedBank = await response.json();
+838:         if (!response.ok) throw new Error(savedBank.error || 'Failed to save bank');
+839:         fetchBanks();
+840:       }
+841:       setIsBankModalOpen(false);
+842:     } catch(err: any) {
+843:       alert(err.message);
+844:     } finally {
+845:       setSubmitting(false);
+846:     }
+847:   };
+848: 
+849:   const handleSavePayment = async (e: React.FormEvent) => {
+850:     e.preventDefault();
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

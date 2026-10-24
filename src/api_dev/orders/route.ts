@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     const netAmount = Number((totalAmount + taxAmount).toFixed(2));
 
     // Generate ZATCA compliant invoice details
-    const sellerName = 'شركة الإنطلاق لتصنيع وتوريد الخراطيم والمواسير';
+    const sellerName = 'شركة الإنطلاق لتصنيع وتوريد الخراطيم والمواسير والأسلاك';
     const trn = '310122345600003'; // Mock Saudi ZATCA TRN
     const timestamp = new Date().toISOString();
     

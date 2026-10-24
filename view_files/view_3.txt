@@ -1,0 +1,89 @@
+Created At: 2026-06-22T10:20:19Z
+Completed At: 2026-06-22T10:20:19Z
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 1991
+Total Bytes: 106346
+Showing lines 1910 to 1990
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1910:                         };
+1911:                       });
+1912:                     }}
+1913:                     placeholder="مثال: 30"
+1914:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1915:                   />
+1916:                 </div>
+1917:                 <div className="space-y-1">
+1918:                   <label className="text-xs text-slate-400 block font-bold">سعر البيع *</label>
+1919:                   <input 
+1920:                     type="number"
+1921:                     step="0.01"
+1922:                     required
+1923:                     value={productForm.price}
+1924:                     onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
+1925:                     placeholder="سعر البيع النهائي"
+1926:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1927:                   />
+1928:                 </div>
+1929:               </div>
+1930: 
+1931:               <div className="grid grid-cols-3 gap-4">
+1932:                 <div className="space-y-1">
+1933:                   <label className="text-xs text-slate-400 block font-bold">الكمية الحالية *</label>
+1934:                   <input 
+1935:                     type="number"
+1936:                     required
+1937:                     value={productForm.stockQty}
+1938:                     onChange={(e) => setProductForm(prev => ({ ...prev, stockQty: e.target.value }))}
+1939:                     placeholder="الكمية"
+1940:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1941:                   />
+1942:                 </div>
+1943:                 <div className="space-y-1">
+1944:                   <label className="text-xs text-slate-400 block font-bold">الحد الأدنى *</label>
+1945:                   <input 
+1946:                     type="number"
+1947:                     required
+1948:                     value={productForm.minStockQty}
+1949:                     onChange={(e) => setProductForm(prev => ({ ...prev, minStockQty: e.target.value }))}
+1950:                     placeholder="حد التنبيه"
+1951:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1952:                   />
+1953:                 </div>
+1954:                 <div className="space-y-1">
+1955:                   <label className="text-xs text-slate-400 block font-bold">الحد الأقصى *</label>
+1956:                   <input 
+1957:                     type="number"
+1958:                     required
+1959:                     value={productForm.maxStockQty}
+1960:                     onChange={(e) => setProductForm(prev => ({ ...prev, maxStockQty: e.target.value }))}
+1961:                     placeholder="الحد الأقصى"
+1962:                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+1963:                   />
+1964:                 </div>
+1965:               </div>
+1966: 
+1967:               <div className="pt-4 border-t border-slate-800 flex gap-3">
+1968:                 <button 
+1969:                   type="submit"
+1970:                   className="flex-1 bg-entlaq-red text-white py-3 rounded-2xl font-bold flex gap-2 items-center justify-center hover:bg-red-600 transition-all cursor-pointer shadow-lg shadow-red-500/10"
+1971:                 >
+1972:                   حفظ البيانات
+1973:                 </button>
+1974:                 <button 
+1975:                   type="button"
+1976:                   onClick={() => setShowProductFormModal(false)}
+1977:                   className="bg-white/5 text-slate-300 px-6 py-3 rounded-2xl font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
+1978:                 >
+1979:                   إلغاء
+1980:                 </button>
+1981:               </div>
+1982:             </form>
+1983: 
+1984:           </div>
+1985:         </div>
+1986:       )}
+1987: 
+1988:     </div>
+1989:   );
+1990: }
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

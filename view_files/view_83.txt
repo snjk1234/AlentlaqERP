@@ -1,0 +1,54 @@
+Created At: 2026-07-30T18:48:12+03:00
+Completed At: 2026-07-30T18:48:12+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4503
+Total Bytes: 259774
+Showing lines 775 to 820
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+775: 
+776:   // Product Save handler
+777:   const handleSaveProduct = async (e: React.FormEvent) => {
+778:     e.preventDefault();
+779:     if (!productForm.code || !productForm.name || !productForm.size || !productForm.price) {
+780:       alert("يرجى ملء الحقول الأساسية: الكود، الاسم، المقاس، وسعر البيع!");
+781:       return;
+782:     }
+783:     
+784:     const formattedData = {
+785:       ...productForm,
+786:       costPrice: parseFloat(productForm.costPrice) || 0,
+787:       markup: parseFloat(productForm.markup) || 1.3,
+788:       price: parseFloat(productForm.price) || 0,
+789:       stockQty: parseInt(productForm.stockQty) || 0,
+790:       minStockQty: parseInt(productForm.minStockQty) || 10,
+791:       maxStockQty: parseInt(productForm.maxStockQty) || 1000
+792:     };
+793:     
+794:     try {
+795:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+796:         if (isEditingProduct) {
+797:           await (window as any).electronAPI.updateProduct(formattedData);
+798:         } else {
+799:           // Check if code exists locally in the loaded products array
+800:           const codeExists = products.some(p => p.code === formattedData.code);
+801:           if (codeExists) {
+802:             alert(`خطأ: كود الصنف "${formattedData.code}" موجود بالفعل مسبقاً! يرجى اختيار كود آخر فريد.`);
+803:             return;
+804:           }
+805:           await (window as any).electronAPI.createProduct(formattedData);
+806:         }
+807:         setShowProductFormModal(false);
+808:         fetchProducts();
+809:       } else {
+810:         // Browser fallback: Make actual fetch call to DB!
+811:         const response = await fetch('/api/products', {
+812:           method: isEditingProduct ? 'PUT' : 'POST',
+813:           headers: { 'Content-Type': 'application/json' },
+814:           body: JSON.stringify(formattedData)
+815:         });
+816:         const saved = await response.json();
+817:         if (!response.ok) throw new Error(saved.error || 'Failed to save product');
+818:         fetchProducts();
+819:         setShowProductFormModal(false);
+820:       }
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

@@ -1,0 +1,29 @@
+Created At: 2026-07-30T17:42:31+03:00
+Completed At: 2026-07-30T17:42:31+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4498
+Total Bytes: 259339
+Showing lines 3940 to 3960
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3940:                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+3941:                   />
+3942:                 </div>
+3943:               </div>
+3944: 
+3945:               <div className="space-y-1">
+3946:                 <label className="text-xs text-slate-300 block mb-1">الرصيد الافتتاحي (مديونية)</label>
+3947:                 <input
+3948:                   type="number"
+3949:                   step="0.01"
+3950:                   value={supplierForm.balance}
+3951:                   onChange={(e) => setSupplierForm(prev => ({ ...prev, balance: e.target.value }))}
+3952:                   placeholder="0.00"
+3953:                   className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-mono"
+3954:                 />
+3955:               </div>
+3956: 
+3957:               <div className="pt-4 border-t border-slate-800 flex gap-3">
+3958:                 <button
+3959:                   type="submit"
+3960:                   disabled={submitting}
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

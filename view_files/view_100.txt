@@ -1,0 +1,49 @@
+Created At: 2026-07-30T18:56:47+03:00
+Completed At: 2026-07-30T18:56:47+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4361
+Total Bytes: 252330
+Showing lines 2780 to 2820
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2780:                   value={changePasswordForm.confirmPassword}
+2781:                   onChange={(e) => setChangePasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+2782:                   className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 font-bold focus:outline-none focus:border-entlaq-red transition-all text-center tracking-widest"
+2783:                   required
+2784:                 />
+2785:               </div>
+2786: 
+2787:               <button 
+2788:                 type="submit"
+2789:                 className="w-full bg-entlaq-red hover:bg-red-600 active:scale-95 text-white font-bold text-sm py-3.5 rounded-xl shadow-lg shadow-red-500/20 transition-all cursor-pointer mt-2"
+2790:               >
+2791:                 تحديث كلمة المرور
+2792:               </button>
+2793:             </form>
+2794:           </div>
+2795:         </div>
+2796:       )}
+2797: 
+2798:       {/* MODAL 2: PRODUCT IN-GRID DETAIL PREVIEW */}
+2799:       {showProductModal && selectedProduct && (
+2800:         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in no-print">
+2801:           <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+2802:             
+2803:             {/* Modal Header */}
+2804:             <div className="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+2805:               <div>
+2806:                 <span className="px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded text-[10px] font-bold">
+2807:                   {getCategoryNameAr(selectedProduct.type)}
+2808:                 </span>
+2809:                 <h3 className="text-lg font-bold text-white mt-1">{selectedProduct.name}</h3>
+2810:               </div>
+2811:               <button 
+2812:                 onClick={() => setShowProductModal(false)}
+2813:                 className="text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+2814:               >
+2815:                 <XIcon size={18} />
+2816:               </button>
+2817:             </div>
+2818: 
+2819:             {/* Modal Body */}
+2820:             <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

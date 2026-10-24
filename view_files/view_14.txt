@@ -1,0 +1,119 @@
+Created At: 2026-07-29T18:36:32+03:00
+Completed At: 2026-07-29T18:36:32+03:00
+File Path: `file:///f:/Entlaq/pos-app/src/app/page.tsx`
+Total Lines: 4354
+Total Bytes: 247145
+Showing lines 840 to 950
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+840:     e.preventDefault();
+841:     if (!supplierForm.name) {
+842:       alert("يرجى إدخال اسم المورد!");
+843:       return;
+844:     }
+845:     setSubmitting(true);
+846:     const data = {
+847:       ...supplierForm,
+848:       balance: parseFloat(supplierForm.balance) || 0
+849:     };
+850:     try {
+851:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+852:         if (isEditingSupplier) {
+853:           await (window as any).electronAPI.updateSupplier(data);
+854:         } else {
+855:           await (window as any).electronAPI.createSupplier(data);
+856:         }
+857:       } else {
+858:         const response = await fetch('/api/suppliers', {
+859:           method: isEditingSupplier ? 'PUT' : 'POST',
+860:           headers: { 'Content-Type': 'application/json' },
+861:           body: JSON.stringify(data)
+862:         });
+863:         const saved = await response.json();
+864:         if (!response.ok) throw new Error(saved.error || 'Failed to save supplier');
+865:       }
+866:       fetchSuppliers();
+867:       setShowSupplierModal(false);
+868:     } catch (err: any) {
+869:       alert(`خطأ أثناء حفظ المورد: ${err.message}`);
+870:     } finally {
+871:       setSubmitting(false);
+872:     }
+873:   };
+874: 
+875:   const handleSavePurchase = async (e: React.FormEvent) => {
+876:     e.preventDefault();
+877:     if (!purchaseForm.billNumber || !purchaseForm.supplierId || purchaseForm.items.length === 0) {
+878:       alert("يرجى ملء جميع الحقول وإضافة منتج واحد على الأقل!");
+879:       return;
+880:     }
+881:     setSubmitting(true);
+882:     try {
+883:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+884:         await (window as any).electronAPI.createPurchase(purchaseForm);
+885:       } else {
+886:         const response = await fetch('/api/purchases', {
+887:           method: 'POST',
+888:           headers: { 'Content-Type': 'application/json' },
+889:           body: JSON.stringify(purchaseForm)
+890:         });
+891:         const saved = await response.json();
+892:         if (!response.ok) throw new Error(saved.error || 'Failed to save purchase order');
+893:       }
+894:       fetchPurchases();
+895:       fetchProducts();
+896:       fetchSuppliers();
+897:       setShowPurchaseModal(false);
+898:       setPurchaseForm({ billNumber: '', supplierId: '', items: [] });
+899:     } catch (err: any) {
+900:       alert(`خطأ أثناء حفظ فاتورة الشراء: ${err.message}`);
+901:     } finally {
+902:       setSubmitting(false);
+903:     }
+904:   };
+905: 
+906:   const handleSaveExpense = async (e: React.FormEvent) => {
+907:     e.preventDefault();
+908:     if (!expenseForm.supplierId || !expenseForm.bankId || !expenseForm.amount) {
+909:       alert("يرجى ملء جميع الحقول المطلوبة!");
+910:       return;
+911:     }
+912:     setSubmitting(true);
+913:     try {
+914:       let saved;
+915:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+916:         saved = await (window as any).electronAPI.createExpense(expenseForm);
+917:       } else {
+918:         const response = await fetch('/api/expenses', {
+919:           method: 'POST',
+920:           headers: { 'Content-Type': 'application/json' },
+921:           body: JSON.stringify(expenseForm)
+922:         });
+923:         saved = await response.json();
+924:         if (!response.ok) throw new Error(saved.error || 'Failed to save expense payment');
+925:       }
+926:       fetchExpenses();
+927:       fetchBanks();
+928:       fetchSuppliers();
+929:       setSelectedExpense(saved);
+930:       setShowExpenseReceiptModal(true);
+931:       setShowExpenseModal(false);
+932:       setExpenseForm({ supplierId: '', bankId: '', amount: '', notes: '', reference: '' });
+933:     } catch (err: any) {
+934:       alert(`خطأ أثناء حفظ سند الصرف: ${err.message}`);
+935:     } finally {
+936:       setSubmitting(false);
+937:     }
+938:   };
+939: 
+940:   const handleQuickStockAdjust = async (product: any, delta: number) => {
+941:     const newQty = product.stockQty + delta;
+942:     if (newQty < 0) return;
+943:     
+944:     try {
+945:       if (typeof window !== 'undefined' && (window as any).electronAPI) {
+946:         await (window as any).electronAPI.updateProduct({ id: product.id, stockQty: newQty });
+947:       } else {
+948:         // Browser fallback: Make actual PUT call to DB!
+949:         const response = await fetch('/api/products', {
+950:           method: 'PUT',
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

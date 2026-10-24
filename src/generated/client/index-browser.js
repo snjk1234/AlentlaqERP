@@ -99,9 +99,6 @@ Prisma.NullTypes = {
  */
 
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
-  ReadUncommitted: 'ReadUncommitted',
-  ReadCommitted: 'ReadCommitted',
-  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
@@ -126,6 +123,7 @@ exports.Prisma.ProductScalarFieldEnum = {
   color: 'color',
   length: 'length',
   weight: 'weight',
+  pricePerKilo: 'pricePerKilo',
   costPrice: 'costPrice',
   markup: 'markup',
   price: 'price',
@@ -133,6 +131,8 @@ exports.Prisma.ProductScalarFieldEnum = {
   stockQty: 'stockQty',
   minStockQty: 'minStockQty',
   maxStockQty: 'maxStockQty',
+  supplierId: 'supplierId',
+  imageUrl: 'imageUrl',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -140,6 +140,37 @@ exports.Prisma.ProductScalarFieldEnum = {
 exports.Prisma.CategoryScalarFieldEnum = {
   id: 'id',
   name: 'name'
+};
+
+exports.Prisma.StocktakeSettingScalarFieldEnum = {
+  id: 'id',
+  passwordHash: 'passwordHash',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.StocktakeScalarFieldEnum = {
+  id: 'id',
+  documentNumber: 'documentNumber',
+  status: 'status',
+  notes: 'notes',
+  revision: 'revision',
+  createdBy: 'createdBy',
+  approvedBy: 'approvedBy',
+  approvedAt: 'approvedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.StocktakeItemScalarFieldEnum = {
+  id: 'id',
+  stocktakeId: 'stocktakeId',
+  productId: 'productId',
+  position: 'position',
+  productLabel: 'productLabel',
+  bookQty: 'bookQty',
+  countedQty: 'countedQty',
+  unitCost: 'unitCost'
 };
 
 exports.Prisma.OrderScalarFieldEnum = {
@@ -152,6 +183,9 @@ exports.Prisma.OrderScalarFieldEnum = {
   taxAmount: 'taxAmount',
   netAmount: 'netAmount',
   qrCode: 'qrCode',
+  siteReceiptNumber: 'siteReceiptNumber',
+  receiverName: 'receiverName',
+  invoiceType: 'invoiceType',
   status: 'status',
   userId: 'userId',
   createdAt: 'createdAt',
@@ -168,6 +202,16 @@ exports.Prisma.CustomerScalarFieldEnum = {
   customerType: 'customerType',
   phone: 'phone',
   discount: 'discount',
+  openingBalance: 'openingBalance',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CustomerPriceScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  productId: 'productId',
+  price: 'price',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -175,6 +219,35 @@ exports.Prisma.CustomerScalarFieldEnum = {
 exports.Prisma.OrderItemScalarFieldEnum = {
   id: 'id',
   orderId: 'orderId',
+  productId: 'productId',
+  position: 'position',
+  quantity: 'quantity',
+  unitPrice: 'unitPrice',
+  taxAmount: 'taxAmount',
+  total: 'total'
+};
+
+exports.Prisma.OrderReturnScalarFieldEnum = {
+  id: 'id',
+  returnNumber: 'returnNumber',
+  orderId: 'orderId',
+  customerId: 'customerId',
+  userId: 'userId',
+  totalAmount: 'totalAmount',
+  taxAmount: 'taxAmount',
+  netAmount: 'netAmount',
+  refundAmount: 'refundAmount',
+  refundMethod: 'refundMethod',
+  bankId: 'bankId',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.OrderReturnItemScalarFieldEnum = {
+  id: 'id',
+  orderReturnId: 'orderReturnId',
+  orderItemId: 'orderItemId',
   productId: 'productId',
   quantity: 'quantity',
   unitPrice: 'unitPrice',
@@ -191,6 +264,19 @@ exports.Prisma.BankScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.CustomerCeilingQuotaScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  productId: 'productId',
+  buildingsCount: 'buildingsCount',
+  floorsCount: 'floorsCount',
+  quantityPerFloor: 'quantityPerFloor',
+  totalQuantity: 'totalQuantity',
+  deliveredQuantity: 'deliveredQuantity',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.PaymentScalarFieldEnum = {
   id: 'id',
   customerId: 'customerId',
@@ -200,6 +286,7 @@ exports.Prisma.PaymentScalarFieldEnum = {
   receiptNumber: 'receiptNumber',
   date: 'date',
   notes: 'notes',
+  correctionHistory: 'correctionHistory',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -212,6 +299,7 @@ exports.Prisma.SupplierScalarFieldEnum = {
   cr: 'cr',
   trn: 'trn',
   balance: 'balance',
+  openingBalance: 'openingBalance',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -220,6 +308,7 @@ exports.Prisma.PurchaseOrderScalarFieldEnum = {
   id: 'id',
   billNumber: 'billNumber',
   supplierId: 'supplierId',
+  invoiceType: 'invoiceType',
   totalAmount: 'totalAmount',
   taxAmount: 'taxAmount',
   netAmount: 'netAmount',
@@ -251,14 +340,29 @@ exports.Prisma.ExpensePaymentScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ExpenseCategoryScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.GeneralExpenseScalarFieldEnum = {
+  id: 'id',
+  expenseNumber: 'expenseNumber',
+  bankId: 'bankId',
+  categoryId: 'categoryId',
+  amount: 'amount',
+  reference: 'reference',
+  date: 'date',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
-};
-
-exports.Prisma.QueryMode = {
-  default: 'default',
-  insensitive: 'insensitive'
 };
 
 exports.Prisma.NullsOrder = {
@@ -271,15 +375,24 @@ exports.Prisma.ModelName = {
   User: 'User',
   Product: 'Product',
   Category: 'Category',
+  StocktakeSetting: 'StocktakeSetting',
+  Stocktake: 'Stocktake',
+  StocktakeItem: 'StocktakeItem',
   Order: 'Order',
   Customer: 'Customer',
+  CustomerPrice: 'CustomerPrice',
   OrderItem: 'OrderItem',
+  OrderReturn: 'OrderReturn',
+  OrderReturnItem: 'OrderReturnItem',
   Bank: 'Bank',
+  CustomerCeilingQuota: 'CustomerCeilingQuota',
   Payment: 'Payment',
   Supplier: 'Supplier',
   PurchaseOrder: 'PurchaseOrder',
   PurchaseOrderItem: 'PurchaseOrderItem',
-  ExpensePayment: 'ExpensePayment'
+  ExpensePayment: 'ExpensePayment',
+  ExpenseCategory: 'ExpenseCategory',
+  GeneralExpense: 'GeneralExpense'
 };
 
 /**
