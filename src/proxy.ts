@@ -7,8 +7,8 @@ export function proxy(request: NextRequest) {
   if (!expectedToken) {
     return NextResponse.json({ error: 'POS_API_TOKEN is not configured on the server.' }, { status: 503 });
   }
-  if ((request.method === 'PUT' && ['/api/purchases', '/api/expenses', '/api/general-expenses'].includes(request.nextUrl.pathname))
-    || request.nextUrl.pathname === '/api/stocktakes') {
+  if ((request.method === 'PUT' && ['/api/purchases', '/api/expenses', '/api/general-expenses', '/api/quotations', '/api/invoice-details'].includes(request.nextUrl.pathname))
+    || ['/api/stocktakes', '/api/bank-transfers', '/api/quotation-costs'].includes(request.nextUrl.pathname)) {
     const authorization = request.headers.get('authorization') || '';
     const session = verifyUserSessionToken(authorization.startsWith('Bearer ') ? authorization.slice(7) : '');
     if (!session) return NextResponse.json({ error: 'انتهت الجلسة. سجّل الدخول مجددًا.' }, { status: 401 });

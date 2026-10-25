@@ -2,7 +2,7 @@
 
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import QRCode from 'qrcode';
 import { customerInPeriod, inAccountPeriod, supplierInPeriod } from '@/lib/account-period';
@@ -11,10 +11,15 @@ import AccountStatement from '@/components/AccountStatement';
 import CollapsiblePanel from '@/components/CollapsiblePanel';
 import MoneyInput from '@/components/MoneyInput';
 import StocktakePanel from '@/components/StocktakePanel';
+import QuotationEdit, { type EditableQuotation } from '@/components/QuotationEdit';
+import InvoiceDetailsEdit, { type EditableInvoiceDetails } from '@/components/InvoiceDetailsEdit';
+import QuotationPricingDraft from '@/components/QuotationPricingDraft';
+import { confirmQuotationProfit, type PricingLine } from '@/lib/quotation-pricing';
+import BankTransfersPanel, { type BankTransfer, type TransferSnapshot } from '@/components/BankTransfersPanel';
 import { formatMoney as formatTotal, normalizeMoneyInput } from '@/lib/money-format';
 import { purchaseTaxRate } from '@/lib/document-edits';
 import ProductCardDetails, { ProductCardHeader } from '@/components/ProductCardDetails';
-import { InvoicePrint, ReceiptPrint, ReturnPrint, StocktakePrint, TablePrint, type PrintStocktake, type PrintTableData } from '@/components/PrintDocuments';
+import { BankTransferPrint, InvoicePrint, ReceiptPrint, ReturnPrint, StocktakePrint, TablePrint, type PrintBankTransfer, type PrintStocktake, type PrintTableData } from '@/components/PrintDocuments';
 
 import {
 
@@ -358,8 +363,10 @@ export default function POSDashboard() {
 
   const [stmtFrom, setStmtFrom] = useState('');
   const [stmtTo, setStmtTo] = useState('');
-  const selectedHistoryCustomer = selectedHistoryCustomerRaw
-    && customerInPeriod(selectedHistoryCustomerRaw, stmtFrom, stmtTo);
+  const currentHistoryCustomer = selectedHistoryCustomerRaw
+    && (customers.find(customer => customer.id === selectedHistoryCustomerRaw.id) || selectedHistoryCustomerRaw);
+  const selectedHistoryCustomer = currentHistoryCustomer
+    && customerInPeriod(currentHistoryCustomer, stmtFrom, stmtTo);
   const renderStatementPeriod = () => {
     const pad = (n: number) => String(n).padStart(2, '0');
     const setMonth = (value: string) => {
@@ -486,6 +493,17 @@ export default function POSDashboard() {
   const [bankSearch, setBankSearch] = useState('');
 
   const [selectedBankStatement, setSelectedBankStatement] = useState<any>(null);
+  const [bankTransfers, setBankTransfers] = useState<BankTransfer[]>([]);
+  const [transfersReady, setTransfersReady] = useState(false);
+  const [transferLaunch, setTransferLaunch] = useState<string | null>(null);
+  const [printBankTransfer, setPrintBankTransfer] = useState<PrintBankTransfer | null>(null);
+  const applyTransferSnapshot = useCallback((data: TransferSnapshot) => {
+    setBanks(data.banks);
+    setBankTransfers(data.transfers);
+    setTransfersReady(true);
+  }, []);
+  const markTransfersLoading = useCallback(() => setTransfersReady(false), []);
+  const closeTransferLaunch = useCallback(() => setTransferLaunch(null), []);
 
   const [bankStatementFrom, setBankStatementFrom] = useState('');
 
@@ -544,6 +562,9 @@ export default function POSDashboard() {
 
   const [printTableData, setPrintTableData] = useState<PrintTableData | null>(null);
   const [printStocktake, setPrintStocktake] = useState<PrintStocktake | null>(null);
+  const [editingQuotation, setEditingQuotation] = useState<EditableQuotation | null>(null);
+  const [editingInvoiceDetails, setEditingInvoiceDetails] = useState<EditableInvoiceDetails | null>(null);
+  const [showQuotationPricing, setShowQuotationPricing] = useState(false);
 
 
 
@@ -1767,10 +1788,12 @@ export default function POSDashboard() {
     && ((e.expenseNumber || '').includes(expenseSearch) || (e.supplier?.name || '').includes(expenseSearch)));
   const filteredPayments = payments.filter(p => inAccountPeriod(p, totalsFrom, totalsTo)
     && ((p.customer?.name || '').includes(paymentSearch) || (p.receiptNumber || '').includes(paymentSearch)));
-  const bankStatement = selectedBankStatement
+  const currentStatementBank = selectedBankStatement && banks.find(bank => bank.id === selectedBankStatement.id);
+  const bankStatement = currentStatementBank && transfersReady
     ? buildBankStatement({
-      bankId: selectedBankStatement.id,
-      bankBalance: selectedBankStatement.balance,
+      bankId: currentStatementBank.id,
+      bankBalance: currentStatementBank.balance,
+      transfers: bankTransfers,
       payments,
       supplierPayments: expenses,
       generalExpenses,
@@ -1991,9 +2014,9 @@ export default function POSDashboard() {
 
   // Handle Checkout (Invoice or Quotation)
 
-  const handleCheckout = async (isQuotation: boolean) => {
+  const handleCheckout = async (isQuotation: boolean, quotationLines?: PricingLine[]) => {
 
-    if (cart.length === 0) return;
+    if (cart.length === 0 || submitting) return;
 
 
 
@@ -2033,7 +2056,7 @@ export default function POSDashboard() {
 
         quantity: item.qty,
 
-        unitPrice: item.price
+        unitPrice: quotationLines ? Number(quotationLines.find(line => line.productId === item.id)?.unitPrice) : item.price
 
       })),
 
@@ -2044,6 +2067,10 @@ export default function POSDashboard() {
 
 
     try {
+
+      if (isQuotation && currentUser?.role === 'ADMIN' && !await confirmQuotationProfit(currentUser, orderData.items.map(item => ({
+        productId: item.productId, quantity: String(item.quantity), unitPrice: String(item.unitPrice)
+      })))) return;
 
       let data;
 
@@ -2076,6 +2103,7 @@ export default function POSDashboard() {
 
 
       setInvoice(data);
+      setShowQuotationPricing(false);
 
 
 
@@ -4332,6 +4360,12 @@ export default function POSDashboard() {
 
 
                 {/* Checkout Actions */}
+                {currentUser?.role === 'ADMIN' && <button type="button"
+                  disabled={!cart.length || submitting || cart.some(item => item.originalPrice <= 0)}
+                  onClick={() => setShowQuotationPricing(true)}
+                  className="w-full rounded-sm border border-emerald-500/30 bg-emerald-600/15 py-2 text-sm font-bold text-emerald-300 disabled:opacity-40">
+                  تسعير وأرباح عرض السعر
+                </button>}
 
                 <div className="grid grid-cols-2 gap-2.5">
 
@@ -6218,6 +6252,12 @@ export default function POSDashboard() {
                 <span>إضافة بنك / خزينة</span>
 
               </button>
+              {currentUser?.role === 'ADMIN' && <button type="button"
+                disabled={!transfersReady || transferLaunch !== null}
+                onClick={() => setTransferLaunch('')}
+                className="rounded-sm bg-indigo-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-40 shrink-0">
+                تحويل بين الحسابات
+              </button>}
 
               {renderTotalsBar([
                 { label: 'عدد الحسابات', value: String((Array.isArray(banks) ? banks : []).length) },
@@ -6336,6 +6376,7 @@ export default function POSDashboard() {
 
                         <button
                           type="button"
+                          disabled={!transfersReady}
                           onClick={() => {
                             setSelectedBankStatement(bank);
                             setBankStatementFrom('');
@@ -6346,6 +6387,11 @@ export default function POSDashboard() {
                           <FileTextIcon size={14} />
                           كشف حساب البنك
                         </button>
+                        {currentUser?.role === 'ADMIN' && <button type="button" disabled={!transfersReady || transferLaunch !== null}
+                          onClick={() => setTransferLaunch(bank.id)}
+                          className="mt-2 w-full rounded-sm bg-indigo-600/20 px-2 py-2 text-xs font-bold text-indigo-200 disabled:opacity-40">
+                          تحويل من هذا الحساب
+                        </button>}
 
                       </div>
 
@@ -6357,6 +6403,9 @@ export default function POSDashboard() {
 
               )}
 
+              {currentUser?.role === 'ADMIN' && <BankTransfersPanel key={currentUser.id} user={currentUser} banks={banks}
+                onSnapshot={applyTransferSnapshot} onLoading={markTransfersLoading}
+                onPrint={setPrintBankTransfer} launch={transferLaunch} onCloseLaunch={closeTransferLaunch} />}
             </div>
 
           </div>
@@ -6371,7 +6420,7 @@ export default function POSDashboard() {
               <header className="flex items-center justify-between border-b border-slate-800 bg-slate-950 p-3">
                 <div>
                   <h2 className="text-lg font-bold text-white">كشف حساب البنك: {selectedBankStatement.name}</h2>
-                  <p className="text-xs text-slate-400">جميع المقبوضات والمصروفات والمرتجعات المرتبطة بهذا الحساب</p>
+                  <p className="text-xs text-slate-400">دفعات العملاء والمصروفات والمرتجعات والتحويلات الداخلية المرتبطة بهذا الحساب</p>
                 </div>
                 <button type="button" onClick={() => setSelectedBankStatement(null)} aria-label="إغلاق كشف البنك" className="rounded-sm bg-white/5 p-2 text-slate-300 hover:bg-white/10 hover:text-white">
                   <XIcon size={18} />
@@ -6791,8 +6840,15 @@ export default function POSDashboard() {
 
                       <td className="p-2 font-mono font-bold text-white" dir="ltr">{formatTotal(inv.netAmount)} ج.م</td>
                       <td className="p-2">
+                        {currentUser?.role === 'ADMIN' && inv.isQuotation && inv.status !== 'CONVERTED' && (
+                          <button type="button" className="rounded bg-indigo-600/20 px-2 py-1 text-xs font-bold text-indigo-300"
+                            onClick={event => { event.stopPropagation(); setEditingQuotation(inv); }}>تعديل عرض السعر</button>
+                        )}
                         {!inv.isQuotation && inv.status === 'COMPLETED' && (
                           <div className="flex flex-wrap gap-1">
+                            {currentUser?.role === 'ADMIN' && <button type="button"
+                              className="rounded bg-indigo-600/20 px-2 py-1 text-xs font-bold text-indigo-300"
+                              onClick={event => { event.stopPropagation(); setEditingInvoiceDetails(inv); }}>تعديل بيانات الفاتورة</button>}
                             <button
                               type="button"
                               disabled={!hasReturnableItems(inv)}
@@ -6848,6 +6904,43 @@ export default function POSDashboard() {
 
       {/* MODAL 1: INVOICE & QUOTATION PRINT MODAL */}
       {printStocktake && <StocktakePrint document={printStocktake} onClose={() => setPrintStocktake(null)} />}
+      {printBankTransfer && <BankTransferPrint transfer={printBankTransfer} onClose={() => setPrintBankTransfer(null)} />}
+      {showQuotationPricing && currentUser?.role === 'ADMIN' && <QuotationPricingDraft user={currentUser} busy={submitting}
+        initialLines={cart.map(item => ({ productId: item.id, quantity: String(item.qty), unitPrice: String(item.price) }))}
+        names={Object.fromEntries(cart.map(item => [item.id, [item.code, item.name, item.size, item.color].filter(Boolean).join(' - ')]))}
+        taxRates={Object.fromEntries(cart.map(item => [item.id, ['فاتورة', 'فاتورة مبسطة'].includes(invoiceType) ? 0 : Number(products.find(product => product.id === item.id)?.taxRate)]))}
+        onClose={() => setShowQuotationPricing(false)} onSave={lines => handleCheckout(true, lines)} />}
+      {editingQuotation && currentUser?.role === 'ADMIN' && (
+        <QuotationEdit quotation={editingQuotation} products={products} user={currentUser}
+          onClose={() => setEditingQuotation(null)}
+          onSaved={saved => {
+            setEditingQuotation(null);
+            setInvoice(saved);
+            setQrCodeUrl('');
+            setShowModal(true);
+            fetchInvoices();
+            fetchCustomers();
+          }} />
+      )}
+      {editingInvoiceDetails && currentUser?.role === 'ADMIN' && (
+        <InvoiceDetailsEdit invoice={editingInvoiceDetails} customers={customers} user={currentUser}
+          onClose={() => setEditingInvoiceDetails(null)}
+          onSaved={async saved => {
+            setEditingInvoiceDetails(null);
+            setInvoice(saved);
+            setShowModal(true);
+            fetchInvoices();
+            fetchCustomers();
+            setQrCodeUrl('');
+            if (saved.qrCode) {
+              try { setQrCodeUrl(await QRCode.toDataURL(saved.qrCode, { width: 160, margin: 1 })); }
+              catch (error) {
+                console.error('Failed to render invoice QR after detail edit:', error);
+                alert('تم حفظ بيانات الفاتورة، لكن تعذر عرض رمز QR. أعد فتح الفاتورة.');
+              }
+            }
+          }} />
+      )}
 
       {showModal && invoice && (
         <InvoicePrint
@@ -6855,9 +6948,13 @@ export default function POSDashboard() {
           qrCodeUrl={qrCodeUrl}
           onClose={() => setShowModal(false)}
           actions={invoice.isQuotation && invoice.status !== 'CONVERTED' ? (
+            <>
+            {currentUser?.role === 'ADMIN' && <button type="button" onClick={() => { setShowModal(false); setEditingQuotation(invoice); }}>تعديل عرض السعر</button>}
             <button type="button" onClick={convertQuotationToInvoice}>تحويل لفاتورة</button>
+            </>
           ) : !invoice.isQuotation && invoice.status === 'COMPLETED' ? (
             <>
+              {currentUser?.role === 'ADMIN' && <button type="button" onClick={() => { setShowModal(false); setEditingInvoiceDetails(invoice); }}>تعديل بيانات الفاتورة</button>}
               {hasReturnableItems(invoice) && <button type="button" onClick={() => openReturnDialog(invoice)}>إنشاء مرتجع</button>}
               {!!invoice.orderReturns?.length && <button type="button" onClick={() => openReturnHistory(invoice)}>عرض المرتجعات ({invoice.orderReturns.length})</button>}
             </>
@@ -8695,7 +8792,7 @@ export default function POSDashboard() {
         <AccountStatement
           kind="customer"
           name={selectedHistoryCustomer.name}
-          openingBalance={selectedHistoryCustomerRaw.openingBalance || 0}
+          openingBalance={currentHistoryCustomer.openingBalance || 0}
           invoices={selectedHistoryCustomer.orders}
           payments={selectedHistoryCustomer.payments}
           returns={selectedHistoryCustomer.orderReturns}

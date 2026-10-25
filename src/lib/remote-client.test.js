@@ -38,6 +38,37 @@ test('successful bank creation returns the server data unchanged', async (t) => 
   );
 });
 
+test('login rejects an older server that authenticates without issuing a user session', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => Response.json({
+    id: 'admin', username: 'admin', role: 'ADMIN'
+  }));
+  await assert.rejects(
+    createRemoteClient(config).login({ username: 'admin', password: 'test-password' }),
+    /حدّث خادم البيانات وأعد تشغيله/
+  );
+});
+
+test('login rejects empty session responses instead of creating a sessionless authenticated client', async (t) => {
+  for (const result of [null, {}, { sessionToken: null }, { sessionToken: '' }, { sessionToken: '   ' }]) {
+    t.mock.method(globalThis, 'fetch', async () => Response.json(result));
+    await assert.rejects(
+      createRemoteClient(config).login({ username: 'admin', password: 'test-password' }),
+      /تثبيت المحطة وحده لا يحدّث الخادم/
+    );
+  }
+});
+
+test('login preserves a compatible server session and surfaces real authentication failures', async (t) => {
+  const user = { id: 'admin', role: 'ADMIN', sessionToken: 'signed-session' };
+  t.mock.method(globalThis, 'fetch', async () => Response.json(user));
+  assert.deepEqual(await createRemoteClient(config).login({ username: 'admin', password: 'test-password' }), user);
+  t.mock.method(globalThis, 'fetch', async () => Response.json({ error: 'Incorrect password' }, { status: 401 }));
+  await assert.rejects(
+    createRemoteClient(config).login({ username: 'admin', password: 'incorrect' }),
+    /Incorrect password/
+  );
+});
+
 test('creating an invoice return calls the dedicated authenticated server endpoint', async (t) => {
   const orderReturn = { id: 'return-id', returnNumber: 'RET-2026-00001' };
   let request;

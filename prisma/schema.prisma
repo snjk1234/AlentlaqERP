@@ -58,6 +58,32 @@ model Category {
   name String @unique
 }
 
+model BankTransfer {
+  id                  String   @id @default(cuid())
+  transferNumber      String   @unique
+  requestId           String   @unique
+  fromBankId          String
+  toBankId            String
+  fromBankName        String
+  toBankName          String
+  fromAccountNumber   String?
+  toAccountNumber     String?
+  amount              Float
+  date                DateTime
+  reference           String?
+  notes               String?
+  status              String   @default("POSTED")
+  reversalOf          String?
+  createdBy           String
+  createdByName       String
+  fromBalanceBefore   Float
+  fromBalanceAfter    Float
+  toBalanceBefore     Float
+  toBalanceAfter      Float
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
 model StocktakeSetting {
   id           String   @id @default(cuid())
   passwordHash String

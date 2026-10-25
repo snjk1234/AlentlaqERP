@@ -4,8 +4,9 @@ const dateValue = (document) => {
   if (!Number.isFinite(timestamp)) throw new Error('Bank statement movement has an invalid date.');
   return timestamp;
 };
+const roundMoney = value => Math.round(value * 100) / 100;
 
-function buildBankStatement({ bankId, bankBalance, payments = [], supplierPayments = [], generalExpenses = [], returns = [], from = '', to = '' }) {
+function buildBankStatement({ bankId, bankBalance, payments = [], supplierPayments = [], generalExpenses = [], returns = [], transfers = [], from = '', to = '' }) {
   const movements = [
     ...payments.filter(payment => payment.bankId === bankId).map(payment => ({
       id: payment.id,
@@ -42,6 +43,20 @@ function buildBankStatement({ bankId, bankBalance, payments = [], supplierPaymen
       incoming: 0,
       outgoing: Number(expense.amount) || 0
     })),
+    ...transfers.filter(transfer => transfer.fromBankId === bankId || transfer.toBankId === bankId).map(transfer => {
+      const outgoing = transfer.fromBankId === bankId;
+      return {
+        id: transfer.id,
+        date: transfer.date,
+        type: `${transfer.reversalOf ? 'عكس تحويل' : 'تحويل'} ${outgoing ? 'صادر' : 'وارد'}`,
+        number: transfer.transferNumber,
+        party: outgoing ? transfer.toBankName : transfer.fromBankName,
+        reference: transfer.reference,
+        notes: transfer.notes,
+        incoming: outgoing ? 0 : Number(transfer.amount),
+        outgoing: outgoing ? Number(transfer.amount) : 0
+      };
+    }),
     ...returns.filter(orderReturn =>
       orderReturn.bankId === bankId
       && orderReturn.refundMethod === 'BANK'
@@ -68,18 +83,18 @@ function buildBankStatement({ bankId, bankBalance, payments = [], supplierPaymen
   const futureNet = movements
     .filter(movement => movement.timestamp >= fromTime)
     .reduce((sum, movement) => sum + movement.incoming - movement.outgoing, 0);
-  const openingBalance = Number(bankBalance) - futureNet;
+  const openingBalance = roundMoney(Number(bankBalance) - futureNet);
   let runningBalance = openingBalance;
   const rows = periodMovements.map(movement => {
-    runningBalance += movement.incoming - movement.outgoing;
+    runningBalance = roundMoney(runningBalance + movement.incoming - movement.outgoing);
     return { ...movement, balance: runningBalance };
   });
 
   return {
     openingBalance,
     closingBalance: runningBalance,
-    totalIncoming: periodMovements.reduce((sum, movement) => sum + movement.incoming, 0),
-    totalOutgoing: periodMovements.reduce((sum, movement) => sum + movement.outgoing, 0),
+    totalIncoming: roundMoney(periodMovements.reduce((sum, movement) => sum + movement.incoming, 0)),
+    totalOutgoing: roundMoney(periodMovements.reduce((sum, movement) => sum + movement.outgoing, 0)),
     rows
   };
 }

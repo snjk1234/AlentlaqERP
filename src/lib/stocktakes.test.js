@@ -449,7 +449,7 @@ test('stocktake transport uses a signed user token instead of machine credential
   await client.stocktakeOperation({ action: 'list' }, user.sessionToken);
   assert.equal(calls[1].url, 'http://localhost:3000/api/stocktakes');
   assert.equal(calls[1].options.headers.authorization, 'Bearer signed-user-token');
-  assert.throws(() => client.stocktakeOperation({ action: 'list' }), /انتهت الجلسة/);
+  assert.throws(() => client.stocktakeOperation({ action: 'list' }), /جلسة المستخدم غير موجودة/);
 });
 
 test('Electron stocktake bridge uses the authenticated sender session and rejects unauthenticated senders', async () => {

@@ -142,6 +142,32 @@ exports.Prisma.CategoryScalarFieldEnum = {
   name: 'name'
 };
 
+exports.Prisma.BankTransferScalarFieldEnum = {
+  id: 'id',
+  transferNumber: 'transferNumber',
+  requestId: 'requestId',
+  fromBankId: 'fromBankId',
+  toBankId: 'toBankId',
+  fromBankName: 'fromBankName',
+  toBankName: 'toBankName',
+  fromAccountNumber: 'fromAccountNumber',
+  toAccountNumber: 'toAccountNumber',
+  amount: 'amount',
+  date: 'date',
+  reference: 'reference',
+  notes: 'notes',
+  status: 'status',
+  reversalOf: 'reversalOf',
+  createdBy: 'createdBy',
+  createdByName: 'createdByName',
+  fromBalanceBefore: 'fromBalanceBefore',
+  fromBalanceAfter: 'fromBalanceAfter',
+  toBalanceBefore: 'toBalanceBefore',
+  toBalanceAfter: 'toBalanceAfter',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.StocktakeSettingScalarFieldEnum = {
   id: 'id',
   passwordHash: 'passwordHash',
@@ -375,6 +401,7 @@ exports.Prisma.ModelName = {
   User: 'User',
   Product: 'Product',
   Category: 'Category',
+  BankTransfer: 'BankTransfer',
   StocktakeSetting: 'StocktakeSetting',
   Stocktake: 'Stocktake',
   StocktakeItem: 'StocktakeItem',

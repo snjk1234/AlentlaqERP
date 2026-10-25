@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { test } = require('node:test');
 const ts = require('typescript');
-const { editDocument, purchaseTaxRate } = require('./document-edits');
+const { editDocument, purchaseTaxRate, editQuotation } = require('./document-edits');
 const { createUserSessionToken, verifyUserSessionToken } = require('./user-session-token');
 
 const root = path.resolve(__dirname, '..', '..');
@@ -33,6 +33,12 @@ function store() {
       { id: 'a', name: 'Product A', stockQty: 8, taxRate: 0.14, price: 180, costPrice: 150 },
       { id: 'b', name: 'Product B', stockQty: 20, taxRate: 0, price: 400, costPrice: 300 }
     ],
+    order: [{ id: 'quotation', invoiceNumber: 'QT-00001', isQuotation: true, status: 'PENDING',
+      customerId: 'customer', customerName: 'Customer', receiverName: 'Receiver', siteReceiptNumber: 'SITE',
+      invoiceType: 'فاتورة ضريبية', createdAt: version, updatedAt: version,
+      totalAmount: 100, taxAmount: 14, netAmount: 114 }],
+    orderItem: [{ id: 'quote-line', orderId: 'quotation', productId: 'a', quantity: 1,
+      unitPrice: 100, taxAmount: 14, total: 114, position: 0 }],
     purchaseOrder: [{ id: 'purchase', supplierId: 's1', billNumber: 'PUR-1', invoiceType: 'فاتورة ضريبية',
       totalAmount: 1000, taxAmount: 140, netAmount: 1140, date: version, createdAt: version, updatedAt: version }],
     purchaseOrderItem: [{ id: 'line1', purchaseOrderId: 'purchase', productId: 'a', quantity: 10, unitCost: 100, taxAmount: 140, total: 1140 }],
@@ -49,8 +55,11 @@ function store() {
     if (!row) return null;
     const result = copy(row);
     if (include?.items) {
-      result.items = copy(state.purchaseOrderItem.filter(item => item.purchaseOrderId === row.id));
+      result.items = model === 'order'
+        ? copy(state.orderItem.filter(item => item.orderId === row.id).sort((a, b) => a.position - b.position))
+        : copy(state.purchaseOrderItem.filter(item => item.purchaseOrderId === row.id));
     }
+
     if (include?.supplier) result.supplier = copy(state.supplier.find(s => s.id === row.supplierId));
     if (include?.bank) result.bank = copy(state.bank.find(b => b.id === row.bankId));
     if (include?.category) result.category = copy(state.expenseCategory.find(c => c.id === row.categoryId));
@@ -98,6 +107,168 @@ function store() {
     }
   };
 }
+
+const quotationInput = { id: 'quotation', userId: 'admin', updatedAt: version, items: [
+  { productId: 'b', quantity: 3, unitPrice: 20 }, { productId: 'a', quantity: 2, unitPrice: 50 }
+] };
+
+test('quotation edits preserve identity, parties, dates and inventory while replacing ordered lines and totals', async () => {
+  const context = store();
+  const original = copy(context.state.order[0]);
+  context.state.product[0].taxRate = 0.2;
+  const products = copy(context.state.product);
+  const result = await editQuotation(context.database, { ...quotationInput, customerId: 'forged', invoiceNumber: 'NEW' });
+  assert.deepEqual(result.items.map(item => [item.productId, item.position]), [['b', 0], ['a', 1]]);
+  assert.equal(result.totalAmount, 160);
+  assert.equal(result.taxAmount, 14);
+  assert.equal(result.netAmount, 174);
+  for (const key of ['invoiceNumber', 'customerId', 'customerName', 'receiverName', 'siteReceiptNumber', 'createdAt', 'invoiceType', 'isQuotation', 'status']) {
+    assert.equal(result[key], original[key], key);
+  }
+  assert.deepEqual(context.state.product, products);
+  assert.ok(context.calls.every(call => call.startsWith('orderItem.') || call === 'order.update'));
+});
+
+test('quotation edits reject non-admins, final invoices, converted and stale quotations before any write', async () => {
+  for (const change of ['cashier', 'invoice', 'converted', 'stale']) {
+    const context = store();
+    const input = copy(quotationInput);
+    if (change === 'cashier') input.userId = 'cashier';
+    if (change === 'invoice') context.state.order[0].isQuotation = false;
+    if (change === 'converted') context.state.order[0].status = 'CONVERTED';
+    if (change === 'stale') input.updatedAt = '2026-01-01';
+    await assert.rejects(editQuotation(context.database, input), { statusCode: change === 'cashier' ? 403 : 409 });
+    assert.equal(context.calls.length, 0);
+  }
+});
+
+test('quotation edits validate every item and roll back replacements and totals on database failure', async () => {
+  for (const items of [[], [{ productId: 'a', quantity: 0, unitPrice: 1 }],
+    [{ productId: 'a', quantity: 1.2, unitPrice: 1 }], [{ productId: 'a', quantity: 1, unitPrice: -1 }],
+    [{ productId: 'missing', quantity: 1, unitPrice: 1 }],
+    [{ productId: 'a', quantity: 1, unitPrice: 1 }, { productId: 'a', quantity: 2, unitPrice: 2 }]]) {
+    const context = store();
+    await assert.rejects(editQuotation(context.database, { ...quotationInput, items }));
+    assert.equal(context.calls.length, 0);
+  }
+  for (const operation of ['orderItem.create', 'order.update']) {
+    const context = store();
+    const before = copy(context.state);
+    context.fail(operation);
+    await assert.rejects(editQuotation(context.database, quotationInput), /Injected/);
+    assert.deepEqual(context.state, before);
+  }
+});
+
+test('quotation edits keep non-tax quotations tax-free and support zero prices and out-of-stock quote items', async () => {
+  const context = store();
+  context.state.order[0].invoiceType = 'فاتورة';
+  context.state.product[0].stockQty = 0;
+  const result = await editQuotation(context.database, { ...quotationInput, items: [
+    { productId: 'a', quantity: 10, unitPrice: 0 }, { productId: 'b', quantity: 2, unitPrice: 10 }
+  ] });
+  assert.equal(result.taxAmount, 0);
+  assert.equal(result.netAmount, 20);
+  assert.equal(context.state.product[0].stockQty, 0);
+});
+
+test('quotation API verifies signed admin identity, rejects malformed requests and ignores forged identities', async () => {
+  process.env.POS_API_TOKEN = 'quotation-session-test-secret';
+  const context = store();
+  const exports = {};
+  vm.runInNewContext(compile(read('src', 'app', 'api', 'quotations', 'route.ts')), {
+    exports, process, Error, console: { error() {} },
+    require: id => {
+      if (id === '@/lib/prisma') return { prisma: context.database };
+      if (id === '@/lib/document-edits') return { editQuotation };
+      if (id === '@/lib/user-session-token') return { verifyUserSessionToken };
+      if (id === 'next/server') return { NextResponse: { json: (data, init) => Response.json(data, init) } };
+      throw new Error(id);
+    }
+  });
+  const post = (user, body, token) => exports.PUT(new Request('http://localhost/api/quotations', {
+    method: 'PUT',
+    headers: { authorization: `Bearer ${token ?? createUserSessionToken(user)}` },
+    body: typeof body === 'string' ? body : JSON.stringify(body)
+  }));
+  assert.equal((await post({}, quotationInput, 'invalid')).status, 401);
+  assert.equal((await post({ id: 'cashier', role: 'CASHIER' }, quotationInput)).status, 403);
+  assert.equal((await post({ id: 'admin', role: 'ADMIN' }, '{')).status, 400);
+  assert.equal((await post({ id: 'cashier', role: 'ADMIN' }, quotationInput)).status, 403);
+  const response = await post({ id: 'admin', role: 'ADMIN' }, { ...quotationInput, userId: 'cashier' });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).invoiceNumber, 'QT-00001');
+});
+
+test('quotation Electron editing uses authenticated sender and cannot forge the admin user', async () => {
+  const context = store();
+  const handlers = new Map();
+  vm.runInNewContext(read('electron', 'main.js') + '\ninitializeDatabase(); authenticatedUsers.set(10, {id:"admin", role:"ADMIN"});', {
+    process, Buffer, console: { error() {} }, __dirname: path.join(root, 'electron'),
+    require: id => {
+      if (id === 'electron') return {
+        app: { isPackaged: true, whenReady: () => ({ then() {} }), on() {} },
+        ipcMain: { handle: (name, fn) => handlers.set(name, fn), on() {} },
+        protocol: { registerSchemesAsPrivileged() {} }
+      };
+      if (id === '../src/lib/remote-client') return { createRemoteClient: () => context.database };
+      if (id.startsWith('../src/lib/')) return require(path.join(root, id.slice(3)));
+      return require(id);
+    }
+  });
+  const update = handlers.get('update-quotation');
+  await assert.rejects(update({ sender: { id: 99 } }, quotationInput), /للمدير فقط/);
+  const saved = await update({ sender: { id: 10 } }, { ...quotationInput, userId: 'cashier' });
+  assert.equal(saved.id, 'quotation');
+  assert.equal(saved.netAmount, 174);
+  assert.ok(read('electron', 'preload.js').includes("ipcRenderer.invoke('update-quotation', data)"));
+});
+
+test('quotation editor uses update transports, retains edits on failure and exposes only permitted fields', async () => {
+  const source = read('src', 'components', 'QuotationEdit.tsx');
+  const tree = ts.createSourceFile('QuotationEdit.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let declaration;
+  const visit = node => {
+    if (ts.isVariableDeclaration(node) && node.name.getText(tree) === 'save') declaration = node.getText(tree);
+    ts.forEachChild(node, visit);
+  };
+  visit(tree);
+  for (const desktop of [false, true]) {
+    for (const fail of [false, true]) {
+      const errors = [];
+      const calls = [];
+      const saved = [];
+      const exports = {};
+      const send = async data => {
+        calls.push(data);
+        if (fail) throw new Error('stale quotation');
+        return { id: 'quotation', items: [] };
+      };
+      vm.runInNewContext(compile(`const ${declaration}; exports.save = save;`), {
+        exports, Error, busy: false, user: { role: 'ADMIN', sessionToken: 'signed-token' },
+        quotation: { id: 'quotation', updatedAt: version }, items: quotationInput.items,
+        setError: error => errors.push(error), setBusy() {}, onSaved: data => saved.push(data),
+        confirmQuotationProfit: async () => true,
+        window: desktop ? { electronAPI: { updateQuotation: send } } : {},
+        fetch: async (url, options) => {
+          assert.equal(url, '/api/quotations');
+          assert.equal(options.method, 'PUT');
+          assert.equal(options.headers.Authorization, 'Bearer signed-token');
+          return Response.json(await send(JSON.parse(options.body)));
+        }
+      });
+      await exports.save({ preventDefault() {} });
+      assert.equal(calls.length, 1);
+      assert.deepEqual(Object.keys(calls[0]).sort(), ['id', 'items', 'updatedAt']);
+      assert.equal(saved.length, fail ? 0 : 1);
+      if (fail) assert.ok(errors.includes('stale quotation'));
+    }
+  }
+  const page = read('src', 'app', 'page.tsx');
+  assert.ok(page.includes("currentUser?.role === 'ADMIN' && inv.isQuotation && inv.status !== 'CONVERTED'"));
+  assert.ok(page.includes('setEditingQuotation(inv)'));
+  assert.ok(page.includes('setEditingQuotation(invoice)'));
+});
 
 test('purchase edit replaces lines and adjusts stock and supplier only by net differences', async () => {
   const db = store();

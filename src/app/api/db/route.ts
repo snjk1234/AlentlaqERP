@@ -57,6 +57,9 @@ export async function POST(request: Request) {
     if (['stocktake', 'stocktakeItem', 'stocktakeSetting'].includes(body.modelName)) {
       return NextResponse.json({ error: 'استخدم واجهة الجرد المصرح بها.' }, { status: 403 });
     }
+    if (body.modelName === 'bankTransfer') {
+      return NextResponse.json({ error: 'استخدم واجهة التحويلات المصرح بها.' }, { status: 403 });
+    }
     if (typeof body.operation !== 'string') {
       return NextResponse.json({ error: 'A database operation is required.' }, { status: 400 });
     }

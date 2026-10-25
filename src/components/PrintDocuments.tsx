@@ -36,6 +36,14 @@ export type PrintStocktake = {
   approvedBy: string | null; approvedAt: string | Date | null;
   items: { productLabel: string; bookQty: number; countedQty: number | null; unitCost: number | null }[];
 };
+export type PrintBankTransfer = {
+  id: string; transferNumber: string; fromBankId: string; toBankId: string;
+  fromBankName: string; toBankName: string; fromAccountNumber: string | null; toAccountNumber: string | null;
+  amount: number; date: string | Date; reference: string | null; notes: string | null;
+  status: string; reversalOf: string | null; createdByName: string; createdAt: string | Date;
+  fromBalanceBefore: number; fromBalanceAfter: number; toBalanceBefore: number; toBalanceAfter: number;
+  reversedByNumber?: string;
+};
 const printCell = (value: ReactNode) => {
   if (typeof value !== 'string') return value;
   const amount = value.match(/^(-?\d+)(\.\d{2})(\s*ج\.م)?$/);
@@ -319,6 +327,34 @@ export function ReceiptPrint({ receipt, expense = false, onClose, actions }: {
       <DocumentFooter />
     </DocumentFrame>
   );
+}
+
+export function BankTransferPrint({ transfer, onClose }: { transfer: PrintBankTransfer; onClose: () => void }) {
+  const title = transfer.reversalOf ? 'سند عكس تحويل داخلي' : 'سند تحويل داخلي';
+  return <DocumentFrame id="printable-bank-transfer" title={title} onClose={onClose}>
+    <DocumentHeader title={title} number={transfer.transferNumber} issuedAt={transfer.date} includeTime>
+      <div className="document-meta">
+        <span>الحالة: {transfer.status === 'REVERSED' ? `تم عكس هذا التحويل — السند العكسي ${transfer.reversedByNumber || ''}` : transfer.reversalOf ? 'سند عكسي منفّذ' : 'منفّذ'}</span>
+        <span>المنفّذ: {transfer.createdByName}</span>
+        <span>وقت التسجيل: <bdi>{date(transfer.createdAt, true)}</bdi></span>
+      </div>
+    </DocumentHeader>
+    <table className="statement-ledger document-table">
+      <thead><tr className="statement-column-heading">{['البيان', 'حساب المصدر', 'حساب المستلم'].map(title => <th key={title} scope="col">{title}</th>)}</tr></thead>
+      <tbody>
+        <tr><td>اسم الحساب</td><td>{transfer.fromBankName}</td><td>{transfer.toBankName}</td></tr>
+        <tr><td>رقم الحساب</td><td><bdi>{transfer.fromAccountNumber || '—'}</bdi></td><td><bdi>{transfer.toAccountNumber || '—'}</bdi></td></tr>
+        <tr><td>الرصيد قبل التنفيذ</td><td><bdi>{money(transfer.fromBalanceBefore)}</bdi></td><td><bdi>{money(transfer.toBalanceBefore)}</bdi></td></tr>
+        <tr><td>مبلغ التحويل</td><td><bdi>−{money(transfer.amount)}</bdi></td><td><bdi>+{money(transfer.amount)}</bdi></td></tr>
+        <tr><td>الرصيد بعد التنفيذ</td><td><bdi>{money(transfer.fromBalanceAfter)}</bdi></td><td><bdi>{money(transfer.toBalanceAfter)}</bdi></td></tr>
+      </tbody>
+    </table>
+    <p className="document-meta">قيمة التحويل: <bdi>{money(transfer.amount)}</bdi> جنيه مصري · تحويل داخلي وليس مصروفًا أو إيرادًا</p>
+    {transfer.reference && <p className="document-meta">{transfer.reversalOf ? 'رقم السند الأصلي' : 'المرجع'}: <bdi>{transfer.reference}</bdi></p>}
+    {transfer.notes && <p className="document-meta" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{transfer.reversalOf ? 'سبب العكس' : 'الملاحظات'}: {transfer.notes}</p>}
+    <div className="document-signatures"><div>توقيع المُسلّم<p /></div><div>توقيع المستلم<p /></div><div>اعتماد المدير<p /></div></div>
+    <DocumentFooter />
+  </DocumentFrame>;
 }
 
 export function StocktakePrint({ document, onClose }: { document: PrintStocktake; onClose: () => void }) {

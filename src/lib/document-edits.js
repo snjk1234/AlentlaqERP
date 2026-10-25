@@ -148,4 +148,148 @@ async function editDocument(database, kind, input) {
   }, { timeout: 20000, maxWait: 20000 });
 }
 
-module.exports = { editDocument, purchaseTaxRate };
+async function editQuotation(database, input) {
+  if (!input || typeof input !== 'object') throw editError('بيانات عرض السعر غير صالحة.');
+  const id = requiredId(input.id);
+  const userId = requiredId(input.userId);
+  const version = new Date(input.updatedAt);
+  if (!input.updatedAt || !Number.isFinite(version.getTime())) throw editError('نسخة عرض السعر غير صالحة. حدّث القائمة.');
+  if (!Array.isArray(input.items) || !input.items.length) throw editError('أضف صنفًا واحدًا على الأقل.');
+  return database.$transaction(async tx => {
+    const user = await tx.user.findUnique({ where: { id: userId } });
+    if (user?.role !== 'ADMIN') throw editError('تعديل عرض السعر متاح للمدير فقط.', 403);
+    const existing = await tx.order.findUnique({ where: { id }, include: { items: true } });
+    if (!existing) throw editError('عرض السعر غير موجود.', 404);
+    if (!existing.isQuotation || existing.status === 'CONVERTED') {
+      throw editError('يمكن تعديل عروض الأسعار غير المحوّلة فقط، وليس الفواتير.', 409);
+    }
+    if (new Date(existing.updatedAt).getTime() !== version.getTime()) {
+      throw editError('تم تعديل عرض السعر من مستخدم آخر. أغلق النموذج وحدّث القائمة.', 409);
+    }
+    const seen = new Set();
+    const items = [];
+    let totalAmount = 0;
+    let taxAmount = 0;
+    for (const [position, item] of input.items.entries()) {
+      if (!item || typeof item !== 'object') throw editError('بيانات الصنف غير صالحة.');
+      const productId = requiredId(item.productId);
+      if (seen.has(productId)) throw editError('لا يمكن تكرار الصنف في عرض السعر.');
+      seen.add(productId);
+      const quantity = inputNumber(item.quantity);
+      const unitPrice = inputNumber(item.unitPrice);
+      if (!Number.isInteger(quantity) || quantity <= 0 || quantity > 2147483647 || unitPrice < 0) {
+        throw editError('الكمية يجب أن تكون عددًا صحيحًا موجبًا والسعر غير سالب.');
+      }
+      const product = await requireRecord(tx, 'product', productId, 'الصنف');
+      const previous = existing.items.find(line => line.productId === productId);
+      const oldSubtotal = previous ? previous.quantity * previous.unitPrice : 0;
+      const taxRate = ['فاتورة', 'فاتورة مبسطة'].includes(existing.invoiceType) ? 0
+        : oldSubtotal > 0 ? previous.taxAmount / oldSubtotal : Number(product.taxRate);
+      if (!Number.isFinite(taxRate) || taxRate < 0) throw editError('نسبة ضريبة الصنف غير صالحة.');
+      const subtotal = Number((quantity * unitPrice).toFixed(2));
+      const tax = Number((subtotal * taxRate).toFixed(2));
+      const total = Number((subtotal + tax).toFixed(2));
+      if (![subtotal, tax, total].every(Number.isFinite)) throw editError('قيمة الصنف تتجاوز الحد المسموح.');
+      totalAmount += subtotal;
+      taxAmount += tax;
+      items.push({ orderId: id, productId, position, quantity, unitPrice, taxAmount: tax, total });
+    }
+    totalAmount = Number(totalAmount.toFixed(2));
+    taxAmount = Number(taxAmount.toFixed(2));
+    const netAmount = Number((totalAmount + taxAmount).toFixed(2));
+    if (![totalAmount, taxAmount, netAmount].every(Number.isFinite)) throw editError('إجمالي عرض السعر يتجاوز الحد المسموح.');
+    for (const line of existing.items) await tx.orderItem.delete({ where: { id: line.id } });
+    for (const item of items) await tx.orderItem.create({ data: item });
+    return tx.order.update({
+      where: { id }, data: { totalAmount, taxAmount, netAmount },
+      include: { customer: true, items: { include: { product: true } } }
+    });
+  }, { timeout: 20000, maxWait: 20000 });
+}
+
+async function getQuotationCosts(database, userId, input) {
+  if (!input || !Array.isArray(input.productIds) || !input.productIds.length || input.productIds.length > 5000
+    || input.productIds.some(id => typeof id !== 'string' || !id.trim() || id.length > 50)) {
+    throw editError('قائمة أصناف تحليل الربح غير صالحة.');
+  }
+  return database.$transaction(async tx => {
+    const user = typeof userId === 'string' && userId.trim() ? await tx.user.findUnique({ where: { id: userId } }) : null;
+    if (user?.role !== 'ADMIN') throw editError('تحليل أرباح عرض السعر متاح للمدير فقط.', 403);
+    const costs = [];
+    for (const id of new Set(input.productIds)) {
+      const product = await requireRecord(tx, 'product', id, 'الصنف');
+      costs.push({
+        productId: product.id,
+        costPrice: typeof product.costPrice === 'number' && Number.isFinite(product.costPrice) && product.costPrice > 0
+          ? product.costPrice : null
+      });
+    }
+    return { costs, checkedAt: new Date().toISOString() };
+  });
+}
+
+async function editInvoiceDetails(database, input) {
+  if (!input || typeof input !== 'object') throw editError('بيانات الفاتورة غير صالحة.');
+  const id = requiredId(input.id);
+  const userId = requiredId(input.userId);
+  const version = new Date(input.updatedAt);
+  if (!input.updatedAt || !Number.isFinite(version.getTime())) throw editError('نسخة الفاتورة غير صالحة. حدّث القائمة.');
+  const text = (value, label, required = false) => {
+    if ((value === null || value === undefined) && !required) return null;
+    if (typeof value !== 'string' || value.length > 255 || value.includes('\0') || (required && !value.trim())) {
+      throw editError(`${label} غير صالح (الحد الأقصى 255 حرفًا).`);
+    }
+    return value.trim() || null;
+  };
+  const receiverName = text(input.receiverName, 'اسم المستلم');
+  const siteReceiptNumber = text(input.siteReceiptNumber, 'رقم إذن الاستلام');
+  if (input.customerId !== null && (typeof input.customerId !== 'string' || !input.customerId.trim() || input.customerId.length > 50)) {
+    throw editError('اختر عميلًا مسجلًا أو عميلًا نقديًا.');
+  }
+  const customerId = input.customerId === null ? null : input.customerId.trim();
+  return database.$transaction(async tx => {
+    const user = await tx.user.findUnique({ where: { id: userId } });
+    if (user?.role !== 'ADMIN') throw editError('تعديل بيانات الفاتورة متاح للمدير فقط.', 403);
+    const existing = await tx.order.findUnique({ where: { id }, include: { items: true } });
+    if (!existing) throw editError('الفاتورة غير موجودة.', 404);
+    if (existing.isQuotation || existing.status !== 'COMPLETED') throw editError('يمكن تعديل بيانات فاتورة مبيعات صادرة فقط.', 409);
+    if (new Date(existing.updatedAt).getTime() !== version.getTime()) {
+      throw editError('تم تعديل الفاتورة من مستخدم آخر. أغلق النموذج وحدّث القائمة.', 409);
+    }
+    const customer = customerId ? await requireRecord(tx, 'customer', customerId, 'العميل') : null;
+    const customerName = customer ? customer.name : text(input.customerName, 'اسم العميل النقدي', true);
+    if (customerId !== (existing.customerId || null)) {
+      const returns = await tx.orderReturn.findMany({ where: { orderId: id } });
+      if (returns.length) throw editError('لا يمكن نقل الفاتورة إلى عميل آخر لوجود مرتجعات عليها. يمكنك تعديل المستلم وإذن الاستلام فقط.', 409);
+      if (existing.customerId) {
+        const payments = await tx.payment.findMany({ where: { customerId: existing.customerId } });
+        if (payments.length) throw editError('لا يمكن نقل الفاتورة لأن للعميل الأصلي دفعات مسجلة، حتى لو كانت تخص فواتير أخرى. يمكنك تعديل المستلم وإذن الاستلام فقط.', 409);
+      }
+      const quantities = new Map();
+      for (const item of existing.items) {
+        const quantity = Number(item.quantity);
+        if (!Number.isInteger(quantity) || quantity <= 0) throw editError('كميات الفاتورة غير صالحة لنقل التسليمات.', 409);
+        quantities.set(item.productId, (quantities.get(item.productId) || 0) + quantity);
+      }
+      for (const [productId, quantity] of quantities) {
+        for (const [accountId, direction] of [[existing.customerId, -1], [customerId, 1]]) {
+          if (!accountId) continue;
+          const quota = await tx.customerCeilingQuota.findUnique({ where: { customerId_productId: { customerId: accountId, productId } } });
+          if (!quota) continue;
+          const delivered = Number(quota.deliveredQuantity);
+          const next = delivered + direction * quantity;
+          if (!Number.isInteger(delivered) || !Number.isSafeInteger(next) || next < 0 || next > 2147483647) {
+            throw editError('أرصدة تسليمات الأسقف لا تسمح بنقل الفاتورة. راجع تسليمات العميلين أولًا.', 409);
+          }
+          await tx.customerCeilingQuota.update({ where: { id: quota.id }, data: { deliveredQuantity: next } });
+        }
+      }
+    }
+    return tx.order.update({
+      where: { id }, data: { customerId, customerName, receiverName, siteReceiptNumber },
+      include: { customer: true, items: { include: { product: true } }, orderReturns: { include: { bank: true, items: { include: { product: true } } } } }
+    });
+  }, { timeout: 20000, maxWait: 20000 });
+}
+
+module.exports = { editDocument, purchaseTaxRate, editQuotation, getQuotationCosts, editInvoiceDetails };

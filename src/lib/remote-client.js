@@ -61,6 +61,7 @@ function createRemoteClient(getConfig, transactionId = null) {
     if (!response.ok) {
       const error = new Error(result.error || `POS server request failed (${response.status}).`);
       if (typeof result.code === 'string') error.code = result.code;
+      error.statusCode = response.status;
       throw error;
     }
     return unwrap ? result.data : result;
@@ -99,12 +100,26 @@ function createRemoteClient(getConfig, transactionId = null) {
     }
   };
   client.createOrderReturn = data => request('/api/order-returns', data);
-  client.login = credentials => request('/api/users/login', credentials, undefined, false);
+  client.login = async credentials => {
+    const user = await request('/api/users/login', credentials, undefined, false);
+    if (!user || typeof user.sessionToken !== 'string' || !user.sessionToken.trim()) {
+      throw new Error('خادم البيانات لا يُصدر جلسة المستخدم المطلوبة لهذه النسخة. حدّث خادم البيانات وأعد تشغيله، ثم سجّل الدخول مجددًا. تثبيت المحطة وحده لا يحدّث الخادم.');
+    }
+    return user;
+  };
   client.stocktakeOperation = (data, sessionToken) => {
-    if (!sessionToken) throw new Error('انتهت الجلسة. سجّل الدخول مجددًا.');
+    if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وإذا استمرت المشكلة فحدّث خادم البيانات وأعد تشغيله.');
     return request('/api/stocktakes', data, sessionToken);
   };
+  client.bankTransferOperation = (data, sessionToken) => {
+    if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وتأكد من تحديث الخادم.');
+    return request('/api/bank-transfers', data, sessionToken);
+  };
   client.$disconnect = async () => {};
+  client.quotationCosts = (data, sessionToken) => {
+    if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وتأكد من تحديث الخادم.');
+    return request('/api/quotation-costs', data, sessionToken, false);
+  };
   return client;
 }
 

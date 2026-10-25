@@ -11,6 +11,7 @@ type AccessModelName =
   | 'orderReturn'
   | 'orderReturnItem'
   | 'bank'
+  | 'bankTransfer'
   | 'customerCeilingQuota'
   | 'payment'
   | 'supplier'

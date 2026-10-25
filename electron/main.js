@@ -4,7 +4,7 @@ const fs = require('fs');
 const { createRemoteClient } = require('../src/lib/remote-client');
 const { saveCustomerPrices } = require('../src/lib/customer-prices');
 const { correctPayment } = require('../src/lib/payment-corrections');
-const { editDocument } = require('../src/lib/document-edits');
+const { editDocument, editQuotation, editInvoiceDetails } = require('../src/lib/document-edits');
 
 // Register 'app' as a standard and secure scheme supporting fetch
 protocol.registerSchemesAsPrivileged([
@@ -779,6 +779,39 @@ for (const [channel, kind] of [
   });
 }
 
+ipcMain.handle('quotation-costs', async (event, data) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    if (user?.role !== 'ADMIN') throw new Error('تحليل أرباح عرض السعر متاح للمدير فقط.');
+    return await prisma.quotationCosts(data, user.sessionToken);
+  } catch (error) {
+    console.error('Quotation cost lookup failed:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('update-invoice-details', async (event, data) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    if (user?.role !== 'ADMIN') throw new Error('تعديل بيانات الفاتورة متاح للمدير فقط.');
+    return await editInvoiceDetails(prisma, { ...data, userId: user.id });
+  } catch (error) {
+    console.error('Invoice detail correction failed:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('update-quotation', async (event, data) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    if (user?.role !== 'ADMIN') throw new Error('تعديل عرض السعر متاح للمدير فقط.');
+    return await editQuotation(prisma, { ...data, userId: user.id });
+  } catch (error) {
+    console.error('Error editing quotation:', error);
+    throw error;
+  }
+});
+
 // Expenses IPC
 ipcMain.handle('get-expenses', async () => {
   try {
@@ -942,6 +975,18 @@ ipcMain.handle('stocktake-operation', async (event, data) => {
   } catch (error) {
     console.error('Stocktake operation failed:', error);
     throw error;
+  }
+});
+
+ipcMain.handle('bank-transfer-operation', async (event, data) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    if (user?.role !== 'ADMIN') return { error: 'التحويلات بين الحسابات متاحة للمدير فقط. سجّل الدخول مجددًا.', statusCode: 403 };
+    const result = await prisma.bankTransferOperation(data, user.sessionToken);
+    return { data: result };
+  } catch (error) {
+    console.error('Bank transfer operation failed:', error);
+    return { error: error.message, statusCode: error.statusCode || 500 };
   }
 });
 

@@ -199,6 +199,25 @@ const models = {
       generalExpenses: { model: 'generalExpense', many: true, foreignKey: 'bankId' }
     }
   },
+  bankTransfer: {
+    table: 'BankTransfer',
+    fields: {
+      id, transferNumber: text({ nullable: false }), requestId: text({ size: 50, nullable: false }),
+      fromBankId: text({ size: 50, nullable: false }), toBankId: text({ size: 50, nullable: false }),
+      fromBankName: text({ nullable: false }), toBankName: text({ nullable: false }),
+      fromAccountNumber: text(), toAccountNumber: text(),
+      amount: number({ nullable: false }), date: timestamp, reference: text(), notes: text({ memo: true }),
+      status: text({ nullable: false }), reversalOf: text({ size: 50 }),
+      createdBy: text({ size: 50, nullable: false }), createdByName: text({ nullable: false }),
+      fromBalanceBefore: number({ nullable: false }), fromBalanceAfter: number({ nullable: false }),
+      toBalanceBefore: number({ nullable: false }), toBalanceAfter: number({ nullable: false }),
+      createdAt: timestamp, updatedAt: timestamp
+    },
+    defaults: { status: 'POSTED' },
+    unique: [['transferNumber'], ['requestId']],
+    foreignKeys: [{ field: 'fromBankId', model: 'bank' }, { field: 'toBankId', model: 'bank' }],
+    relations: {}
+  },
   customerCeilingQuota: {
     table: 'CustomerCeilingQuota',
     fields: {

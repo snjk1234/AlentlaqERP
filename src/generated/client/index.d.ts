@@ -93,6 +93,42 @@ export type CategoryPayload<ExtArgs extends $Extensions.Args = $Extensions.Defau
  * 
  */
 export type Category = runtime.Types.DefaultSelection<CategoryPayload>
+export type BankTransferPayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+  name: "BankTransfer"
+  objects: {}
+  scalars: $Extensions.GetResult<{
+    id: string
+    transferNumber: string
+    requestId: string
+    fromBankId: string
+    toBankId: string
+    fromBankName: string
+    toBankName: string
+    fromAccountNumber: string | null
+    toAccountNumber: string | null
+    amount: number
+    date: Date
+    reference: string | null
+    notes: string | null
+    status: string
+    reversalOf: string | null
+    createdBy: string
+    createdByName: string
+    fromBalanceBefore: number
+    fromBalanceAfter: number
+    toBalanceBefore: number
+    toBalanceAfter: number
+    createdAt: Date
+    updatedAt: Date
+  }, ExtArgs["result"]["bankTransfer"]>
+  composites: {}
+}
+
+/**
+ * Model BankTransfer
+ * 
+ */
+export type BankTransfer = runtime.Types.DefaultSelection<BankTransferPayload>
 export type StocktakeSettingPayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
   name: "StocktakeSetting"
   objects: {}
@@ -705,6 +741,16 @@ export class PrismaClient<
     * ```
     */
   get category(): Prisma.CategoryDelegate<ExtArgs>;
+
+  /**
+   * `prisma.bankTransfer`: Exposes CRUD operations for the **BankTransfer** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more BankTransfers
+    * const bankTransfers = await prisma.bankTransfer.findMany()
+    * ```
+    */
+  get bankTransfer(): Prisma.BankTransferDelegate<ExtArgs>;
 
   /**
    * `prisma.stocktakeSetting`: Exposes CRUD operations for the **StocktakeSetting** model.
@@ -1371,6 +1417,7 @@ export namespace Prisma {
     User: 'User',
     Product: 'Product',
     Category: 'Category',
+    BankTransfer: 'BankTransfer',
     StocktakeSetting: 'StocktakeSetting',
     Stocktake: 'Stocktake',
     StocktakeItem: 'StocktakeItem',
@@ -1405,7 +1452,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
     meta: {
-      modelProps: 'user' | 'product' | 'category' | 'stocktakeSetting' | 'stocktake' | 'stocktakeItem' | 'order' | 'customer' | 'customerPrice' | 'orderItem' | 'orderReturn' | 'orderReturnItem' | 'bank' | 'customerCeilingQuota' | 'payment' | 'supplier' | 'purchaseOrder' | 'purchaseOrderItem' | 'expensePayment' | 'expenseCategory' | 'generalExpense'
+      modelProps: 'user' | 'product' | 'category' | 'bankTransfer' | 'stocktakeSetting' | 'stocktake' | 'stocktakeItem' | 'order' | 'customer' | 'customerPrice' | 'orderItem' | 'orderReturn' | 'orderReturnItem' | 'bank' | 'customerCeilingQuota' | 'payment' | 'supplier' | 'purchaseOrder' | 'purchaseOrderItem' | 'expensePayment' | 'expenseCategory' | 'generalExpense'
       txIsolationLevel: Prisma.TransactionIsolationLevel
     },
     model: {
@@ -1592,6 +1639,68 @@ export namespace Prisma {
           count: {
             args: Prisma.CategoryCountArgs<ExtArgs>,
             result: $Utils.Optional<CategoryCountAggregateOutputType> | number
+          }
+        }
+      }
+      BankTransfer: {
+        payload: BankTransferPayload<ExtArgs>
+        fields: Prisma.BankTransferFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BankTransferFindUniqueArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<BankTransferPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BankTransferFindUniqueOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<BankTransferPayload>
+          }
+          findFirst: {
+            args: Prisma.BankTransferFindFirstArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<BankTransferPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BankTransferFindFirstOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<BankTransferPayload>
+          }
+          findMany: {
+            args: Prisma.BankTransferFindManyArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<BankTransferPayload>[]
+          }
+          create: {
+            args: Prisma.BankTransferCreateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<BankTransferPayload>
+          }
+          delete: {
+            args: Prisma.BankTransferDeleteArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<BankTransferPayload>
+          }
+          update: {
+            args: Prisma.BankTransferUpdateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<BankTransferPayload>
+          }
+          deleteMany: {
+            args: Prisma.BankTransferDeleteManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BankTransferUpdateManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          upsert: {
+            args: Prisma.BankTransferUpsertArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<BankTransferPayload>
+          }
+          aggregate: {
+            args: Prisma.BankTransferAggregateArgs<ExtArgs>,
+            result: $Utils.Optional<AggregateBankTransfer>
+          }
+          groupBy: {
+            args: Prisma.BankTransferGroupByArgs<ExtArgs>,
+            result: $Utils.Optional<BankTransferGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BankTransferCountArgs<ExtArgs>,
+            result: $Utils.Optional<BankTransferCountAggregateOutputType> | number
           }
         }
       }
@@ -6455,6 +6564,1079 @@ export namespace Prisma {
      * Select specific fields to fetch from the Category
      */
     select?: CategorySelect<ExtArgs> | null
+  }
+
+
+
+  /**
+   * Model BankTransfer
+   */
+
+
+  export type AggregateBankTransfer = {
+    _count: BankTransferCountAggregateOutputType | null
+    _avg: BankTransferAvgAggregateOutputType | null
+    _sum: BankTransferSumAggregateOutputType | null
+    _min: BankTransferMinAggregateOutputType | null
+    _max: BankTransferMaxAggregateOutputType | null
+  }
+
+  export type BankTransferAvgAggregateOutputType = {
+    amount: number | null
+    fromBalanceBefore: number | null
+    fromBalanceAfter: number | null
+    toBalanceBefore: number | null
+    toBalanceAfter: number | null
+  }
+
+  export type BankTransferSumAggregateOutputType = {
+    amount: number | null
+    fromBalanceBefore: number | null
+    fromBalanceAfter: number | null
+    toBalanceBefore: number | null
+    toBalanceAfter: number | null
+  }
+
+  export type BankTransferMinAggregateOutputType = {
+    id: string | null
+    transferNumber: string | null
+    requestId: string | null
+    fromBankId: string | null
+    toBankId: string | null
+    fromBankName: string | null
+    toBankName: string | null
+    fromAccountNumber: string | null
+    toAccountNumber: string | null
+    amount: number | null
+    date: Date | null
+    reference: string | null
+    notes: string | null
+    status: string | null
+    reversalOf: string | null
+    createdBy: string | null
+    createdByName: string | null
+    fromBalanceBefore: number | null
+    fromBalanceAfter: number | null
+    toBalanceBefore: number | null
+    toBalanceAfter: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type BankTransferMaxAggregateOutputType = {
+    id: string | null
+    transferNumber: string | null
+    requestId: string | null
+    fromBankId: string | null
+    toBankId: string | null
+    fromBankName: string | null
+    toBankName: string | null
+    fromAccountNumber: string | null
+    toAccountNumber: string | null
+    amount: number | null
+    date: Date | null
+    reference: string | null
+    notes: string | null
+    status: string | null
+    reversalOf: string | null
+    createdBy: string | null
+    createdByName: string | null
+    fromBalanceBefore: number | null
+    fromBalanceAfter: number | null
+    toBalanceBefore: number | null
+    toBalanceAfter: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type BankTransferCountAggregateOutputType = {
+    id: number
+    transferNumber: number
+    requestId: number
+    fromBankId: number
+    toBankId: number
+    fromBankName: number
+    toBankName: number
+    fromAccountNumber: number
+    toAccountNumber: number
+    amount: number
+    date: number
+    reference: number
+    notes: number
+    status: number
+    reversalOf: number
+    createdBy: number
+    createdByName: number
+    fromBalanceBefore: number
+    fromBalanceAfter: number
+    toBalanceBefore: number
+    toBalanceAfter: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type BankTransferAvgAggregateInputType = {
+    amount?: true
+    fromBalanceBefore?: true
+    fromBalanceAfter?: true
+    toBalanceBefore?: true
+    toBalanceAfter?: true
+  }
+
+  export type BankTransferSumAggregateInputType = {
+    amount?: true
+    fromBalanceBefore?: true
+    fromBalanceAfter?: true
+    toBalanceBefore?: true
+    toBalanceAfter?: true
+  }
+
+  export type BankTransferMinAggregateInputType = {
+    id?: true
+    transferNumber?: true
+    requestId?: true
+    fromBankId?: true
+    toBankId?: true
+    fromBankName?: true
+    toBankName?: true
+    fromAccountNumber?: true
+    toAccountNumber?: true
+    amount?: true
+    date?: true
+    reference?: true
+    notes?: true
+    status?: true
+    reversalOf?: true
+    createdBy?: true
+    createdByName?: true
+    fromBalanceBefore?: true
+    fromBalanceAfter?: true
+    toBalanceBefore?: true
+    toBalanceAfter?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type BankTransferMaxAggregateInputType = {
+    id?: true
+    transferNumber?: true
+    requestId?: true
+    fromBankId?: true
+    toBankId?: true
+    fromBankName?: true
+    toBankName?: true
+    fromAccountNumber?: true
+    toAccountNumber?: true
+    amount?: true
+    date?: true
+    reference?: true
+    notes?: true
+    status?: true
+    reversalOf?: true
+    createdBy?: true
+    createdByName?: true
+    fromBalanceBefore?: true
+    fromBalanceAfter?: true
+    toBalanceBefore?: true
+    toBalanceAfter?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type BankTransferCountAggregateInputType = {
+    id?: true
+    transferNumber?: true
+    requestId?: true
+    fromBankId?: true
+    toBankId?: true
+    fromBankName?: true
+    toBankName?: true
+    fromAccountNumber?: true
+    toAccountNumber?: true
+    amount?: true
+    date?: true
+    reference?: true
+    notes?: true
+    status?: true
+    reversalOf?: true
+    createdBy?: true
+    createdByName?: true
+    fromBalanceBefore?: true
+    fromBalanceAfter?: true
+    toBalanceBefore?: true
+    toBalanceAfter?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type BankTransferAggregateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BankTransfer to aggregate.
+     */
+    where?: BankTransferWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BankTransfers to fetch.
+     */
+    orderBy?: BankTransferOrderByWithRelationInput | BankTransferOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BankTransferWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BankTransfers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BankTransfers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned BankTransfers
+    **/
+    _count?: true | BankTransferCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: BankTransferAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: BankTransferSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BankTransferMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BankTransferMaxAggregateInputType
+  }
+
+  export type GetBankTransferAggregateType<T extends BankTransferAggregateArgs> = {
+        [P in keyof T & keyof AggregateBankTransfer]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBankTransfer[P]>
+      : GetScalarType<T[P], AggregateBankTransfer[P]>
+  }
+
+
+
+
+  export type BankTransferGroupByArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: BankTransferWhereInput
+    orderBy?: BankTransferOrderByWithAggregationInput | BankTransferOrderByWithAggregationInput[]
+    by: BankTransferScalarFieldEnum[] | BankTransferScalarFieldEnum
+    having?: BankTransferScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BankTransferCountAggregateInputType | true
+    _avg?: BankTransferAvgAggregateInputType
+    _sum?: BankTransferSumAggregateInputType
+    _min?: BankTransferMinAggregateInputType
+    _max?: BankTransferMaxAggregateInputType
+  }
+
+
+  export type BankTransferGroupByOutputType = {
+    id: string
+    transferNumber: string
+    requestId: string
+    fromBankId: string
+    toBankId: string
+    fromBankName: string
+    toBankName: string
+    fromAccountNumber: string | null
+    toAccountNumber: string | null
+    amount: number
+    date: Date
+    reference: string | null
+    notes: string | null
+    status: string
+    reversalOf: string | null
+    createdBy: string
+    createdByName: string
+    fromBalanceBefore: number
+    fromBalanceAfter: number
+    toBalanceBefore: number
+    toBalanceAfter: number
+    createdAt: Date
+    updatedAt: Date
+    _count: BankTransferCountAggregateOutputType | null
+    _avg: BankTransferAvgAggregateOutputType | null
+    _sum: BankTransferSumAggregateOutputType | null
+    _min: BankTransferMinAggregateOutputType | null
+    _max: BankTransferMaxAggregateOutputType | null
+  }
+
+  type GetBankTransferGroupByPayload<T extends BankTransferGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BankTransferGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BankTransferGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BankTransferGroupByOutputType[P]>
+            : GetScalarType<T[P], BankTransferGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BankTransferSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    transferNumber?: boolean
+    requestId?: boolean
+    fromBankId?: boolean
+    toBankId?: boolean
+    fromBankName?: boolean
+    toBankName?: boolean
+    fromAccountNumber?: boolean
+    toAccountNumber?: boolean
+    amount?: boolean
+    date?: boolean
+    reference?: boolean
+    notes?: boolean
+    status?: boolean
+    reversalOf?: boolean
+    createdBy?: boolean
+    createdByName?: boolean
+    fromBalanceBefore?: boolean
+    fromBalanceAfter?: boolean
+    toBalanceBefore?: boolean
+    toBalanceAfter?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["bankTransfer"]>
+
+  export type BankTransferSelectScalar = {
+    id?: boolean
+    transferNumber?: boolean
+    requestId?: boolean
+    fromBankId?: boolean
+    toBankId?: boolean
+    fromBankName?: boolean
+    toBankName?: boolean
+    fromAccountNumber?: boolean
+    toAccountNumber?: boolean
+    amount?: boolean
+    date?: boolean
+    reference?: boolean
+    notes?: boolean
+    status?: boolean
+    reversalOf?: boolean
+    createdBy?: boolean
+    createdByName?: boolean
+    fromBalanceBefore?: boolean
+    fromBalanceAfter?: boolean
+    toBalanceBefore?: boolean
+    toBalanceAfter?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  type BankTransferGetPayload<S extends boolean | null | undefined | BankTransferArgs> = $Types.GetResult<BankTransferPayload, S>
+
+  type BankTransferCountArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = 
+    Omit<BankTransferFindManyArgs, 'select' | 'include'> & {
+      select?: BankTransferCountAggregateInputType | true
+    }
+
+  export interface BankTransferDelegate<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BankTransfer'], meta: { name: 'BankTransfer' } }
+    /**
+     * Find zero or one BankTransfer that matches the filter.
+     * @param {BankTransferFindUniqueArgs} args - Arguments to find a BankTransfer
+     * @example
+     * // Get one BankTransfer
+     * const bankTransfer = await prisma.bankTransfer.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUnique<T extends BankTransferFindUniqueArgs<ExtArgs>>(
+      args: SelectSubset<T, BankTransferFindUniqueArgs<ExtArgs>>
+    ): Prisma__BankTransferClient<$Types.GetResult<BankTransferPayload<ExtArgs>, T, 'findUnique'> | null, null, ExtArgs>
+
+    /**
+     * Find one BankTransfer that matches the filter or throw an error  with `error.code='P2025'` 
+     *     if no matches were found.
+     * @param {BankTransferFindUniqueOrThrowArgs} args - Arguments to find a BankTransfer
+     * @example
+     * // Get one BankTransfer
+     * const bankTransfer = await prisma.bankTransfer.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUniqueOrThrow<T extends BankTransferFindUniqueOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, BankTransferFindUniqueOrThrowArgs<ExtArgs>>
+    ): Prisma__BankTransferClient<$Types.GetResult<BankTransferPayload<ExtArgs>, T, 'findUniqueOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find the first BankTransfer that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BankTransferFindFirstArgs} args - Arguments to find a BankTransfer
+     * @example
+     * // Get one BankTransfer
+     * const bankTransfer = await prisma.bankTransfer.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirst<T extends BankTransferFindFirstArgs<ExtArgs>>(
+      args?: SelectSubset<T, BankTransferFindFirstArgs<ExtArgs>>
+    ): Prisma__BankTransferClient<$Types.GetResult<BankTransferPayload<ExtArgs>, T, 'findFirst'> | null, null, ExtArgs>
+
+    /**
+     * Find the first BankTransfer that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BankTransferFindFirstOrThrowArgs} args - Arguments to find a BankTransfer
+     * @example
+     * // Get one BankTransfer
+     * const bankTransfer = await prisma.bankTransfer.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirstOrThrow<T extends BankTransferFindFirstOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, BankTransferFindFirstOrThrowArgs<ExtArgs>>
+    ): Prisma__BankTransferClient<$Types.GetResult<BankTransferPayload<ExtArgs>, T, 'findFirstOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find zero or more BankTransfers that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BankTransferFindManyArgs=} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BankTransfers
+     * const bankTransfers = await prisma.bankTransfer.findMany()
+     * 
+     * // Get first 10 BankTransfers
+     * const bankTransfers = await prisma.bankTransfer.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const bankTransferWithIdOnly = await prisma.bankTransfer.findMany({ select: { id: true } })
+     * 
+    **/
+    findMany<T extends BankTransferFindManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, BankTransferFindManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<$Types.GetResult<BankTransferPayload<ExtArgs>, T, 'findMany'>>
+
+    /**
+     * Create a BankTransfer.
+     * @param {BankTransferCreateArgs} args - Arguments to create a BankTransfer.
+     * @example
+     * // Create one BankTransfer
+     * const BankTransfer = await prisma.bankTransfer.create({
+     *   data: {
+     *     // ... data to create a BankTransfer
+     *   }
+     * })
+     * 
+    **/
+    create<T extends BankTransferCreateArgs<ExtArgs>>(
+      args: SelectSubset<T, BankTransferCreateArgs<ExtArgs>>
+    ): Prisma__BankTransferClient<$Types.GetResult<BankTransferPayload<ExtArgs>, T, 'create'>, never, ExtArgs>
+
+    /**
+     * Delete a BankTransfer.
+     * @param {BankTransferDeleteArgs} args - Arguments to delete one BankTransfer.
+     * @example
+     * // Delete one BankTransfer
+     * const BankTransfer = await prisma.bankTransfer.delete({
+     *   where: {
+     *     // ... filter to delete one BankTransfer
+     *   }
+     * })
+     * 
+    **/
+    delete<T extends BankTransferDeleteArgs<ExtArgs>>(
+      args: SelectSubset<T, BankTransferDeleteArgs<ExtArgs>>
+    ): Prisma__BankTransferClient<$Types.GetResult<BankTransferPayload<ExtArgs>, T, 'delete'>, never, ExtArgs>
+
+    /**
+     * Update one BankTransfer.
+     * @param {BankTransferUpdateArgs} args - Arguments to update one BankTransfer.
+     * @example
+     * // Update one BankTransfer
+     * const bankTransfer = await prisma.bankTransfer.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    update<T extends BankTransferUpdateArgs<ExtArgs>>(
+      args: SelectSubset<T, BankTransferUpdateArgs<ExtArgs>>
+    ): Prisma__BankTransferClient<$Types.GetResult<BankTransferPayload<ExtArgs>, T, 'update'>, never, ExtArgs>
+
+    /**
+     * Delete zero or more BankTransfers.
+     * @param {BankTransferDeleteManyArgs} args - Arguments to filter BankTransfers to delete.
+     * @example
+     * // Delete a few BankTransfers
+     * const { count } = await prisma.bankTransfer.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+    **/
+    deleteMany<T extends BankTransferDeleteManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, BankTransferDeleteManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BankTransfers.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BankTransferUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BankTransfers
+     * const bankTransfer = await prisma.bankTransfer.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    updateMany<T extends BankTransferUpdateManyArgs<ExtArgs>>(
+      args: SelectSubset<T, BankTransferUpdateManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one BankTransfer.
+     * @param {BankTransferUpsertArgs} args - Arguments to update or create a BankTransfer.
+     * @example
+     * // Update or create a BankTransfer
+     * const bankTransfer = await prisma.bankTransfer.upsert({
+     *   create: {
+     *     // ... data to create a BankTransfer
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the BankTransfer we want to update
+     *   }
+     * })
+    **/
+    upsert<T extends BankTransferUpsertArgs<ExtArgs>>(
+      args: SelectSubset<T, BankTransferUpsertArgs<ExtArgs>>
+    ): Prisma__BankTransferClient<$Types.GetResult<BankTransferPayload<ExtArgs>, T, 'upsert'>, never, ExtArgs>
+
+    /**
+     * Count the number of BankTransfers.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BankTransferCountArgs} args - Arguments to filter BankTransfers to count.
+     * @example
+     * // Count the number of BankTransfers
+     * const count = await prisma.bankTransfer.count({
+     *   where: {
+     *     // ... the filter for the BankTransfers we want to count
+     *   }
+     * })
+    **/
+    count<T extends BankTransferCountArgs>(
+      args?: Subset<T, BankTransferCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BankTransferCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a BankTransfer.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BankTransferAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BankTransferAggregateArgs>(args: Subset<T, BankTransferAggregateArgs>): Prisma.PrismaPromise<GetBankTransferAggregateType<T>>
+
+    /**
+     * Group by BankTransfer.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BankTransferGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BankTransferGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BankTransferGroupByArgs['orderBy'] }
+        : { orderBy?: BankTransferGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BankTransferGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBankTransferGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the BankTransfer model
+   */
+  readonly fields: BankTransferFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BankTransfer.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export class Prisma__BankTransferClient<T, Null = never, ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> implements Prisma.PrismaPromise<T> {
+    private readonly _dmmf;
+    private readonly _queryType;
+    private readonly _rootField;
+    private readonly _clientMethod;
+    private readonly _args;
+    private readonly _dataPath;
+    private readonly _errorFormat;
+    private readonly _measurePerformance?;
+    private _isList;
+    private _callsite;
+    private _requestPromise?;
+    readonly [Symbol.toStringTag]: 'PrismaPromise';
+    constructor(_dmmf: runtime.DMMFClass, _queryType: 'query' | 'mutation', _rootField: string, _clientMethod: string, _args: any, _dataPath: string[], _errorFormat: ErrorFormat, _measurePerformance?: boolean | undefined, _isList?: boolean);
+
+
+    private get _document();
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult>;
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+  }
+
+
+
+  /**
+   * Fields of the BankTransfer model
+   */ 
+  interface BankTransferFieldRefs {
+    readonly id: FieldRef<"BankTransfer", 'String'>
+    readonly transferNumber: FieldRef<"BankTransfer", 'String'>
+    readonly requestId: FieldRef<"BankTransfer", 'String'>
+    readonly fromBankId: FieldRef<"BankTransfer", 'String'>
+    readonly toBankId: FieldRef<"BankTransfer", 'String'>
+    readonly fromBankName: FieldRef<"BankTransfer", 'String'>
+    readonly toBankName: FieldRef<"BankTransfer", 'String'>
+    readonly fromAccountNumber: FieldRef<"BankTransfer", 'String'>
+    readonly toAccountNumber: FieldRef<"BankTransfer", 'String'>
+    readonly amount: FieldRef<"BankTransfer", 'Float'>
+    readonly date: FieldRef<"BankTransfer", 'DateTime'>
+    readonly reference: FieldRef<"BankTransfer", 'String'>
+    readonly notes: FieldRef<"BankTransfer", 'String'>
+    readonly status: FieldRef<"BankTransfer", 'String'>
+    readonly reversalOf: FieldRef<"BankTransfer", 'String'>
+    readonly createdBy: FieldRef<"BankTransfer", 'String'>
+    readonly createdByName: FieldRef<"BankTransfer", 'String'>
+    readonly fromBalanceBefore: FieldRef<"BankTransfer", 'Float'>
+    readonly fromBalanceAfter: FieldRef<"BankTransfer", 'Float'>
+    readonly toBalanceBefore: FieldRef<"BankTransfer", 'Float'>
+    readonly toBalanceAfter: FieldRef<"BankTransfer", 'Float'>
+    readonly createdAt: FieldRef<"BankTransfer", 'DateTime'>
+    readonly updatedAt: FieldRef<"BankTransfer", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+
+  /**
+   * BankTransfer findUnique
+   */
+  export type BankTransferFindUniqueArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BankTransfer
+     */
+    select?: BankTransferSelect<ExtArgs> | null
+    /**
+     * Filter, which BankTransfer to fetch.
+     */
+    where: BankTransferWhereUniqueInput
+  }
+
+
+  /**
+   * BankTransfer findUniqueOrThrow
+   */
+  export type BankTransferFindUniqueOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BankTransfer
+     */
+    select?: BankTransferSelect<ExtArgs> | null
+    /**
+     * Filter, which BankTransfer to fetch.
+     */
+    where: BankTransferWhereUniqueInput
+  }
+
+
+  /**
+   * BankTransfer findFirst
+   */
+  export type BankTransferFindFirstArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BankTransfer
+     */
+    select?: BankTransferSelect<ExtArgs> | null
+    /**
+     * Filter, which BankTransfer to fetch.
+     */
+    where?: BankTransferWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BankTransfers to fetch.
+     */
+    orderBy?: BankTransferOrderByWithRelationInput | BankTransferOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BankTransfers.
+     */
+    cursor?: BankTransferWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BankTransfers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BankTransfers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BankTransfers.
+     */
+    distinct?: BankTransferScalarFieldEnum | BankTransferScalarFieldEnum[]
+  }
+
+
+  /**
+   * BankTransfer findFirstOrThrow
+   */
+  export type BankTransferFindFirstOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BankTransfer
+     */
+    select?: BankTransferSelect<ExtArgs> | null
+    /**
+     * Filter, which BankTransfer to fetch.
+     */
+    where?: BankTransferWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BankTransfers to fetch.
+     */
+    orderBy?: BankTransferOrderByWithRelationInput | BankTransferOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BankTransfers.
+     */
+    cursor?: BankTransferWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BankTransfers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BankTransfers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BankTransfers.
+     */
+    distinct?: BankTransferScalarFieldEnum | BankTransferScalarFieldEnum[]
+  }
+
+
+  /**
+   * BankTransfer findMany
+   */
+  export type BankTransferFindManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BankTransfer
+     */
+    select?: BankTransferSelect<ExtArgs> | null
+    /**
+     * Filter, which BankTransfers to fetch.
+     */
+    where?: BankTransferWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BankTransfers to fetch.
+     */
+    orderBy?: BankTransferOrderByWithRelationInput | BankTransferOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing BankTransfers.
+     */
+    cursor?: BankTransferWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BankTransfers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BankTransfers.
+     */
+    skip?: number
+    distinct?: BankTransferScalarFieldEnum | BankTransferScalarFieldEnum[]
+  }
+
+
+  /**
+   * BankTransfer create
+   */
+  export type BankTransferCreateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BankTransfer
+     */
+    select?: BankTransferSelect<ExtArgs> | null
+    /**
+     * The data needed to create a BankTransfer.
+     */
+    data: XOR<BankTransferCreateInput, BankTransferUncheckedCreateInput>
+  }
+
+
+  /**
+   * BankTransfer update
+   */
+  export type BankTransferUpdateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BankTransfer
+     */
+    select?: BankTransferSelect<ExtArgs> | null
+    /**
+     * The data needed to update a BankTransfer.
+     */
+    data: XOR<BankTransferUpdateInput, BankTransferUncheckedUpdateInput>
+    /**
+     * Choose, which BankTransfer to update.
+     */
+    where: BankTransferWhereUniqueInput
+  }
+
+
+  /**
+   * BankTransfer updateMany
+   */
+  export type BankTransferUpdateManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update BankTransfers.
+     */
+    data: XOR<BankTransferUpdateManyMutationInput, BankTransferUncheckedUpdateManyInput>
+    /**
+     * Filter which BankTransfers to update
+     */
+    where?: BankTransferWhereInput
+  }
+
+
+  /**
+   * BankTransfer upsert
+   */
+  export type BankTransferUpsertArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BankTransfer
+     */
+    select?: BankTransferSelect<ExtArgs> | null
+    /**
+     * The filter to search for the BankTransfer to update in case it exists.
+     */
+    where: BankTransferWhereUniqueInput
+    /**
+     * In case the BankTransfer found by the `where` argument doesn't exist, create a new BankTransfer with this data.
+     */
+    create: XOR<BankTransferCreateInput, BankTransferUncheckedCreateInput>
+    /**
+     * In case the BankTransfer was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BankTransferUpdateInput, BankTransferUncheckedUpdateInput>
+  }
+
+
+  /**
+   * BankTransfer delete
+   */
+  export type BankTransferDeleteArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BankTransfer
+     */
+    select?: BankTransferSelect<ExtArgs> | null
+    /**
+     * Filter which BankTransfer to delete.
+     */
+    where: BankTransferWhereUniqueInput
+  }
+
+
+  /**
+   * BankTransfer deleteMany
+   */
+  export type BankTransferDeleteManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BankTransfers to delete
+     */
+    where?: BankTransferWhereInput
+  }
+
+
+  /**
+   * BankTransfer without action
+   */
+  export type BankTransferArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BankTransfer
+     */
+    select?: BankTransferSelect<ExtArgs> | null
   }
 
 
@@ -24460,6 +25642,35 @@ export namespace Prisma {
   export type CategoryScalarFieldEnum = (typeof CategoryScalarFieldEnum)[keyof typeof CategoryScalarFieldEnum]
 
 
+  export const BankTransferScalarFieldEnum: {
+    id: 'id',
+    transferNumber: 'transferNumber',
+    requestId: 'requestId',
+    fromBankId: 'fromBankId',
+    toBankId: 'toBankId',
+    fromBankName: 'fromBankName',
+    toBankName: 'toBankName',
+    fromAccountNumber: 'fromAccountNumber',
+    toAccountNumber: 'toAccountNumber',
+    amount: 'amount',
+    date: 'date',
+    reference: 'reference',
+    notes: 'notes',
+    status: 'status',
+    reversalOf: 'reversalOf',
+    createdBy: 'createdBy',
+    createdByName: 'createdByName',
+    fromBalanceBefore: 'fromBalanceBefore',
+    fromBalanceAfter: 'fromBalanceAfter',
+    toBalanceBefore: 'toBalanceBefore',
+    toBalanceAfter: 'toBalanceAfter',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type BankTransferScalarFieldEnum = (typeof BankTransferScalarFieldEnum)[keyof typeof BankTransferScalarFieldEnum]
+
+
   export const StocktakeSettingScalarFieldEnum: {
     id: 'id',
     passwordHash: 'passwordHash',
@@ -25054,6 +26265,150 @@ export namespace Prisma {
     NOT?: CategoryScalarWhereWithAggregatesInput | CategoryScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Category"> | string
     name?: StringWithAggregatesFilter<"Category"> | string
+  }
+
+  export type BankTransferWhereInput = {
+    AND?: BankTransferWhereInput | BankTransferWhereInput[]
+    OR?: BankTransferWhereInput[]
+    NOT?: BankTransferWhereInput | BankTransferWhereInput[]
+    id?: StringFilter<"BankTransfer"> | string
+    transferNumber?: StringFilter<"BankTransfer"> | string
+    requestId?: StringFilter<"BankTransfer"> | string
+    fromBankId?: StringFilter<"BankTransfer"> | string
+    toBankId?: StringFilter<"BankTransfer"> | string
+    fromBankName?: StringFilter<"BankTransfer"> | string
+    toBankName?: StringFilter<"BankTransfer"> | string
+    fromAccountNumber?: StringNullableFilter<"BankTransfer"> | string | null
+    toAccountNumber?: StringNullableFilter<"BankTransfer"> | string | null
+    amount?: FloatFilter<"BankTransfer"> | number
+    date?: DateTimeFilter<"BankTransfer"> | Date | string
+    reference?: StringNullableFilter<"BankTransfer"> | string | null
+    notes?: StringNullableFilter<"BankTransfer"> | string | null
+    status?: StringFilter<"BankTransfer"> | string
+    reversalOf?: StringNullableFilter<"BankTransfer"> | string | null
+    createdBy?: StringFilter<"BankTransfer"> | string
+    createdByName?: StringFilter<"BankTransfer"> | string
+    fromBalanceBefore?: FloatFilter<"BankTransfer"> | number
+    fromBalanceAfter?: FloatFilter<"BankTransfer"> | number
+    toBalanceBefore?: FloatFilter<"BankTransfer"> | number
+    toBalanceAfter?: FloatFilter<"BankTransfer"> | number
+    createdAt?: DateTimeFilter<"BankTransfer"> | Date | string
+    updatedAt?: DateTimeFilter<"BankTransfer"> | Date | string
+  }
+
+  export type BankTransferOrderByWithRelationInput = {
+    id?: SortOrder
+    transferNumber?: SortOrder
+    requestId?: SortOrder
+    fromBankId?: SortOrder
+    toBankId?: SortOrder
+    fromBankName?: SortOrder
+    toBankName?: SortOrder
+    fromAccountNumber?: SortOrderInput | SortOrder
+    toAccountNumber?: SortOrderInput | SortOrder
+    amount?: SortOrder
+    date?: SortOrder
+    reference?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    status?: SortOrder
+    reversalOf?: SortOrderInput | SortOrder
+    createdBy?: SortOrder
+    createdByName?: SortOrder
+    fromBalanceBefore?: SortOrder
+    fromBalanceAfter?: SortOrder
+    toBalanceBefore?: SortOrder
+    toBalanceAfter?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BankTransferWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    transferNumber?: string
+    requestId?: string
+    AND?: BankTransferWhereInput | BankTransferWhereInput[]
+    OR?: BankTransferWhereInput[]
+    NOT?: BankTransferWhereInput | BankTransferWhereInput[]
+    fromBankId?: StringFilter<"BankTransfer"> | string
+    toBankId?: StringFilter<"BankTransfer"> | string
+    fromBankName?: StringFilter<"BankTransfer"> | string
+    toBankName?: StringFilter<"BankTransfer"> | string
+    fromAccountNumber?: StringNullableFilter<"BankTransfer"> | string | null
+    toAccountNumber?: StringNullableFilter<"BankTransfer"> | string | null
+    amount?: FloatFilter<"BankTransfer"> | number
+    date?: DateTimeFilter<"BankTransfer"> | Date | string
+    reference?: StringNullableFilter<"BankTransfer"> | string | null
+    notes?: StringNullableFilter<"BankTransfer"> | string | null
+    status?: StringFilter<"BankTransfer"> | string
+    reversalOf?: StringNullableFilter<"BankTransfer"> | string | null
+    createdBy?: StringFilter<"BankTransfer"> | string
+    createdByName?: StringFilter<"BankTransfer"> | string
+    fromBalanceBefore?: FloatFilter<"BankTransfer"> | number
+    fromBalanceAfter?: FloatFilter<"BankTransfer"> | number
+    toBalanceBefore?: FloatFilter<"BankTransfer"> | number
+    toBalanceAfter?: FloatFilter<"BankTransfer"> | number
+    createdAt?: DateTimeFilter<"BankTransfer"> | Date | string
+    updatedAt?: DateTimeFilter<"BankTransfer"> | Date | string
+  }, "id" | "transferNumber" | "requestId">
+
+  export type BankTransferOrderByWithAggregationInput = {
+    id?: SortOrder
+    transferNumber?: SortOrder
+    requestId?: SortOrder
+    fromBankId?: SortOrder
+    toBankId?: SortOrder
+    fromBankName?: SortOrder
+    toBankName?: SortOrder
+    fromAccountNumber?: SortOrderInput | SortOrder
+    toAccountNumber?: SortOrderInput | SortOrder
+    amount?: SortOrder
+    date?: SortOrder
+    reference?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    status?: SortOrder
+    reversalOf?: SortOrderInput | SortOrder
+    createdBy?: SortOrder
+    createdByName?: SortOrder
+    fromBalanceBefore?: SortOrder
+    fromBalanceAfter?: SortOrder
+    toBalanceBefore?: SortOrder
+    toBalanceAfter?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: BankTransferCountOrderByAggregateInput
+    _avg?: BankTransferAvgOrderByAggregateInput
+    _max?: BankTransferMaxOrderByAggregateInput
+    _min?: BankTransferMinOrderByAggregateInput
+    _sum?: BankTransferSumOrderByAggregateInput
+  }
+
+  export type BankTransferScalarWhereWithAggregatesInput = {
+    AND?: BankTransferScalarWhereWithAggregatesInput | BankTransferScalarWhereWithAggregatesInput[]
+    OR?: BankTransferScalarWhereWithAggregatesInput[]
+    NOT?: BankTransferScalarWhereWithAggregatesInput | BankTransferScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"BankTransfer"> | string
+    transferNumber?: StringWithAggregatesFilter<"BankTransfer"> | string
+    requestId?: StringWithAggregatesFilter<"BankTransfer"> | string
+    fromBankId?: StringWithAggregatesFilter<"BankTransfer"> | string
+    toBankId?: StringWithAggregatesFilter<"BankTransfer"> | string
+    fromBankName?: StringWithAggregatesFilter<"BankTransfer"> | string
+    toBankName?: StringWithAggregatesFilter<"BankTransfer"> | string
+    fromAccountNumber?: StringNullableWithAggregatesFilter<"BankTransfer"> | string | null
+    toAccountNumber?: StringNullableWithAggregatesFilter<"BankTransfer"> | string | null
+    amount?: FloatWithAggregatesFilter<"BankTransfer"> | number
+    date?: DateTimeWithAggregatesFilter<"BankTransfer"> | Date | string
+    reference?: StringNullableWithAggregatesFilter<"BankTransfer"> | string | null
+    notes?: StringNullableWithAggregatesFilter<"BankTransfer"> | string | null
+    status?: StringWithAggregatesFilter<"BankTransfer"> | string
+    reversalOf?: StringNullableWithAggregatesFilter<"BankTransfer"> | string | null
+    createdBy?: StringWithAggregatesFilter<"BankTransfer"> | string
+    createdByName?: StringWithAggregatesFilter<"BankTransfer"> | string
+    fromBalanceBefore?: FloatWithAggregatesFilter<"BankTransfer"> | number
+    fromBalanceAfter?: FloatWithAggregatesFilter<"BankTransfer"> | number
+    toBalanceBefore?: FloatWithAggregatesFilter<"BankTransfer"> | number
+    toBalanceAfter?: FloatWithAggregatesFilter<"BankTransfer"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"BankTransfer"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"BankTransfer"> | Date | string
   }
 
   export type StocktakeSettingWhereInput = {
@@ -26801,6 +28156,162 @@ export namespace Prisma {
   export type CategoryUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type BankTransferCreateInput = {
+    id?: string
+    transferNumber: string
+    requestId: string
+    fromBankId: string
+    toBankId: string
+    fromBankName: string
+    toBankName: string
+    fromAccountNumber?: string | null
+    toAccountNumber?: string | null
+    amount: number
+    date: Date | string
+    reference?: string | null
+    notes?: string | null
+    status?: string
+    reversalOf?: string | null
+    createdBy: string
+    createdByName: string
+    fromBalanceBefore: number
+    fromBalanceAfter: number
+    toBalanceBefore: number
+    toBalanceAfter: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BankTransferUncheckedCreateInput = {
+    id?: string
+    transferNumber: string
+    requestId: string
+    fromBankId: string
+    toBankId: string
+    fromBankName: string
+    toBankName: string
+    fromAccountNumber?: string | null
+    toAccountNumber?: string | null
+    amount: number
+    date: Date | string
+    reference?: string | null
+    notes?: string | null
+    status?: string
+    reversalOf?: string | null
+    createdBy: string
+    createdByName: string
+    fromBalanceBefore: number
+    fromBalanceAfter: number
+    toBalanceBefore: number
+    toBalanceAfter: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BankTransferUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    transferNumber?: StringFieldUpdateOperationsInput | string
+    requestId?: StringFieldUpdateOperationsInput | string
+    fromBankId?: StringFieldUpdateOperationsInput | string
+    toBankId?: StringFieldUpdateOperationsInput | string
+    fromBankName?: StringFieldUpdateOperationsInput | string
+    toBankName?: StringFieldUpdateOperationsInput | string
+    fromAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    toAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    amount?: FloatFieldUpdateOperationsInput | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    reference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    reversalOf?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdByName?: StringFieldUpdateOperationsInput | string
+    fromBalanceBefore?: FloatFieldUpdateOperationsInput | number
+    fromBalanceAfter?: FloatFieldUpdateOperationsInput | number
+    toBalanceBefore?: FloatFieldUpdateOperationsInput | number
+    toBalanceAfter?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BankTransferUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    transferNumber?: StringFieldUpdateOperationsInput | string
+    requestId?: StringFieldUpdateOperationsInput | string
+    fromBankId?: StringFieldUpdateOperationsInput | string
+    toBankId?: StringFieldUpdateOperationsInput | string
+    fromBankName?: StringFieldUpdateOperationsInput | string
+    toBankName?: StringFieldUpdateOperationsInput | string
+    fromAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    toAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    amount?: FloatFieldUpdateOperationsInput | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    reference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    reversalOf?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdByName?: StringFieldUpdateOperationsInput | string
+    fromBalanceBefore?: FloatFieldUpdateOperationsInput | number
+    fromBalanceAfter?: FloatFieldUpdateOperationsInput | number
+    toBalanceBefore?: FloatFieldUpdateOperationsInput | number
+    toBalanceAfter?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BankTransferUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    transferNumber?: StringFieldUpdateOperationsInput | string
+    requestId?: StringFieldUpdateOperationsInput | string
+    fromBankId?: StringFieldUpdateOperationsInput | string
+    toBankId?: StringFieldUpdateOperationsInput | string
+    fromBankName?: StringFieldUpdateOperationsInput | string
+    toBankName?: StringFieldUpdateOperationsInput | string
+    fromAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    toAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    amount?: FloatFieldUpdateOperationsInput | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    reference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    reversalOf?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdByName?: StringFieldUpdateOperationsInput | string
+    fromBalanceBefore?: FloatFieldUpdateOperationsInput | number
+    fromBalanceAfter?: FloatFieldUpdateOperationsInput | number
+    toBalanceBefore?: FloatFieldUpdateOperationsInput | number
+    toBalanceAfter?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BankTransferUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    transferNumber?: StringFieldUpdateOperationsInput | string
+    requestId?: StringFieldUpdateOperationsInput | string
+    fromBankId?: StringFieldUpdateOperationsInput | string
+    toBankId?: StringFieldUpdateOperationsInput | string
+    fromBankName?: StringFieldUpdateOperationsInput | string
+    toBankName?: StringFieldUpdateOperationsInput | string
+    fromAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    toAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    amount?: FloatFieldUpdateOperationsInput | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    reference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    reversalOf?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdByName?: StringFieldUpdateOperationsInput | string
+    fromBalanceBefore?: FloatFieldUpdateOperationsInput | number
+    fromBalanceAfter?: FloatFieldUpdateOperationsInput | number
+    toBalanceBefore?: FloatFieldUpdateOperationsInput | number
+    toBalanceAfter?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StocktakeSettingCreateInput = {
@@ -28559,6 +30070,100 @@ export namespace Prisma {
   export type CategoryMinOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+  }
+
+  export type BankTransferCountOrderByAggregateInput = {
+    id?: SortOrder
+    transferNumber?: SortOrder
+    requestId?: SortOrder
+    fromBankId?: SortOrder
+    toBankId?: SortOrder
+    fromBankName?: SortOrder
+    toBankName?: SortOrder
+    fromAccountNumber?: SortOrder
+    toAccountNumber?: SortOrder
+    amount?: SortOrder
+    date?: SortOrder
+    reference?: SortOrder
+    notes?: SortOrder
+    status?: SortOrder
+    reversalOf?: SortOrder
+    createdBy?: SortOrder
+    createdByName?: SortOrder
+    fromBalanceBefore?: SortOrder
+    fromBalanceAfter?: SortOrder
+    toBalanceBefore?: SortOrder
+    toBalanceAfter?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BankTransferAvgOrderByAggregateInput = {
+    amount?: SortOrder
+    fromBalanceBefore?: SortOrder
+    fromBalanceAfter?: SortOrder
+    toBalanceBefore?: SortOrder
+    toBalanceAfter?: SortOrder
+  }
+
+  export type BankTransferMaxOrderByAggregateInput = {
+    id?: SortOrder
+    transferNumber?: SortOrder
+    requestId?: SortOrder
+    fromBankId?: SortOrder
+    toBankId?: SortOrder
+    fromBankName?: SortOrder
+    toBankName?: SortOrder
+    fromAccountNumber?: SortOrder
+    toAccountNumber?: SortOrder
+    amount?: SortOrder
+    date?: SortOrder
+    reference?: SortOrder
+    notes?: SortOrder
+    status?: SortOrder
+    reversalOf?: SortOrder
+    createdBy?: SortOrder
+    createdByName?: SortOrder
+    fromBalanceBefore?: SortOrder
+    fromBalanceAfter?: SortOrder
+    toBalanceBefore?: SortOrder
+    toBalanceAfter?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BankTransferMinOrderByAggregateInput = {
+    id?: SortOrder
+    transferNumber?: SortOrder
+    requestId?: SortOrder
+    fromBankId?: SortOrder
+    toBankId?: SortOrder
+    fromBankName?: SortOrder
+    toBankName?: SortOrder
+    fromAccountNumber?: SortOrder
+    toAccountNumber?: SortOrder
+    amount?: SortOrder
+    date?: SortOrder
+    reference?: SortOrder
+    notes?: SortOrder
+    status?: SortOrder
+    reversalOf?: SortOrder
+    createdBy?: SortOrder
+    createdByName?: SortOrder
+    fromBalanceBefore?: SortOrder
+    fromBalanceAfter?: SortOrder
+    toBalanceBefore?: SortOrder
+    toBalanceAfter?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BankTransferSumOrderByAggregateInput = {
+    amount?: SortOrder
+    fromBalanceBefore?: SortOrder
+    fromBalanceAfter?: SortOrder
+    toBalanceBefore?: SortOrder
+    toBalanceAfter?: SortOrder
   }
 
   export type StocktakeSettingCountOrderByAggregateInput = {

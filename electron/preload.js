@@ -16,6 +16,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveCustomerPrices: (data) => ipcRenderer.invoke('save-customer-prices', data),
   
   createOrder: (orderData) => ipcRenderer.invoke('create-order', orderData),
+  updateQuotation: (data) => ipcRenderer.invoke('update-quotation', data),
+  updateInvoiceDetails: (data) => ipcRenderer.invoke('update-invoice-details', data),
+  quotationCosts: (data) => ipcRenderer.invoke('quotation-costs', data),
   createOrderReturn: (returnData) => ipcRenderer.invoke('create-order-return', returnData),
   getOrders: () => ipcRenderer.invoke('get-orders'),
   
@@ -48,6 +51,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   login: (credentials) => ipcRenderer.invoke('login', credentials),
   stocktakeOperation: (data) => ipcRenderer.invoke('stocktake-operation', data),
+  bankTransferOperation: (data) => ipcRenderer.invoke('bank-transfer-operation', data),
   logout: () => ipcRenderer.invoke('logout'),
   getUsers: () => ipcRenderer.invoke('get-users'),
   changePassword: (data) => ipcRenderer.invoke('change-password', data),
