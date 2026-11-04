@@ -6371,6 +6371,21 @@ export default function POSDashboard() {
                 className="rounded-sm bg-indigo-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-40 shrink-0">
                 تحويل بين الحسابات
               </button>}
+              <button
+                onClick={() => {
+                  const list = (Array.isArray(banks) ? banks : []).filter((b: any) => (b.name || '').includes(bankSearch));
+                  setPrintTableData({
+                    title: 'جدول البنوك والخزائن',
+                    headers: ['م', 'اسم البنك / الخزينة', 'رقم الحساب', 'الرصيد'],
+                    rows: list.map((b: any, i: number) => [String(i + 1), b.name || '', b.accountNumber || '—', formatTotal(Number(b.balance) || 0)]),
+                    footer: ['', 'إجمالي الأرصدة', '', formatTotal(list.reduce((s: number, b: any) => s + (Number(b.balance) || 0), 0))]
+                  });
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-2.5 rounded-sm font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
+              >
+                <PrinterIcon className="w-4 h-4" />
+                <span>طباعة الجدول</span>
+              </button>
 
               {renderTotalsBar([
                 { label: 'عدد الحسابات', value: String((Array.isArray(banks) ? banks : []).length) },
