@@ -131,12 +131,12 @@ export default function ProductionResetPanel({ sessionToken, onCompleted }: { se
         </div>
       </div>)}
       </div>
-      <div className="bg-slate-900 border border-slate-800 rounded p-2 grid md:grid-cols-3 gap-2 items-end">
+      <div className="bg-slate-900 border border-slate-800 rounded p-2 w-fit flex flex-wrap items-end gap-3">
         <label className="grid gap-1 text-xs text-slate-300">كلمة مرور حساب المدير
-          <input type="password" autoComplete="current-password" className={inputClass + ' w-full text-right'} value={password} disabled={busy} onChange={event => setPassword(event.target.value)} />
+          <input type="password" autoComplete="current-password" className={inputClass + ' w-48 text-right'} value={password} disabled={busy} onChange={event => setPassword(event.target.value)} />
         </label>
         <label className="grid gap-1 text-xs text-slate-300">اكتب «{preview.confirmWord}» للتأكيد
-          <input className={inputClass + ' w-full text-right'} value={confirm} disabled={busy} onChange={event => setConfirm(event.target.value)} />
+          <input className={inputClass + ' w-48 text-right'} value={confirm} disabled={busy} onChange={event => setConfirm(event.target.value)} />
         </label>
         <button type="button" className="bg-red-600/80 hover:bg-red-600 text-white px-3 py-2 rounded-sm font-bold text-xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           disabled={busy || !password || confirm !== preview.confirmWord} onClick={() => {
