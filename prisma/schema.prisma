@@ -49,74 +49,12 @@ model Product {
   purchaseItems PurchaseOrderItem[]
   customPrices  CustomerPrice[]
   ceilingQuotas CustomerCeilingQuota[]
-  stocktakeItems StocktakeItem[]
   supplier      Supplier?           @relation(fields: [supplierId], references: [id])
 }
 
 model Category {
   id   String @id @default(cuid())
   name String @unique
-}
-
-model BankTransfer {
-  id                  String   @id @default(cuid())
-  transferNumber      String   @unique
-  requestId           String   @unique
-  fromBankId          String
-  toBankId            String
-  fromBankName        String
-  toBankName          String
-  fromAccountNumber   String?
-  toAccountNumber     String?
-  amount              Float
-  date                DateTime
-  reference           String?
-  notes               String?
-  status              String   @default("POSTED")
-  reversalOf          String?
-  createdBy           String
-  createdByName       String
-  fromBalanceBefore   Float
-  fromBalanceAfter    Float
-  toBalanceBefore     Float
-  toBalanceAfter      Float
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-}
-
-model StocktakeSetting {
-  id           String   @id @default(cuid())
-  passwordHash String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-model Stocktake {
-  id             String   @id @default(cuid())
-  documentNumber String   @unique
-  status         String   @default("DRAFT")
-  notes          String?
-  revision       Int      @default(1)
-  createdBy      String
-  approvedBy     String?
-  approvedAt     DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  items          StocktakeItem[]
-}
-
-model StocktakeItem {
-  id           String   @id @default(cuid())
-  stocktakeId  String
-  productId    String
-  position     Int
-  productLabel String
-  bookQty      Int
-  countedQty   Int?
-  unitCost     Float?
-  stocktake    Stocktake @relation(fields: [stocktakeId], references: [id])
-  product      Product  @relation(fields: [productId], references: [id])
-  @@unique([stocktakeId, productId])
 }
 
 model Order {
@@ -158,6 +96,7 @@ model Customer {
   orders         Order[]
   orderReturns   OrderReturn[]
   payments       Payment[]
+  discounts      AccountDiscount[]
   customPrices   CustomerPrice[]
   ceilingQuotas  CustomerCeilingQuota[]
 }
@@ -179,7 +118,6 @@ model OrderItem {
   id        String  @id @default(cuid())
   orderId   String
   productId String
-  position  Int?
   quantity  Int
   unitPrice Float
   taxAmount Float
@@ -266,7 +204,6 @@ model Payment {
   receiptNumber String?
   date          DateTime @default(now())
   notes         String?
-  correctionHistory String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   bank          Bank     @relation(fields: [bankId], references: [id])
@@ -285,8 +222,25 @@ model Supplier {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   expenses       ExpensePayment[]
+  discounts      AccountDiscount[]
   purchaseOrders PurchaseOrder[]
   products       Product[]
+}
+
+model AccountDiscount {
+  id             String    @id @default(cuid())
+  discountNumber String    @unique
+  requestId      String    @unique
+  kind           String
+  customerId     String?
+  supplierId     String?
+  amount         Float
+  date           DateTime  @default(now())
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  customer       Customer? @relation(fields: [customerId], references: [id])
+  supplier       Supplier? @relation(fields: [supplierId], references: [id])
 }
 
 model PurchaseOrder {

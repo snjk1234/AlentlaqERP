@@ -1,6 +1,12 @@
 type Dated = { date?: string | Date | null; createdAt?: string | Date | null };
 type Invoice = Dated & { netAmount: number; isQuotation?: boolean };
 type Payment = Dated & { amount: number };
+export type StatementDiscount = Dated & {
+  id: string;
+  discountNumber: string;
+  amount: number;
+  notes?: string | null;
+};
 type OrderReturn = Dated & {
   id: string;
   returnNumber: string;
@@ -10,11 +16,17 @@ type OrderReturn = Dated & {
   order?: { invoiceNumber?: string } | null;
   bank?: { name?: string } | null;
 };
-type Customer = { orders?: Invoice[]; payments?: Payment[]; orderReturns?: OrderReturn[]; openingBalance?: number };
-type Supplier = { purchaseOrders?: Invoice[]; expenses?: Payment[]; balance: number };
+type Customer = {
+  orders?: Invoice[]; payments?: Payment[]; orderReturns?: OrderReturn[];
+  discounts?: StatementDiscount[]; openingBalance?: number
+};
+type Supplier = {
+  purchaseOrders?: Invoice[]; expenses?: Payment[]; discounts?: StatementDiscount[]; balance: number
+};
 
 export function statementEntries<I extends Invoice, P extends Payment>(
-  invoices: I[], payments: P[], openingBalance: number, orderReturns: OrderReturn[] = []
+  invoices: I[], payments: P[], openingBalance: number, orderReturns: OrderReturn[] = [],
+  discounts: StatementDiscount[] = []
 ) {
   const entries = [
     ...invoices.filter(invoice => !invoice.isQuotation)
@@ -22,7 +34,8 @@ export function statementEntries<I extends Invoice, P extends Payment>(
     ...payments.map(document => ({ kind: 'payment' as const, document, debit: 0, credit: document.amount })),
     ...orderReturns.map(document => ({
       kind: 'return' as const, document, debit: document.refundAmount, credit: document.netAmount
-    }))
+    })),
+    ...discounts.map(document => ({ kind: 'discount' as const, document, debit: 0, credit: document.amount }))
   ];
   const time = (document: Dated) => {
     const value = document.date || document.createdAt;
@@ -40,7 +53,8 @@ export function statementEntries<I extends Invoice, P extends Payment>(
 }
 
 export function statementTotals(
-  invoices: Invoice[], payments: Payment[], openingBalance: number, orderReturns: OrderReturn[] = []
+  invoices: Invoice[], payments: Payment[], openingBalance: number, orderReturns: OrderReturn[] = [],
+  discounts: StatementDiscount[] = []
 ) {
   const totalInvoices = openingBalance + invoices
     .filter(invoice => !invoice.isQuotation)
@@ -48,9 +62,10 @@ export function statementTotals(
   const totalPayments = payments.reduce((sum, payment) => sum + payment.amount, 0);
   const totalReturns = orderReturns.reduce((sum, orderReturn) => sum + orderReturn.netAmount, 0);
   const totalRefunds = orderReturns.reduce((sum, orderReturn) => sum + (orderReturn.refundAmount || 0), 0);
+  const totalDiscounts = discounts.reduce((sum, discount) => sum + discount.amount, 0);
   return {
-    totalInvoices, totalPayments, totalReturns, totalRefunds,
-    totalDue: totalInvoices - totalPayments - totalReturns + totalRefunds
+    totalInvoices, totalPayments, totalReturns, totalRefunds, totalDiscounts,
+    totalDue: totalInvoices - totalPayments - totalReturns + totalRefunds - totalDiscounts
   };
 }
 
@@ -69,6 +84,7 @@ export function customerInPeriod<T extends Customer>(customer: T, from: string, 
     orders: (customer.orders || []).filter(order => !order.isQuotation && inAccountPeriod(order, from, to)),
     payments: (customer.payments || []).filter(payment => inAccountPeriod(payment, from, to)),
     orderReturns: (customer.orderReturns || []).filter(orderReturn => inAccountPeriod(orderReturn, from, to)),
+    discounts: (customer.discounts || []).filter(discount => inAccountPeriod(discount, from, to)),
     openingBalance: from || to ? 0 : customer.openingBalance || 0
   };
 }
@@ -76,12 +92,16 @@ export function customerInPeriod<T extends Customer>(customer: T, from: string, 
 export function supplierInPeriod<T extends Supplier>(supplier: T, from: string, to: string) {
   const purchaseOrders = (supplier.purchaseOrders || []).filter(order => inAccountPeriod(order, from, to));
   const expenses = (supplier.expenses || []).filter(expense => inAccountPeriod(expense, from, to));
+  const discounts = (supplier.discounts || []).filter(discount => inAccountPeriod(discount, from, to));
   return {
     ...supplier,
     purchaseOrders,
     expenses,
+    discounts,
     balance: from || to
-      ? purchaseOrders.reduce((sum, order) => sum + order.netAmount, 0) - expenses.reduce((sum, expense) => sum + expense.amount, 0)
+      ? purchaseOrders.reduce((sum, order) => sum + order.netAmount, 0)
+        - expenses.reduce((sum, expense) => sum + expense.amount, 0)
+        - discounts.reduce((sum, discount) => sum + discount.amount, 0)
       : supplier.balance
   };
 }

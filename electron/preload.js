@@ -16,10 +16,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveCustomerPrices: (data) => ipcRenderer.invoke('save-customer-prices', data),
   
   createOrder: (orderData) => ipcRenderer.invoke('create-order', orderData),
-  updateQuotation: (data) => ipcRenderer.invoke('update-quotation', data),
-  updateInvoiceDetails: (data) => ipcRenderer.invoke('update-invoice-details', data),
-  quotationCosts: (data) => ipcRenderer.invoke('quotation-costs', data),
   createOrderReturn: (returnData) => ipcRenderer.invoke('create-order-return', returnData),
+  createAccountDiscount: (discountData) => ipcRenderer.invoke('create-account-discount', discountData),
   getOrders: () => ipcRenderer.invoke('get-orders'),
   
   getBanks: () => ipcRenderer.invoke('get-banks'),
@@ -28,7 +26,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   getPayments: () => ipcRenderer.invoke('get-payments'),
   createPayment: (paymentData) => ipcRenderer.invoke('create-payment', paymentData),
-  updatePayment: (paymentData) => ipcRenderer.invoke('update-payment', paymentData),
   
   getSuppliers: () => ipcRenderer.invoke('get-suppliers'),
   createSupplier: (supplierData) => ipcRenderer.invoke('create-supplier', supplierData),
@@ -36,23 +33,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   getPurchases: () => ipcRenderer.invoke('get-purchases'),
   createPurchase: (purchaseData) => ipcRenderer.invoke('create-purchase', purchaseData),
-  updatePurchase: (data) => ipcRenderer.invoke('update-purchase', data),
   
   getExpenses: () => ipcRenderer.invoke('get-expenses'),
   createExpense: (expenseData) => ipcRenderer.invoke('create-expense', expenseData),
-  updateExpense: (data) => ipcRenderer.invoke('update-expense', data),
   
   getExpenseCategories: () => ipcRenderer.invoke('get-expense-categories'),
   createExpenseCategory: (categoryData) => ipcRenderer.invoke('create-expense-category', categoryData),
   
   getGeneralExpenses: () => ipcRenderer.invoke('get-general-expenses'),
   createGeneralExpense: (expenseData) => ipcRenderer.invoke('create-general-expense', expenseData),
-  updateGeneralExpense: (data) => ipcRenderer.invoke('update-general-expense', data),
   
   login: (credentials) => ipcRenderer.invoke('login', credentials),
-  stocktakeOperation: (data) => ipcRenderer.invoke('stocktake-operation', data),
-  bankTransferOperation: (data) => ipcRenderer.invoke('bank-transfer-operation', data),
-  logout: () => ipcRenderer.invoke('logout'),
   getUsers: () => ipcRenderer.invoke('get-users'),
   changePassword: (data) => ipcRenderer.invoke('change-password', data),
   

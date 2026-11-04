@@ -2,24 +2,15 @@
 
 
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import QRCode from 'qrcode';
-import { customerInPeriod, inAccountPeriod, supplierInPeriod } from '@/lib/account-period';
-import { buildBankStatement } from '@/lib/bank-statement';
+import { customerInPeriod, inAccountPeriod, statementTotals, supplierInPeriod, type StatementDiscount } from '@/lib/account-period';
 import AccountStatement from '@/components/AccountStatement';
 import CollapsiblePanel from '@/components/CollapsiblePanel';
-import MoneyInput from '@/components/MoneyInput';
-import StocktakePanel from '@/components/StocktakePanel';
-import QuotationEdit, { type EditableQuotation } from '@/components/QuotationEdit';
-import InvoiceDetailsEdit, { type EditableInvoiceDetails } from '@/components/InvoiceDetailsEdit';
-import QuotationPricingDraft from '@/components/QuotationPricingDraft';
-import { confirmQuotationProfit, type PricingLine } from '@/lib/quotation-pricing';
-import BankTransfersPanel, { type BankTransfer, type TransferSnapshot } from '@/components/BankTransfersPanel';
-import { formatMoney as formatTotal, normalizeMoneyInput } from '@/lib/money-format';
-import { purchaseTaxRate } from '@/lib/document-edits';
+import DiscountsPanel, { type DiscountKind } from '@/components/DiscountsPanel';
 import ProductCardDetails, { ProductCardHeader } from '@/components/ProductCardDetails';
-import { BankTransferPrint, InvoicePrint, ReceiptPrint, ReturnPrint, StocktakePrint, TablePrint, type PrintBankTransfer, type PrintStocktake, type PrintTableData } from '@/components/PrintDocuments';
+import { DiscountPrint, InvoicePrint, ReceiptPrint, ReturnPrint, TablePrint, type PrintAccountDiscount, type PrintTableData } from '@/components/PrintDocuments';
 
 import {
 
@@ -88,18 +79,6 @@ import {
 } from 'lucide-react';
 
 
-
-type DocumentEdit = { id: string; updatedAt: string | Date; date: string; originalDate: string | Date };
-type EditableExpense = {
-  id: string; updatedAt: string | Date; date: string | Date; createdAt: string | Date;
-  bankId: string; amount: number; notes?: string | null; reference?: string | null;
-};
-type EditablePurchase = {
-  id: string; updatedAt: string | Date; date: string | Date; createdAt: string | Date;
-  billNumber: string; supplierId: string; invoiceType: string;
-  items: { id?: string; productId: string; quantity: number; unitCost: number;
-    product?: { code?: string; name?: string; type?: string; size?: string; color?: string | null } }[];
-};
 
 const getProductImage = (type: string) => {
 
@@ -241,47 +220,6 @@ type ReturnRecordSummary = {
   createdAt?: string | Date;
   items?: { orderItemId: string; quantity: number }[];
 };
-type CustomerAccountOrder = { isQuotation?: boolean; netAmount?: number };
-type CustomerAccountPayment = { amount?: number };
-type PaymentCorrectionSnapshot = {
-  customerId: string;
-  bankId: string;
-  amount: number;
-  reference: string | null;
-  notes: string | null;
-  date: string | Date;
-};
-type PaymentCorrectionHistoryEntry = {
-  correctedAt: string;
-  before: PaymentCorrectionSnapshot;
-  after: PaymentCorrectionSnapshot;
-};
-type EditablePayment = {
-  id: string;
-  customerId: string;
-  bankId: string;
-  amount: number;
-  reference: string | null;
-  notes: string | null;
-  date: string | Date;
-  correctionHistory?: string | null;
-};
-const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-const isPaymentCorrectionSnapshot = (value: unknown): value is PaymentCorrectionSnapshot =>
-  isObjectRecord(value)
-  && typeof value.customerId === 'string'
-  && typeof value.bankId === 'string'
-  && typeof value.amount === 'number'
-  && (typeof value.reference === 'string' || value.reference === null)
-  && (typeof value.notes === 'string' || value.notes === null)
-  && (typeof value.date === 'string' || value.date instanceof Date);
-function isPaymentCorrectionHistoryEntry(value: unknown): value is PaymentCorrectionHistoryEntry {
-  return isObjectRecord(value)
-    && typeof value.correctedAt === 'string'
-    && isPaymentCorrectionSnapshot(value.before)
-    && isPaymentCorrectionSnapshot(value.after);
-}
 type InvoiceSalesSummary = {
   netAmount?: number;
   taxAmount?: number;
@@ -327,13 +265,13 @@ export default function POSDashboard() {
 
     if (currentUser.role === 'CASHIER') {
 
-      return ['POS', 'CUSTOMERS', 'INVOICES', 'PAYMENTS'].includes(tab);
+      return ['POS', 'CUSTOMERS', 'INVOICES', 'PAYMENTS', 'DISCOUNTS'].includes(tab);
 
     }
 
     if (currentUser.role === 'STOREKEEPER') {
 
-      return ['INVENTORY', 'STOCKTAKE', 'SUPPLIERS', 'PURCHASES'].includes(tab);
+      return ['INVENTORY', 'SUPPLIERS', 'PURCHASES', 'DISCOUNTS'].includes(tab);
 
     }
 
@@ -348,6 +286,24 @@ export default function POSDashboard() {
   const [products, setProducts] = useState<any[]>([]);
 
   const [customers, setCustomers] = useState<any[]>([]);
+  const [customersReady, setCustomersReady] = useState(false);
+  const [customersError, setCustomersError] = useState('');
+  const [suppliersReady, setSuppliersReady] = useState(false);
+  const [suppliersError, setSuppliersError] = useState('');
+  const accountRequestVersions = useRef({ customer: 0, supplier: 0 });
+  const [selectedDiscountPrint, setSelectedDiscountPrint] = useState<PrintAccountDiscount | null>(null);
+
+  const openDiscountPrint = (discount: StatementDiscount, kind: DiscountKind, partyName: string) => {
+    const date = discount.date || discount.createdAt;
+    if (!date || !Number.isFinite(new Date(date).getTime())) {
+      alert('تعذر طباعة سند الخصم بسبب تاريخ غير صالح.');
+      return;
+    }
+    setSelectedDiscountPrint({
+      discountNumber: discount.discountNumber, kind, partyName, date,
+      amount: discount.amount, notes: discount.notes
+    });
+  };
 
 
 
@@ -363,10 +319,8 @@ export default function POSDashboard() {
 
   const [stmtFrom, setStmtFrom] = useState('');
   const [stmtTo, setStmtTo] = useState('');
-  const currentHistoryCustomer = selectedHistoryCustomerRaw
-    && (customers.find(customer => customer.id === selectedHistoryCustomerRaw.id) || selectedHistoryCustomerRaw);
-  const selectedHistoryCustomer = currentHistoryCustomer
-    && customerInPeriod(currentHistoryCustomer, stmtFrom, stmtTo);
+  const selectedHistoryCustomer = selectedHistoryCustomerRaw
+    && customerInPeriod(selectedHistoryCustomerRaw, stmtFrom, stmtTo);
   const renderStatementPeriod = () => {
     const pad = (n: number) => String(n).padStart(2, '0');
     const setMonth = (value: string) => {
@@ -404,6 +358,7 @@ export default function POSDashboard() {
       </div>
     );
   };
+  const formatTotal = (n: number) => (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const renderTotalsBar = (
     cards: { label: string; value: string; tone?: 'red' | 'green' | 'white' }[],
     withPeriod: boolean
@@ -462,13 +417,9 @@ export default function POSDashboard() {
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
-  const [editingPayment, setEditingPayment] = useState<EditablePayment | null>(null);
-
-  const [paymentCorrectionHistory, setPaymentCorrectionHistory] = useState<PaymentCorrectionHistoryEntry[]>([]);
-
   const [paymentCustomer, setPaymentCustomer] = useState<any>(null);
 
-  const [paymentForm, setPaymentForm] = useState({ customerId: '', amount: '', bankId: '', reference: '', notes: '', date: '' });
+  const [paymentForm, setPaymentForm] = useState({ customerId: '', amount: '', bankId: '', reference: '', notes: '' });
 
   const [bankForm, setBankForm] = useState<{ id?: string; name: string; accountNumber: string; balance: string }>({ name: '', accountNumber: '', balance: '' });
 
@@ -492,23 +443,6 @@ export default function POSDashboard() {
 
   const [bankSearch, setBankSearch] = useState('');
 
-  const [selectedBankStatement, setSelectedBankStatement] = useState<any>(null);
-  const [bankTransfers, setBankTransfers] = useState<BankTransfer[]>([]);
-  const [transfersReady, setTransfersReady] = useState(false);
-  const [transferLaunch, setTransferLaunch] = useState<string | null>(null);
-  const [printBankTransfer, setPrintBankTransfer] = useState<PrintBankTransfer | null>(null);
-  const applyTransferSnapshot = useCallback((data: TransferSnapshot) => {
-    setBanks(data.banks);
-    setBankTransfers(data.transfers);
-    setTransfersReady(true);
-  }, []);
-  const markTransfersLoading = useCallback(() => setTransfersReady(false), []);
-  const closeTransferLaunch = useCallback(() => setTransferLaunch(null), []);
-
-  const [bankStatementFrom, setBankStatementFrom] = useState('');
-
-  const [bankStatementTo, setBankStatementTo] = useState('');
-
   const [paymentSearch, setPaymentSearch] = useState('');
 
   const [invoiceSearch, setInvoiceSearch] = useState('');
@@ -524,7 +458,6 @@ export default function POSDashboard() {
   const [showGeneralExpenseModal, setShowGeneralExpenseModal] = useState(false);
   const [showExpenseCategoryModal, setShowExpenseCategoryModal] = useState(false);
   const [generalExpenseForm, setGeneralExpenseForm] = useState({ categoryId: '', bankId: '', amount: '', reference: '', notes: '' });
-  const [editingGeneralExpense, setEditingGeneralExpense] = useState<DocumentEdit | null>(null);
   const [expenseCategoryForm, setExpenseCategoryForm] = useState({ name: '' });
 
 
@@ -539,12 +472,10 @@ export default function POSDashboard() {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
   const [purchaseForm, setPurchaseForm] = useState<any>({ billNumber: '', supplierId: '', invoiceType: 'فاتورة ضريبية', items: [] });
-  const [editingPurchase, setEditingPurchase] = useState<DocumentEdit | null>(null);
 
   const [showExpenseModal, setShowExpenseModal] = useState(false);
 
   const [expenseForm, setExpenseForm] = useState({ supplierId: '', bankId: '', amount: '', notes: '', reference: '' });
-  const [editingExpense, setEditingExpense] = useState<DocumentEdit | null>(null);
 
   const [showExpenseReceiptModal, setShowExpenseReceiptModal] = useState(false);
 
@@ -561,16 +492,12 @@ export default function POSDashboard() {
   const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
 
   const [printTableData, setPrintTableData] = useState<PrintTableData | null>(null);
-  const [printStocktake, setPrintStocktake] = useState<PrintStocktake | null>(null);
-  const [editingQuotation, setEditingQuotation] = useState<EditableQuotation | null>(null);
-  const [editingInvoiceDetails, setEditingInvoiceDetails] = useState<EditableInvoiceDetails | null>(null);
-  const [showQuotationPricing, setShowQuotationPricing] = useState(false);
 
 
 
   // Navigation active tab
 
-  const [activeTab, setActiveTab] = useState<'POS' | 'CUSTOMERS' | 'INVENTORY' | 'STOCKTAKE' | 'BANKS' | 'PAYMENTS' | 'INVOICES' | 'SUPPLIERS' | 'PURCHASES' | 'EXPENSES' | 'GENERAL_EXPENSES'>('POS');
+  const [activeTab, setActiveTab] = useState<'POS' | 'CUSTOMERS' | 'INVENTORY' | 'BANKS' | 'PAYMENTS' | 'INVOICES' | 'SUPPLIERS' | 'PURCHASES' | 'EXPENSES' | 'GENERAL_EXPENSES' | 'DISCOUNTS'>('POS');
 
   const [showReceiptModal, setShowReceiptModal] = useState(false);
 
@@ -607,9 +534,9 @@ export default function POSDashboard() {
         product.supplier?.name || suppliers.find(supplier => supplier.id === product.supplierId)?.name || '—',
         product.length || '—',
         product.weight || '—',
-        product.pricePerKilo === null || product.pricePerKilo === undefined ? '—' : formatTotal(product.pricePerKilo),
-        formatTotal(Number(product.price)),
-        formatTotal(Number(customerPricesMap[product.id]))
+        product.pricePerKilo ?? '—',
+        Number(product.price).toFixed(2),
+        Number(customerPricesMap[product.id]).toFixed(2)
       ])
     });
   };
@@ -1209,6 +1136,24 @@ export default function POSDashboard() {
     });
   };
 
+  const sortCartAndInvoiceItems = (items: any[]) => {
+    return [...items].sort((a, b) => {
+      const prodA = a.product || a;
+      const prodB = b.product || b;
+      const codeA = String(prodA.code || '').toLowerCase();
+      const codeB = String(prodB.code || '').toLowerCase();
+      if (codeA !== codeB) return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
+      
+      const sizeA = String(prodA.size || '').toLowerCase();
+      const sizeB = String(prodB.size || '').toLowerCase();
+      if (sizeA !== sizeB) return sizeA.localeCompare(sizeB, undefined, { numeric: true, sensitivity: 'base' });
+      
+      const colorA = String(prodA.color || '').toLowerCase();
+      const colorB = String(prodB.color || '').toLowerCase();
+      return colorA.localeCompare(colorB, undefined, { numeric: true, sensitivity: 'base' });
+    });
+  };
+
   const fetchProducts = (isSilent = false) => {
 
     if (!isSilent) setLoading(true);
@@ -1264,75 +1209,56 @@ export default function POSDashboard() {
 
 
 
-  // Fetch customers from database
-
-  const fetchCustomers = () => {
-
-    if (typeof window !== 'undefined' && (window as any).electronAPI) {
-
-      (window as any).electronAPI.getCustomers()
-
-        .then((data: any) => {
-
-          setCustomers(data);
-
-        })
-
-        .catch((err: any) => {
-
-          console.error(err);
-
-        });
-
-    } else {
-
-      fetch('/api/customers')
-
-        .then(res => res.json())
-
-        .then(data => {
-
-          setCustomers(Array.isArray(data) ? data : []);
-
-        })
-
-        .catch(err => {
-
-          console.error(err);
-
-          
-
-        });
-
+  const fetchAccountData = async (kind: 'customer' | 'supplier'): Promise<boolean> => {
+    const version = ++accountRequestVersions.current[kind];
+    try {
+      const desktop = window as Window & {
+        electronAPI?: { getCustomers: () => Promise<unknown>; getSuppliers: () => Promise<unknown> };
+      };
+      let data: unknown;
+      if (desktop.electronAPI) {
+        data = await (kind === 'customer' ? desktop.electronAPI.getCustomers() : desktop.electronAPI.getSuppliers());
+      } else {
+        const response = await fetch(kind === 'customer' ? '/api/customers' : '/api/suppliers');
+        data = await response.json();
+        if (!response.ok) {
+          const message = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+            ? data.error : 'تعذر تحميل بيانات الحسابات.';
+          throw new Error(message);
+        }
+      }
+      if (!Array.isArray(data) || data.some(account =>
+        !account || typeof account !== 'object' || !Array.isArray(account.discounts))) {
+        throw new Error('بيانات الخصومات غير متاحة. حدّث الخادم والمحطة إلى الإصدار نفسه.');
+      }
+      if (version !== accountRequestVersions.current[kind]) return false;
+      if (kind === 'customer') {
+        setCustomers(data);
+        setCustomersReady(true);
+        setCustomersError('');
+      } else {
+        setSuppliers(data);
+        setSuppliersReady(true);
+        setSuppliersError('');
+      }
+      return true;
+    } catch (error) {
+      console.error(`Error fetching ${kind} accounts:`, error);
+      if (version === accountRequestVersions.current[kind]) {
+        const message = error instanceof Error ? error.message : 'تعذر تحميل بيانات الحسابات.';
+        if (kind === 'customer') {
+          setCustomersReady(false);
+          setCustomersError(message);
+        } else {
+          setSuppliersReady(false);
+          setSuppliersError(message);
+        }
+      }
+      return false;
     }
-
   };
-
-
-
-  const fetchSuppliers = () => {
-
-    if (typeof window !== 'undefined' && (window as any).electronAPI) {
-
-      (window as any).electronAPI.getSuppliers()
-
-        .then((data: any) => setSuppliers(Array.isArray(data) ? data : []))
-
-        .catch(console.error);
-
-    } else {
-
-      fetch('/api/suppliers')
-
-        .then(res => res.json())
-
-        .then(data => setSuppliers(Array.isArray(data) ? data : []))
-
-        .catch(console.error);
-
-    }
-
-  };
+  const fetchCustomers = () => fetchAccountData('customer');
+  const fetchSuppliers = () => fetchAccountData('supplier');
 
 
 
@@ -1766,10 +1692,12 @@ export default function POSDashboard() {
 
   const periodCustomers = (Array.isArray(customers) ? customers : [])
     .map(customer => customerInPeriod(customer, totalsFrom, totalsTo))
-    .filter(customer => !(totalsFrom || totalsTo) || customer.orders.length > 0 || customer.payments.length > 0 || customer.orderReturns.length > 0);
+    .filter(customer => !(totalsFrom || totalsTo) || customer.orders.length > 0 || customer.payments.length > 0
+      || customer.orderReturns.length > 0 || customer.discounts.length > 0);
   const periodSuppliers = (Array.isArray(suppliers) ? suppliers : [])
     .map(supplier => supplierInPeriod(supplier, totalsFrom, totalsTo))
-    .filter(supplier => !(totalsFrom || totalsTo) || supplier.purchaseOrders.length > 0 || supplier.expenses.length > 0);
+    .filter(supplier => !(totalsFrom || totalsTo) || supplier.purchaseOrders.length > 0
+      || supplier.expenses.length > 0 || supplier.discounts.length > 0);
   const filteredSuppliers = periodSuppliers.filter(s => (s.name || '').includes(supplierSearch) || (s.trn && s.trn.includes(supplierSearch)));
   const filteredCustomers = periodCustomers.filter(c => {
 
@@ -1788,25 +1716,6 @@ export default function POSDashboard() {
     && ((e.expenseNumber || '').includes(expenseSearch) || (e.supplier?.name || '').includes(expenseSearch)));
   const filteredPayments = payments.filter(p => inAccountPeriod(p, totalsFrom, totalsTo)
     && ((p.customer?.name || '').includes(paymentSearch) || (p.receiptNumber || '').includes(paymentSearch)));
-  const currentStatementBank = selectedBankStatement && banks.find(bank => bank.id === selectedBankStatement.id);
-  const bankStatement = currentStatementBank && transfersReady
-    ? buildBankStatement({
-      bankId: currentStatementBank.id,
-      bankBalance: currentStatementBank.balance,
-      transfers: bankTransfers,
-      payments,
-      supplierPayments: expenses,
-      generalExpenses,
-      returns: customers.flatMap(customer =>
-        (customer.orderReturns || []).map((orderReturn: any) => ({
-          ...orderReturn,
-          customer: orderReturn.customer || customer,
-        }))
-      ),
-      from: bankStatementFrom,
-      to: bankStatementTo,
-    })
-    : null;
   const filteredInvoices = invoices.filter(inv => inAccountPeriod(inv, totalsFrom, totalsTo)
     && ((inv.invoiceNumber || '').includes(invoiceSearch) || (inv.customerName || '').includes(invoiceSearch)
       || (inv.customer?.name || '').includes(invoiceSearch)));
@@ -1832,14 +1741,12 @@ export default function POSDashboard() {
     return [{ orderItemId: item.id, quantity, amount, tax, net: roundMoney(amount + tax) }];
   });
   const returnPreviewNet = Math.round((returnPreviewItems.reduce((sum: number, item: ReturnPreviewItem) => sum + item.net, 0) + Number.EPSILON) * 100) / 100;
-  const returnBalanceKnown = !returnInvoice?.customerId || Boolean(returnCustomer);
+  const returnBalanceKnown = !returnInvoice?.customerId || (customersReady && Boolean(returnCustomer));
   const returnCustomerBalance = returnCustomer
-    ? Number(returnCustomer.openingBalance || 0)
-      + (returnCustomer.orders || []).filter((order: CustomerAccountOrder) => !order.isQuotation)
-        .reduce((sum: number, order: CustomerAccountOrder) => sum + Number(order.netAmount || 0), 0)
-      - (returnCustomer.payments || []).reduce((sum: number, payment: CustomerAccountPayment) => sum + Number(payment.amount || 0), 0)
-      - (returnCustomer.orderReturns || []).reduce((sum: number, orderReturn: ReturnRecordSummary) =>
-        sum + Number(orderReturn.netAmount || 0) - Number(orderReturn.refundAmount || 0), 0)
+    ? statementTotals(
+      returnCustomer.orders || [], returnCustomer.payments || [], Number(returnCustomer.openingBalance || 0),
+      returnCustomer.orderReturns || [], returnCustomer.discounts || []
+    ).totalDue
     : 0;
   const returnPreviewRefund = returnBalanceKnown
     ? Math.round(Math.max(0, returnPreviewNet - Math.max(returnCustomerBalance, 0)) * 100) / 100
@@ -1926,72 +1833,6 @@ export default function POSDashboard() {
       year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
     });
 
-  const printBankStatement = () => {
-    if (!selectedBankStatement || !bankStatement) return;
-    const money = (value: number) => formatTotal(value);
-    setPrintTableData({
-      title: `كشف حساب البنك - ${selectedBankStatement.name}`,
-      headers: ['التاريخ', 'نوع الحركة', 'رقم المستند', 'البيان', 'المرجع / الملاحظات', 'وارد', 'منصرف', 'الرصيد'],
-      rows: [
-        ['', 'رصيد أول الفترة', '', '', '', '', '', money(bankStatement.openingBalance)],
-        ...bankStatement.rows.map(movement => [
-          formatReportDate({ date: movement.date }),
-          movement.type,
-          movement.number,
-          movement.party,
-          [movement.reference, movement.notes].filter(Boolean).join(' / ') || '—',
-          movement.incoming ? money(movement.incoming) : '—',
-          movement.outgoing ? money(movement.outgoing) : '—',
-          money(movement.balance),
-        ]),
-      ],
-      footer: [
-        'إجمالي الحركة',
-        '',
-        '',
-        '',
-        '',
-        money(bankStatement.totalIncoming),
-        money(bankStatement.totalOutgoing),
-        money(bankStatement.closingBalance),
-      ],
-      period: { from: bankStatementFrom, to: bankStatementTo },
-    });
-  };
-
-  const formatPaymentInputDate = (value: string | Date) => {
-    const date = new Date(value);
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${date.getFullYear()}-${month}-${day}`;
-  };
-
-  const handleEditPayment = (payment: EditablePayment) => {
-    let history: PaymentCorrectionHistoryEntry[] = [];
-    try {
-      const parsed: unknown = payment.correctionHistory ? JSON.parse(payment.correctionHistory) : [];
-      if (!Array.isArray(parsed) || !parsed.every(isPaymentCorrectionHistoryEntry)) {
-        throw new Error('سجل التصويبات غير صالح.');
-      }
-      history = parsed;
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'تعذر قراءة سجل تصويبات السند.');
-      return;
-    }
-
-    setEditingPayment(payment);
-    setPaymentCorrectionHistory(history);
-    setPaymentForm({
-      customerId: payment.customerId,
-      bankId: payment.bankId,
-      amount: String(payment.amount),
-      reference: payment.reference || '',
-      notes: payment.notes || '',
-      date: formatPaymentInputDate(payment.date),
-    });
-    setIsPaymentModalOpen(true);
-  };
-
 
 
   const selectedCustomer = selectedCustomerId === 'CASH'
@@ -2014,9 +1855,9 @@ export default function POSDashboard() {
 
   // Handle Checkout (Invoice or Quotation)
 
-  const handleCheckout = async (isQuotation: boolean, quotationLines?: PricingLine[]) => {
+  const handleCheckout = async (isQuotation: boolean) => {
 
-    if (cart.length === 0 || submitting) return;
+    if (cart.length === 0) return;
 
 
 
@@ -2050,13 +1891,13 @@ export default function POSDashboard() {
 
       isQuotation,
 
-      items: cart.map(item => ({
+      items: sortCartAndInvoiceItems(cart).map(item => ({
 
         productId: item.id,
 
         quantity: item.qty,
 
-        unitPrice: quotationLines ? Number(quotationLines.find(line => line.productId === item.id)?.unitPrice) : item.price
+        unitPrice: item.price
 
       })),
 
@@ -2067,10 +1908,6 @@ export default function POSDashboard() {
 
 
     try {
-
-      if (isQuotation && currentUser?.role === 'ADMIN' && !await confirmQuotationProfit(currentUser, orderData.items.map(item => ({
-        productId: item.productId, quantity: String(item.quantity), unitPrice: String(item.unitPrice)
-      })))) return;
 
       let data;
 
@@ -2103,7 +1940,6 @@ export default function POSDashboard() {
 
 
       setInvoice(data);
-      setShowQuotationPricing(false);
 
 
 
@@ -2507,19 +2343,12 @@ export default function POSDashboard() {
     e.preventDefault();
 
     if (!paymentForm.customerId || !paymentForm.bankId || !paymentForm.amount) return;
-    if (editingPayment && currentUser?.role !== 'ADMIN') {
-      alert('تصويب الدفعات متاح لمدير النظام فقط.');
-      return;
-    }
-    if (editingPayment && !paymentForm.date) return;
 
     setSubmitting(true);
 
     try {
 
       const data = {
-
-        ...(editingPayment ? { userId: currentUser.id } : {}),
 
         customerId: paymentForm.customerId,
 
@@ -2529,17 +2358,13 @@ export default function POSDashboard() {
 
         reference: paymentForm.reference,
 
-        notes: paymentForm.notes,
-
-        ...(editingPayment ? { id: editingPayment.id, date: new Date(`${paymentForm.date}T00:00:00`) } : {})
+        notes: paymentForm.notes
 
       };
 
       if (typeof window !== 'undefined' && (window as any).electronAPI) {
 
-        const payment = editingPayment
-          ? await (window as any).electronAPI.updatePayment(data)
-          : await (window as any).electronAPI.createPayment(data);
+        const payment = await (window as any).electronAPI.createPayment(data);
 
         fetchPayments();
 
@@ -2547,7 +2372,7 @@ export default function POSDashboard() {
 
         fetchCustomers();
 
-        if (!editingPayment && payment) {
+        if (payment) {
 
           const cust = customers.find(c => c.id === paymentForm.customerId);
 
@@ -2563,14 +2388,9 @@ export default function POSDashboard() {
 
         const response = await fetch('/api/payments', {
 
-          method: editingPayment ? 'PUT' : 'POST',
+          method: 'POST',
 
-          headers: {
-            'Content-Type': 'application/json',
-            ...(editingPayment && currentUser?.sessionToken
-              ? { Authorization: `Bearer ${currentUser.sessionToken}` }
-              : {}),
-          },
+          headers: { 'Content-Type': 'application/json' },
 
           body: JSON.stringify(data)
 
@@ -2586,22 +2406,17 @@ export default function POSDashboard() {
 
         fetchCustomers();
 
-        if (!editingPayment) {
-          const cust = customers.find(c => c.id === paymentForm.customerId);
+        const cust = customers.find(c => c.id === paymentForm.customerId);
 
-          const bank = banks.find(b => b.id === paymentForm.bankId);
+        const bank = banks.find(b => b.id === paymentForm.bankId);
 
-          setSelectedReceipt({ ...payment, customer: cust, bank: bank });
+        setSelectedReceipt({ ...payment, customer: cust, bank: bank });
 
-          setShowReceiptModal(true);
-        }
+        setShowReceiptModal(true);
 
       }
 
       setIsPaymentModalOpen(false);
-      setEditingPayment(null);
-      setPaymentCorrectionHistory([]);
-      setPaymentForm({ customerId: '', bankId: '', amount: '', notes: '', reference: '', date: '' });
 
     } catch (err: any) {
 
@@ -2699,120 +2514,9 @@ export default function POSDashboard() {
 
 
 
-  const handleEditPurchase = (purchase: EditablePurchase) => {
-    if (currentUser?.role !== 'ADMIN') {
-      alert('تعديل المستندات متاح لمدير النظام فقط.');
-      return;
-    }
-    setEditingPurchase({
-      id: purchase.id, updatedAt: purchase.updatedAt, date: formatPaymentInputDate(purchase.date || purchase.createdAt),
-      originalDate: purchase.date || purchase.createdAt
-    });
-    setPurchaseForm({
-      billNumber: purchase.billNumber, supplierId: purchase.supplierId, invoiceType: purchase.invoiceType,
-      items: purchase.items.map(item => ({
-        id: item.id, productId: item.productId, quantity: String(item.quantity), unitCost: String(item.unitCost),
-        productDisplay: [item.product?.code, '-', item.product?.name, item.product?.type, item.product?.size,
-          item.product?.color ? `(${item.product.color})` : ''].filter(Boolean).join(' ')
-      }))
-    });
-    setShowPurchaseDetailModal(false);
-    setShowSupplierHistoryModal(false);
-    setShowPurchaseModal(true);
-  };
-
-  const handleEditExpense = (expense: EditableExpense & { supplierId: string }) => {
-    if (currentUser?.role !== 'ADMIN') {
-      alert('تعديل المستندات متاح لمدير النظام فقط.');
-      return;
-    }
-    setEditingExpense({
-      id: expense.id, updatedAt: expense.updatedAt, date: formatPaymentInputDate(expense.date || expense.createdAt),
-      originalDate: expense.date || expense.createdAt
-    });
-    setExpenseForm({
-      supplierId: expense.supplierId, bankId: expense.bankId, amount: String(expense.amount),
-      notes: expense.notes || '', reference: expense.reference || ''
-    });
-    setShowExpenseReceiptModal(false);
-    setShowSupplierHistoryModal(false);
-    setShowExpenseModal(true);
-  };
-
-  const handleEditGeneralExpense = (expense: EditableExpense & { categoryId: string }) => {
-    if (currentUser?.role !== 'ADMIN') {
-      alert('تعديل المستندات متاح لمدير النظام فقط.');
-      return;
-    }
-    setEditingGeneralExpense({
-      id: expense.id, updatedAt: expense.updatedAt, date: formatPaymentInputDate(expense.date || expense.createdAt),
-      originalDate: expense.date || expense.createdAt
-    });
-    setGeneralExpenseForm({
-      categoryId: expense.categoryId, bankId: expense.bankId, amount: String(expense.amount),
-      notes: expense.notes || '', reference: expense.reference || ''
-    });
-    setShowGeneralExpenseModal(true);
-  };
-
-  const documentEditHeaders = () => ({
-    'Content-Type': 'application/json',
-    ...(currentUser?.sessionToken ? { Authorization: `Bearer ${currentUser.sessionToken}` } : {})
-  });
-
-  const documentEditData = (edit: DocumentEdit) => ({
-    id: edit.id,
-    updatedAt: edit.updatedAt,
-    date: edit.date === formatPaymentInputDate(edit.originalDate)
-      ? edit.originalDate : new Date(`${edit.date}T00:00:00`)
-  });
-
-  const handleSaveGeneralExpense = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (submitting) return;
-    if (editingGeneralExpense && currentUser?.role !== 'ADMIN') {
-      alert('تعديل المستندات متاح لمدير النظام فقط.');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const data = {
-        ...generalExpenseForm,
-        ...(editingGeneralExpense ? documentEditData(editingGeneralExpense) : {})
-      };
-      if (typeof window !== 'undefined' && (window as any).electronAPI) {
-        if (editingGeneralExpense) await (window as any).electronAPI.updateGeneralExpense(data);
-        else await (window as any).electronAPI.createGeneralExpense(data);
-      } else {
-        const res = await fetch('/api/general-expenses', {
-          method: editingGeneralExpense ? 'PUT' : 'POST',
-          headers: editingGeneralExpense ? documentEditHeaders() : { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        const saved = await res.json();
-        if (!res.ok) throw new Error(saved.error || 'تعذر حفظ المصروف.');
-      }
-      setShowGeneralExpenseModal(false);
-      setEditingGeneralExpense(null);
-      setGeneralExpenseForm({ categoryId: '', bankId: '', amount: '', notes: '', reference: '' });
-      fetchGeneralExpenses();
-      fetchBanks();
-    } catch (error) {
-      console.error('Error saving general expense:', error);
-      alert(error instanceof Error ? error.message : 'حدث خطأ أثناء حفظ المصروف.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleSavePurchase = async (e: React.FormEvent) => {
 
     e.preventDefault();
-    if (submitting) return;
-    if (editingPurchase && currentUser?.role !== 'ADMIN') {
-      alert('تعديل المستندات متاح لمدير النظام فقط.');
-      return;
-    }
 
     if (!purchaseForm.billNumber || !purchaseForm.supplierId || purchaseForm.items.length === 0) {
 
@@ -2826,24 +2530,19 @@ export default function POSDashboard() {
 
     try {
 
-      const data = {
-        ...purchaseForm,
-        ...(editingPurchase ? documentEditData(editingPurchase) : {})
-      };
       if (typeof window !== 'undefined' && (window as any).electronAPI) {
 
-        if (editingPurchase) await (window as any).electronAPI.updatePurchase(data);
-        else await (window as any).electronAPI.createPurchase(data);
+        await (window as any).electronAPI.createPurchase(purchaseForm);
 
       } else {
 
         const response = await fetch('/api/purchases', {
 
-          method: editingPurchase ? 'PUT' : 'POST',
+          method: 'POST',
 
-          headers: editingPurchase ? documentEditHeaders() : { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
 
-          body: JSON.stringify(data)
+          body: JSON.stringify(purchaseForm)
 
         });
 
@@ -2858,10 +2557,8 @@ export default function POSDashboard() {
       fetchProducts();
 
       fetchSuppliers();
-      setSelectedPurchase(null);
 
       setShowPurchaseModal(false);
-      setEditingPurchase(null);
 
       setPurchaseForm({ billNumber: '', supplierId: '', invoiceType: 'فاتورة ضريبية', items: [] });
 
@@ -2882,11 +2579,6 @@ export default function POSDashboard() {
   const handleSaveExpense = async (e: React.FormEvent) => {
 
     e.preventDefault();
-    if (submitting) return;
-    if (editingExpense && currentUser?.role !== 'ADMIN') {
-      alert('تعديل المستندات متاح لمدير النظام فقط.');
-      return;
-    }
 
     if (!expenseForm.supplierId || !expenseForm.bankId || !expenseForm.amount) {
 
@@ -2901,26 +2593,20 @@ export default function POSDashboard() {
     try {
 
       let saved;
-      const data = {
-        ...expenseForm,
-        ...(editingExpense ? documentEditData(editingExpense) : {})
-      };
 
       if (typeof window !== 'undefined' && (window as any).electronAPI) {
 
-        saved = editingExpense
-          ? await (window as any).electronAPI.updateExpense(data)
-          : await (window as any).electronAPI.createExpense(data);
+        saved = await (window as any).electronAPI.createExpense(expenseForm);
 
       } else {
 
         const response = await fetch('/api/expenses', {
 
-          method: editingExpense ? 'PUT' : 'POST',
+          method: 'POST',
 
-          headers: editingExpense ? documentEditHeaders() : { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
 
-          body: JSON.stringify(data)
+          body: JSON.stringify(expenseForm)
 
         });
 
@@ -2943,7 +2629,6 @@ export default function POSDashboard() {
       setShowExpenseReceiptModal(true);
 
       setShowExpenseModal(false);
-      setEditingExpense(null);
 
       setExpenseForm({ supplierId: '', bankId: '', amount: '', notes: '', reference: '' });
 
@@ -3397,14 +3082,6 @@ export default function POSDashboard() {
 
 
 
-          {isRoleAllowed('STOCKTAKE') && (
-            <button onClick={() => setActiveTab('STOCKTAKE')}
-              className={`flex items-center gap-1.5 px-2 py-1.5 text-sm font-bold transition-all duration-300 cursor-pointer border-b border-white/5 ${activeTab === 'STOCKTAKE' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}>
-              <PackageSearchIcon className="h-5 w-5" />
-              <span>جرد</span>
-            </button>
-          )}
-
           {isRoleAllowed('BANKS') && (
 
             <button
@@ -3461,6 +3138,16 @@ export default function POSDashboard() {
 
             </button>
 
+          )}
+
+          {isRoleAllowed('DISCOUNTS') && (
+            <button
+              onClick={() => setActiveTab('DISCOUNTS')}
+              className={`flex items-center gap-1.5 px-2 py-1.5 text-sm font-bold transition-all duration-300 cursor-pointer border-b border-white/5 ${activeTab === 'DISCOUNTS' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+            >
+              <PercentIcon className="h-5 w-5" />
+              <span>الخصومات</span>
+            </button>
           )}
 
 
@@ -3575,12 +3262,7 @@ export default function POSDashboard() {
 
             <button
 
-              onClick={() => {
-                if (typeof window !== 'undefined' && (window as any).electronAPI) {
-                  (window as any).electronAPI.logout();
-                }
-                setCurrentUser(null);
-              }}
+              onClick={() => setCurrentUser(null)}
 
               className="flex-1 text-[10px] bg-red-950/20 border-y border-red-500/20 hover:bg-red-500 hover:text-white text-red-400 font-bold py-2 text-center cursor-pointer transition-all"
 
@@ -3612,13 +3294,32 @@ export default function POSDashboard() {
 
       <div className="flex-1 flex overflow-hidden" dir="rtl">
 
+        {((customersError && isRoleAllowed('CUSTOMERS')) || (suppliersError && isRoleAllowed('SUPPLIERS'))) && (
+          <div role="alert" className="fixed bottom-4 right-4 z-40 max-w-lg rounded border border-red-500/40 bg-slate-950 p-3 text-sm font-bold text-red-300 shadow-xl">
+            تعذر تحديث أرصدة الحسابات والخصومات. قد تكون البيانات المعروضة قديمة.
+            {customersError && isRoleAllowed('CUSTOMERS') && <p>العملاء: {customersError}</p>}
+            {suppliersError && isRoleAllowed('SUPPLIERS') && <p>الموردون: {suppliersError}</p>}
+          </div>
+        )}
+
+        {activeTab === 'DISCOUNTS' && (
+          <DiscountsPanel
+            customers={customers}
+            suppliers={suppliers}
+            canAllow={isRoleAllowed('CUSTOMERS')}
+            canEarn={isRoleAllowed('SUPPLIERS')}
+            showSupplierBalance={currentUser?.role === 'ADMIN'}
+            customersReady={customersReady}
+            suppliersReady={suppliersReady}
+            onSaved={kind => kind === 'ALLOWED' ? fetchCustomers() : fetchSuppliers()}
+            onPrint={openDiscountPrint}
+            onPrintTable={setPrintTableData}
+          />
+        )}
+
 
 
         {/* TAB 1: POS DASHBOARD */}
-
-        {activeTab === 'STOCKTAKE' && isRoleAllowed('STOCKTAKE') && (
-          <StocktakePanel key={currentUser.id} user={currentUser} onInventoryChanged={() => fetchProducts(true)} onPrint={setPrintStocktake} />
-        )}
 
         {activeTab === 'POS' && (
 
@@ -3790,7 +3491,7 @@ export default function POSDashboard() {
 
                         <ProductCardHeader product={item} typeClassName={`px-1.5 py-0.5 rounded font-bold ${getCategoryBadgeClass(item.type)}`} />
 
-                        <div className="relative h-32 mb-3 rounded bg-black/20 overflow-hidden">
+                        <div className="relative w-full h-28 rounded overflow-hidden mb-1.5 bg-black/20 border border-white/5">
 
                           <img
 
@@ -3798,7 +3499,7 @@ export default function POSDashboard() {
 
                             alt={item.name}
 
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
 
                           />
 
@@ -3918,7 +3619,7 @@ export default function POSDashboard() {
 
                   <div className="w-full flex flex-col gap-2">
 
-                    {/* Top Row: Customer + Buttons */}
+                    {/* Top Row: Customer + Invoice Type + Buttons */}
 
                     <div className="flex items-center gap-2 w-full">
 
@@ -3928,7 +3629,7 @@ export default function POSDashboard() {
 
                         onChange={(e) => setSelectedCustomerId(e.target.value)}
 
-                        className="flex-1 w-0 bg-slate-900 border border-white/10 rounded-sm py-2 px-3 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold"
+                        className="flex-1 w-0 bg-slate-900 border border-white/10 rounded-sm py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold"
 
                       >
 
@@ -3945,6 +3646,24 @@ export default function POSDashboard() {
                           ))}
 
                         </optgroup>
+
+                      </select>
+
+
+
+                      <select
+
+                        value={invoiceType}
+
+                        onChange={(e) => setInvoiceType(e.target.value)}
+
+                        className="flex-1 w-0 bg-slate-900 border border-white/10 rounded-sm py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold"
+
+                      >
+
+                        <option className="bg-slate-900 text-slate-200" value="فاتورة ضريبية">فاتورة ضريبية</option>
+
+                        <option className="bg-slate-900 text-slate-200" value="فاتورة">فاتورة</option>
 
                       </select>
 
@@ -3996,10 +3715,11 @@ export default function POSDashboard() {
 
 
 
-                    {/* Bottom Row: Receipt, receiver, and invoice type */}
+                    {/* Bottom Row: Additional fields */}
+
                     <div className="flex gap-2 w-full select-none">
 
-                      <div className="w-1/4 shrink-0">
+                      <div className="flex-1">
 
                         <input
 
@@ -4017,7 +3737,7 @@ export default function POSDashboard() {
 
                       </div>
 
-                      <div className="min-w-0 flex-1">
+                      <div className="flex-1">
 
                         <input
 
@@ -4034,15 +3754,6 @@ export default function POSDashboard() {
                         />
 
                       </div>
-
-                      <select
-                        value={invoiceType}
-                        onChange={(e) => setInvoiceType(e.target.value)}
-                        className="min-w-0 flex-1 bg-slate-900 border border-white/10 rounded-sm py-2 px-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold"
-                      >
-                        <option className="bg-slate-900 text-slate-200" value="فاتورة ضريبية">فاتورة ضريبية</option>
-                        <option className="bg-slate-900 text-slate-200" value="فاتورة">فاتورة</option>
-                      </select>
 
                     </div>
 
@@ -4076,7 +3787,7 @@ export default function POSDashboard() {
 
                 <div className="flex-1 overflow-y-auto p-2.5 space-y-2 custom-scrollbar min-h-0">
 
-                  {cart.map((item) => (
+                  {sortCartAndInvoiceItems(cart).map((item) => (
 
                     <div key={item.id} className="bg-slate-800/40 border border-white/5 rounded-sm p-2.5 flex gap-2.5 hover:border-white/10 transition-colors">
 
@@ -4158,7 +3869,7 @@ export default function POSDashboard() {
 
                             <span className="text-[10px] text-slate-500 line-through font-mono">
 
-                              {formatTotal((item.originalPrice * item.qty))} ج.م
+                              {(item.originalPrice * item.qty).toFixed(2)} ج.م
 
                             </span>
 
@@ -4182,7 +3893,10 @@ export default function POSDashboard() {
 
                             {editingCartPriceId === item.id ? (
 
-                              <MoneyInput
+                              <input
+
+                                type="number"
+
                                 autoFocus
 
                                 className="w-16 bg-slate-900 text-white border border-entlaq-primary px-1 text-center font-mono rounded"
@@ -4191,7 +3905,7 @@ export default function POSDashboard() {
 
                                 onBlur={(e) => {
 
-                                  handleManualPriceChange(item.id, normalizeMoneyInput(e.target.value));
+                                  handleManualPriceChange(item.id, e.target.value);
 
                                   setEditingCartPriceId(null);
 
@@ -4201,7 +3915,7 @@ export default function POSDashboard() {
 
                                   if (e.key === 'Enter') {
 
-                                    handleManualPriceChange(item.id, normalizeMoneyInput(e.currentTarget.value));
+                                    handleManualPriceChange(item.id, e.currentTarget.value);
 
                                     setEditingCartPriceId(null);
 
@@ -4213,7 +3927,7 @@ export default function POSDashboard() {
 
                             ) : (
 
-                              <>{formatTotal((item.price * item.qty))} ج.م</>
+                              <>{(item.price * item.qty).toFixed(2)} ج.م</>
 
                             )}
 
@@ -4327,7 +4041,7 @@ export default function POSDashboard() {
 
                   <span>المجموع (غير شامل الضريبة)</span>
 
-                  <span>{formatTotal(subtotal)} ج.م</span>
+                  <span>{subtotal.toFixed(2)} ج.م</span>
 
                 </div>
 
@@ -4335,7 +4049,7 @@ export default function POSDashboard() {
 
                   <span>{isSimplified ? 'غير شامل للقيمة المضافة' : 'ضريبة القيمة المضافة (14%)'}</span>
 
-                  <span>{formatTotal(totalTax)} ج.م</span>
+                  <span>{totalTax.toFixed(2)} ج.م</span>
 
                 </div>
 
@@ -4351,7 +4065,7 @@ export default function POSDashboard() {
 
                   <span className="text-2xl font-black text-white font-mono">
 
-                    {formatTotal(total)} <span className="text-xs font-normal text-slate-400">ج.م</span>
+                    {total.toFixed(2)} <span className="text-xs font-normal text-slate-400">ج.م</span>
 
                   </span>
 
@@ -4360,12 +4074,6 @@ export default function POSDashboard() {
 
 
                 {/* Checkout Actions */}
-                {currentUser?.role === 'ADMIN' && <button type="button"
-                  disabled={!cart.length || submitting || cart.some(item => item.originalPrice <= 0)}
-                  onClick={() => setShowQuotationPricing(true)}
-                  className="w-full rounded-sm border border-emerald-500/30 bg-emerald-600/15 py-2 text-sm font-bold text-emerald-300 disabled:opacity-40">
-                  تسعير وأرباح عرض السعر
-                </button>}
 
                 <div className="grid grid-cols-2 gap-2.5">
 
@@ -4517,6 +4225,8 @@ export default function POSDashboard() {
 
                     let gRefunds = 0;
 
+                    let gDiscounts = 0;
+
                     let gBalance = 0;
 
 
@@ -4533,7 +4243,9 @@ export default function POSDashboard() {
 
                       const totalRefunds = (c.orderReturns || []).reduce((sum: number, orderReturn: ReturnRecordSummary) => sum + Number(orderReturn.refundAmount || 0), 0);
 
-                      const remainingBalance = totalSpent - totalPayments - totalReturns + totalRefunds + (c.openingBalance || 0);
+                      const totalDiscounts = (c.discounts || []).reduce((sum: number, discount: StatementDiscount) => sum + discount.amount, 0);
+
+                      const remainingBalance = totalSpent - totalPayments - totalReturns + totalRefunds - totalDiscounts + (c.openingBalance || 0);
 
 
 
@@ -4544,6 +4256,8 @@ export default function POSDashboard() {
                       gReturns += totalReturns;
 
                       gRefunds += totalRefunds;
+
+                      gDiscounts += totalDiscounts;
 
                       gBalance += remainingBalance;
 
@@ -4559,15 +4273,17 @@ export default function POSDashboard() {
 
                         c.location || '-',
 
-                        formatTotal(totalSpent),
+                        totalSpent.toFixed(2),
 
-                        formatTotal(totalPayments),
+                        totalPayments.toFixed(2),
 
-                        formatTotal(totalReturns),
+                        totalReturns.toFixed(2),
 
-                        formatTotal(totalRefunds),
+                        totalRefunds.toFixed(2),
 
-                        formatTotal(remainingBalance)
+                        totalDiscounts.toFixed(2),
+
+                        remainingBalance.toFixed(2)
 
                       ];
 
@@ -4580,11 +4296,11 @@ export default function POSDashboard() {
                       title: 'كشف بيانات العملاء والشركات والمديونية',
                       period: { from: totalsFrom, to: totalsTo },
 
-                      headers: ['م', 'اسم العميل', 'رقم الهاتف', 'العنوان', 'إجمالي المسحوبات', 'إجمالي الدفعات', 'إجمالي المرتجعات', 'المبالغ المردودة', 'الرصيد المتبقي'],
+                      headers: ['م', 'اسم العميل', 'رقم الهاتف', 'العنوان', 'إجمالي المسحوبات', 'إجمالي الدفعات', 'إجمالي المرتجعات', 'المبالغ المردودة', 'الخصم المسموح به', 'الرصيد المتبقي'],
 
                       rows: rows,
 
-                      footer: ['', 'الإجماليات الكلية', '', '', formatTotal(gSpent), formatTotal(gPayments), formatTotal(gReturns), formatTotal(gRefunds), formatTotal(gBalance)]
+                      footer: ['', 'الإجماليات الكلية', '', '', gSpent.toFixed(2), gPayments.toFixed(2), gReturns.toFixed(2), gRefunds.toFixed(2), gDiscounts.toFixed(2), gBalance.toFixed(2)]
 
                     });
 
@@ -4638,10 +4354,14 @@ export default function POSDashboard() {
                 const globalTotalRefunds = safeCustomers.reduce((sum, cust) =>
                   sum + (cust.orderReturns || []).filter((r: ReturnRecordSummary) => inPeriod(r.createdAt)).reduce((s: number, r: ReturnRecordSummary) => s + Number(r.refundAmount || 0), 0), 0);
 
+                const globalTotalDiscounts = safeCustomers.reduce((sum, cust) =>
+                  sum + (cust.discounts || []).reduce((s: number, discount: StatementDiscount) => s + discount.amount, 0), 0);
+
                 // The opening balance is not tied to a date, so it is only counted for the full (unfiltered) totals
                 const globalTotalOpeningBalance = hasPeriod ? 0 : safeCustomers.reduce((sum, cust) => sum + (cust.openingBalance || 0), 0);
 
-                const globalTotalBalance = globalTotalSpent - globalTotalPayments - globalTotalReturns + globalTotalRefunds + globalTotalOpeningBalance;
+                const globalTotalBalance = globalTotalSpent - globalTotalPayments - globalTotalReturns
+                  + globalTotalRefunds - globalTotalDiscounts + globalTotalOpeningBalance;
 
                 const setMonth = (value: string) => {
                   if (!value) {
@@ -4721,6 +4441,14 @@ export default function POSDashboard() {
 
                     <div className="bg-black/40 px-2 py-1.5 rounded-md border border-white/10 shadow-lg flex flex-col justify-center shrink-0">
 
+                      <span className="text-[10px] text-slate-300 font-bold whitespace-nowrap">الخصم المسموح به</span>
+
+                      <span className="text-sm font-black text-sky-400 font-mono whitespace-nowrap">{globalTotalDiscounts.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+
+                    </div>
+
+                    <div className="bg-black/40 px-2 py-1.5 rounded-md border border-white/10 shadow-lg flex flex-col justify-center shrink-0">
+
                       <span className="text-[10px] text-slate-300 font-bold whitespace-nowrap">إجمالي الرصيد</span>
 
                       <span className={`text-sm font-black font-mono whitespace-nowrap ${globalTotalBalance > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
@@ -4779,11 +4507,13 @@ export default function POSDashboard() {
 
                     const totalRefunds = (cust.orderReturns || []).reduce((sum: number, orderReturn: ReturnRecordSummary) => sum + Number(orderReturn.refundAmount || 0), 0);
 
+                    const totalDiscounts = (cust.discounts || []).reduce((sum: number, discount: StatementDiscount) => sum + discount.amount, 0);
+
                     const paymentsCount = cust.payments ? cust.payments.length : 0;
 
                     const ordersCount = validOrders.length;
 
-                    const remainingBalance = totalSpent - totalPayments - totalReturns + totalRefunds + (cust.openingBalance || 0);
+                    const remainingBalance = totalSpent - totalPayments - totalReturns + totalRefunds - totalDiscounts + (cust.openingBalance || 0);
 
                     return (
 
@@ -4892,13 +4622,13 @@ export default function POSDashboard() {
                                 <span className="text-xs font-black text-white font-mono">{paymentsCount}</span>
                               </div>
                             </div>
-                            <div className="grid grid-cols-[1fr_1fr_1fr_1.15fr] gap-1">
+                            <div className="grid grid-cols-5 gap-1">
 
                               <div className="bg-black/25 px-1.5 py-1.5 rounded-sm flex flex-col 2xl:flex-row justify-between items-center border border-white/5">
 
                                 <span className="text-[10px] text-slate-400 font-bold shrink-0">مسحوبات:</span>
 
-                                <span className="text-xs font-black text-red-400 font-mono truncate" title={`${formatTotal(totalSpent)} ج.م`}>{totalSpent.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}</span>
+                                <span className="text-xs font-black text-red-400 font-mono truncate" title={`${totalSpent.toFixed(2)} ج.م`}>{totalSpent.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}</span>
 
                               </div>
 
@@ -4906,7 +4636,7 @@ export default function POSDashboard() {
 
                                 <span className="text-[10px] text-slate-400 font-bold shrink-0">دفعات:</span>
 
-                                <span className="text-xs font-black text-emerald-400 font-mono truncate" title={`${formatTotal(totalPayments)} ج.م`}>{totalPayments.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}</span>
+                                <span className="text-xs font-black text-emerald-400 font-mono truncate" title={`${totalPayments.toFixed(2)} ج.م`}>{totalPayments.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}</span>
 
                               </div>
 
@@ -4914,15 +4644,23 @@ export default function POSDashboard() {
 
                                 <span className="text-[10px] text-slate-400 font-bold shrink-0">مرتجعات:</span>
 
-                                <span className="text-xs font-black text-amber-300 font-mono truncate" title={`${formatTotal(totalReturns)} ج.م`}>{totalReturns.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}</span>
+                                <span className="text-xs font-black text-amber-300 font-mono truncate" title={`${totalReturns.toFixed(2)} ج.م`}>{totalReturns.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}</span>
 
                               </div>
 
                               <div className="bg-black/25 px-1.5 py-1.5 rounded-sm flex flex-col 2xl:flex-row justify-between items-center border border-white/5">
 
-                                <span className="text-[11px] text-slate-300 font-bold shrink-0">ر:</span>
+                                <span className="text-[10px] text-slate-400 font-bold shrink-0">خصم:</span>
 
-                                <span className={`text-sm font-black font-mono truncate ${remainingBalance > 0 ? 'text-red-500' : 'text-emerald-500'}`} title={`${formatTotal(remainingBalance)} ج.م`}>
+                                <span className="text-xs font-black text-sky-400 font-mono truncate" title={`${totalDiscounts.toFixed(2)} ج.م`}>{totalDiscounts.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}</span>
+
+                              </div>
+
+                              <div className="bg-black/25 px-1.5 py-1.5 rounded-sm flex flex-col 2xl:flex-row justify-between items-center border border-white/5">
+
+                                <span className="text-[11px] text-slate-300 font-bold shrink-0">الرصيد:</span>
+
+                                <span className={`text-sm font-black font-mono truncate ${remainingBalance > 0 ? 'text-red-500' : 'text-emerald-500'}`} title={`${remainingBalance.toFixed(2)} ج.م`}>
 
                                   {remainingBalance.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}
 
@@ -5148,11 +4886,11 @@ export default function POSDashboard() {
                           p.color || '-',
                           p.length || '-',
                           p.weight || '-',
-                          `${formatTotal(p.price)}`,
+                          `${p.price.toFixed(2)}`,
                           p.stockQty
                         ];
                         if (currentUser?.role === 'ADMIN') {
-                          row.splice(11, 0, `${formatTotal(p.costPrice)}`);
+                          row.splice(11, 0, `${p.costPrice.toFixed(2)}`);
                         }
                         return row;
                       })
@@ -5359,7 +5097,7 @@ export default function POSDashboard() {
 
                           <ProductCardDetails product={p}>
                             {currentUser?.role === 'ADMIN' && <>
-                              <span title="سعر الشراء">ش <bdi>{formatTotal(p.costPrice, 0)}</bdi></span>
+                              <span title="سعر الشراء">ش <bdi>{p.costPrice.toFixed(0)}</bdi></span>
                               <span title="النسبة">ن <bdi>{p.markup !== undefined && p.markup !== null ? p.markup.toFixed(0) : '30'}%</bdi></span>
                             </>}
                           </ProductCardDetails>
@@ -5478,7 +5216,7 @@ export default function POSDashboard() {
 
                   const headers = ['م', 'اسم المورد', 'الهاتف', 'العنوان'];
 
-                  if (currentUser?.role === 'ADMIN') headers.push('الرصيد للمورد (ج.م)');
+                  if (currentUser?.role === 'ADMIN') headers.push('الرصيد للمورد (ج.م)', 'الخصم المكتسب (ج.م)');
 
 
 
@@ -5503,7 +5241,10 @@ export default function POSDashboard() {
 
                       ];
 
-                      if (currentUser?.role === 'ADMIN') row.push(`${formatTotal(s.balance)} ج.م`);
+                      if (currentUser?.role === 'ADMIN') {
+                        const discountTotal = (s.discounts || []).reduce((sum: number, discount: StatementDiscount) => sum + discount.amount, 0);
+                        row.push(`${s.balance.toFixed(2)} ج.م`, `${discountTotal.toFixed(2)} ج.م`);
+                      }
 
                       return row;
 
@@ -5527,10 +5268,13 @@ export default function POSDashboard() {
                 const hasPeriod = !!(totalsFrom || totalsTo);
                 const purchasesTotal = list.reduce((s: number, sup: any) => s + (sup.purchaseOrders || []).reduce((a: number, o: any) => a + o.netAmount, 0), 0);
                 const paidTotal = list.reduce((s: number, sup: any) => s + (sup.expenses || []).reduce((a: number, e: any) => a + e.amount, 0), 0);
-                const balance = hasPeriod ? purchasesTotal - paidTotal : list.reduce((s: number, sup: any) => s + (sup.balance || 0), 0);
+                const discountsTotal = list.reduce((s: number, sup: any) =>
+                  s + (sup.discounts || []).reduce((a: number, discount: StatementDiscount) => a + discount.amount, 0), 0);
+                const balance = hasPeriod ? purchasesTotal - paidTotal - discountsTotal : list.reduce((s: number, sup: any) => s + (sup.balance || 0), 0);
                 return renderTotalsBar([
                   { label: 'إجمالي المشتريات', value: formatTotal(purchasesTotal), tone: 'red' },
                   { label: 'إجمالي المدفوع', value: formatTotal(paidTotal), tone: 'green' },
+                  { label: 'الخصم المكتسب', value: formatTotal(discountsTotal), tone: 'green' },
                   { label: 'إجمالي الرصيد', value: formatTotal(balance), tone: balance > 0 ? 'red' : 'green' }
                 ], true);
               })()}
@@ -5566,6 +5310,8 @@ export default function POSDashboard() {
                     const totalPurchased = sup.purchaseOrders ? sup.purchaseOrders.reduce((sum: number, o: any) => sum + o.netAmount, 0) : 0;
 
                     const totalPaid = sup.expenses ? sup.expenses.reduce((sum: number, p: any) => sum + p.amount, 0) : 0;
+
+                    const totalDiscounts = (sup.discounts || []).reduce((sum: number, discount: StatementDiscount) => sum + discount.amount, 0);
 
                     const remainingDebt = sup.balance;
 
@@ -5649,7 +5395,7 @@ export default function POSDashboard() {
 
                               <span className="text-[10px] text-slate-400 block font-bold">فواتير التوريد</span>
 
-                              <span className="text-sm font-black text-red-400 font-mono">{formatTotal(totalPurchased)} ج.م</span>
+                              <span className="text-sm font-black text-red-400 font-mono">{totalPurchased.toFixed(2)} ج.م</span>
 
                             </div>
 
@@ -5657,9 +5403,18 @@ export default function POSDashboard() {
 
                               <span className="text-[10px] text-slate-400 block font-bold">المبالغ المصروفة</span>
 
-                              <span className="text-sm font-black text-emerald-400 font-mono">{formatTotal(totalPaid)} ج.م</span>
+                              <span className="text-sm font-black text-emerald-400 font-mono">{totalPaid.toFixed(2)} ج.م</span>
 
                             </div>
+
+                            {currentUser?.role === 'ADMIN' && (
+
+                              <div className="col-span-2 bg-black/25 px-2 py-1 rounded-sm text-center">
+                                <span className="text-[10px] text-slate-400 block font-bold">الخصم المكتسب</span>
+                                <span className="text-sm font-black text-sky-400 font-mono">{totalDiscounts.toFixed(2)} ج.م</span>
+                              </div>
+
+                            )}
 
                             {currentUser?.role === 'ADMIN' && (
 
@@ -5669,7 +5424,7 @@ export default function POSDashboard() {
 
                                 <span className={`text-base font-black font-mono ${remainingDebt > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
 
-                                  {formatTotal(remainingDebt)} ج.م
+                                  {remainingDebt.toFixed(2)} ج.م
 
                                 </span>
 
@@ -5781,7 +5536,6 @@ export default function POSDashboard() {
 
                 onClick={() => {
 
-                  setEditingPurchase(null);
                   setPurchaseForm({ billNumber: generateBillNumber(), supplierId: '', invoiceType: 'فاتورة ضريبية', items: [] });
 
                   setShowPurchaseModal(true);
@@ -5839,7 +5593,6 @@ export default function POSDashboard() {
                     <th className="p-2 font-bold">الضريبة (14%)</th>
 
                     <th className="p-2 font-bold">الصافي شامل الضريبة</th>
-                    {currentUser?.role === 'ADMIN' && <th className="p-2 font-bold">تعديل</th>}
 
                   </tr>
 
@@ -5857,18 +5610,11 @@ export default function POSDashboard() {
 
                       <td className="p-2 font-bold text-white">{purchase.supplier?.name || 'غير معروف'}</td>
 
-                      <td className="p-2 font-mono text-slate-300">{formatTotal(purchase.totalAmount)} ج.م</td>
+                      <td className="p-2 font-mono text-slate-300">{purchase.totalAmount.toFixed(2)} ج.م</td>
 
-                      <td className="p-2 font-mono text-slate-400">{formatTotal(purchase.taxAmount)} ج.م</td>
+                      <td className="p-2 font-mono text-slate-400">{purchase.taxAmount.toFixed(2)} ج.م</td>
 
-                      <td className="p-2 font-mono font-bold text-emerald-400" dir="ltr">{formatTotal(purchase.netAmount)} ج.م</td>
-                      {currentUser?.role === 'ADMIN' && <td className="p-2">
-                        <button type="button" aria-label={`تعديل فاتورة الشراء ${purchase.billNumber}`}
-                          onClick={event => { event.stopPropagation(); handleEditPurchase(purchase); }}
-                          className="flex items-center gap-1 text-amber-300 hover:text-amber-200">
-                          <PencilIcon size={14} /> تعديل
-                        </button>
-                      </td>}
+                      <td className="p-2 font-mono font-bold text-emerald-400" dir="ltr">{purchase.netAmount.toFixed(2)} ج.م</td>
 
                     </tr>
 
@@ -5878,7 +5624,7 @@ export default function POSDashboard() {
 
                     <tr>
 
-                      <td colSpan={currentUser?.role === 'ADMIN' ? 7 : 6} className="p-10 text-center text-slate-500 font-bold">لا توجد فواتير مشتريات مسجلة</td>
+                      <td colSpan={6} className="p-10 text-center text-slate-500 font-bold">لا توجد فواتير مشتريات مسجلة</td>
 
                     </tr>
 
@@ -5936,7 +5682,6 @@ export default function POSDashboard() {
               </button>
               <button
                 onClick={() => {
-                  setEditingGeneralExpense(null);
                   setGeneralExpenseForm({ categoryId: '', bankId: '', amount: '', notes: '', reference: '' });
                   setShowGeneralExpenseModal(true);
                 }}
@@ -5972,7 +5717,6 @@ export default function POSDashboard() {
                     <th className="py-2.5 px-3 font-semibold">البنك/الخزينة</th>
                     <th className="py-2.5 px-3 font-semibold">المبلغ</th>
                     <th className="py-2.5 px-3 font-semibold">المرجع</th>
-                    {currentUser?.role === 'ADMIN' && <th className="py-2.5 px-3 font-semibold">تعديل</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-slate-200">
@@ -5982,20 +5726,13 @@ export default function POSDashboard() {
                       <td className="py-2.5 px-3">{formatReportDate(e)}</td>
                       <td className="py-2.5 px-3">{e.category?.name}</td>
                       <td className="py-2.5 px-3 text-slate-400">{e.bank?.name}</td>
-                      <td className="py-2.5 px-3 font-bold text-red-400">{formatTotal(e.amount)}</td>
+                      <td className="py-2.5 px-3 font-bold text-red-400">{Number(e.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                       <td className="py-2.5 px-3 text-slate-500">{e.reference || '-'}</td>
-                      {currentUser?.role === 'ADMIN' && <td className="py-2.5 px-3">
-                        <button type="button" aria-label={`تعديل المصروف ${e.expenseNumber}`}
-                          onClick={() => handleEditGeneralExpense(e)}
-                          className="flex items-center gap-1 text-amber-300 hover:text-amber-200">
-                          <PencilIcon size={14} /> تعديل
-                        </button>
-                      </td>}
                     </tr>
                   ))}
                   {filteredGeneralExpenses.length === 0 && (
                     <tr>
-                      <td colSpan={currentUser?.role === 'ADMIN' ? 7 : 6} className="py-8 text-center text-slate-500">
+                      <td colSpan={6} className="py-8 text-center text-slate-500">
                         لا توجد مصروفات عامة مسجلة
                       </td>
                     </tr>
@@ -6066,7 +5803,6 @@ export default function POSDashboard() {
 
                 onClick={() => {
 
-                  setEditingExpense(null);
                   setExpenseForm({ supplierId: '', bankId: '', amount: '', notes: '', reference: '' });
 
                   setShowExpenseModal(true);
@@ -6122,7 +5858,6 @@ export default function POSDashboard() {
                     <th className="p-2 font-bold">البيان</th>
 
                     <th className="p-2 font-bold">المبلغ المصروف</th>
-                    {currentUser?.role === 'ADMIN' && <th className="p-2 font-bold">تعديل</th>}
 
                   </tr>
 
@@ -6144,14 +5879,7 @@ export default function POSDashboard() {
 
                       <td className="p-2 text-slate-400 text-xs">{expense.notes || '-'}</td>
 
-                      <td className="p-2 font-mono font-bold text-red-400" dir="ltr">{formatTotal(expense.amount)} ج.م</td>
-                      {currentUser?.role === 'ADMIN' && <td className="p-2">
-                        <button type="button" aria-label={`تعديل سند الصرف ${expense.expenseNumber}`}
-                          onClick={event => { event.stopPropagation(); handleEditExpense(expense); }}
-                          className="flex items-center gap-1 text-amber-300 hover:text-amber-200">
-                          <PencilIcon size={14} /> تعديل
-                        </button>
-                      </td>}
+                      <td className="p-2 font-mono font-bold text-red-400" dir="ltr">{expense.amount.toFixed(2)} ج.م</td>
 
                     </tr>
 
@@ -6161,7 +5889,7 @@ export default function POSDashboard() {
 
                     <tr>
 
-                      <td colSpan={currentUser?.role === 'ADMIN' ? 7 : 6} className="p-10 text-center text-slate-500 font-bold">لا توجد سندات صرف مسجلة</td>
+                      <td colSpan={6} className="p-10 text-center text-slate-500 font-bold">لا توجد سندات صرف مسجلة</td>
 
                     </tr>
 
@@ -6252,12 +5980,6 @@ export default function POSDashboard() {
                 <span>إضافة بنك / خزينة</span>
 
               </button>
-              {currentUser?.role === 'ADMIN' && <button type="button"
-                disabled={!transfersReady || transferLaunch !== null}
-                onClick={() => setTransferLaunch('')}
-                className="rounded-sm bg-indigo-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-40 shrink-0">
-                تحويل بين الحسابات
-              </button>}
 
               {renderTotalsBar([
                 { label: 'عدد الحسابات', value: String((Array.isArray(banks) ? banks : []).length) },
@@ -6368,30 +6090,11 @@ export default function POSDashboard() {
 
                           <span className="text-base font-black font-mono text-emerald-400">
 
-                            {formatTotal(bank.balance)} ج.م
+                            {bank.balance.toFixed(2)} ج.م
 
                           </span>
 
                         </div>
-
-                        <button
-                          type="button"
-                          disabled={!transfersReady}
-                          onClick={() => {
-                            setSelectedBankStatement(bank);
-                            setBankStatementFrom('');
-                            setBankStatementTo('');
-                          }}
-                          className="mt-2 w-full inline-flex items-center justify-center gap-1.5 rounded-sm border border-indigo-400/20 bg-indigo-500/10 px-2 py-2 text-xs font-bold text-indigo-200 hover:bg-indigo-500/20"
-                        >
-                          <FileTextIcon size={14} />
-                          كشف حساب البنك
-                        </button>
-                        {currentUser?.role === 'ADMIN' && <button type="button" disabled={!transfersReady || transferLaunch !== null}
-                          onClick={() => setTransferLaunch(bank.id)}
-                          className="mt-2 w-full rounded-sm bg-indigo-600/20 px-2 py-2 text-xs font-bold text-indigo-200 disabled:opacity-40">
-                          تحويل من هذا الحساب
-                        </button>}
 
                       </div>
 
@@ -6403,9 +6106,6 @@ export default function POSDashboard() {
 
               )}
 
-              {currentUser?.role === 'ADMIN' && <BankTransfersPanel key={currentUser.id} user={currentUser} banks={banks}
-                onSnapshot={applyTransferSnapshot} onLoading={markTransfersLoading}
-                onPrint={setPrintBankTransfer} launch={transferLaunch} onCloseLaunch={closeTransferLaunch} />}
             </div>
 
           </div>
@@ -6413,94 +6113,6 @@ export default function POSDashboard() {
         )}
 
 
-
-        {selectedBankStatement && bankStatement && activeTab === 'BANKS' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-2 no-print" dir="rtl">
-            <section className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-sm border border-slate-700 bg-slate-900 shadow-2xl">
-              <header className="flex items-center justify-between border-b border-slate-800 bg-slate-950 p-3">
-                <div>
-                  <h2 className="text-lg font-bold text-white">كشف حساب البنك: {selectedBankStatement.name}</h2>
-                  <p className="text-xs text-slate-400">دفعات العملاء والمصروفات والمرتجعات والتحويلات الداخلية المرتبطة بهذا الحساب</p>
-                </div>
-                <button type="button" onClick={() => setSelectedBankStatement(null)} aria-label="إغلاق كشف البنك" className="rounded-sm bg-white/5 p-2 text-slate-300 hover:bg-white/10 hover:text-white">
-                  <XIcon size={18} />
-                </button>
-              </header>
-
-              <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 p-3 text-xs text-slate-300">
-                <span className="font-bold">من</span>
-                <input type="date" value={bankStatementFrom} max={bankStatementTo || undefined} onChange={event => setBankStatementFrom(event.target.value)} className="rounded-sm border border-white/10 bg-slate-950 px-2 py-1.5 text-white" />
-                <span className="font-bold">إلى</span>
-                <input type="date" value={bankStatementTo} min={bankStatementFrom || undefined} onChange={event => setBankStatementTo(event.target.value)} className="rounded-sm border border-white/10 bg-slate-950 px-2 py-1.5 text-white" />
-                {(bankStatementFrom || bankStatementTo) && (
-                  <button type="button" onClick={() => { setBankStatementFrom(''); setBankStatementTo(''); }} className="rounded-sm border border-white/10 bg-white/5 px-2 py-1.5 font-bold hover:bg-white/10">
-                    عرض كل الحركات
-                  </button>
-                )}
-                <button type="button" onClick={printBankStatement} className="inline-flex items-center gap-1.5 rounded-sm bg-emerald-600 px-3 py-1.5 font-bold text-white hover:bg-emerald-700">
-                  <PrinterIcon size={14} />
-                  طباعة الكشف
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 p-3 lg:grid-cols-4">
-                {[
-                  ['رصيد أول الفترة', bankStatement.openingBalance],
-                  ['إجمالي الوارد', bankStatement.totalIncoming],
-                  ['إجمالي المنصرف', bankStatement.totalOutgoing],
-                  ['رصيد آخر الفترة', bankStatement.closingBalance],
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-sm border border-white/10 bg-black/20 p-2">
-                    <span className="block text-[10px] font-bold text-slate-400">{label}</span>
-                    <strong className="font-mono text-sm text-white">{formatTotal(Number(value))} ج.م</strong>
-                  </div>
-                ))}
-              </div>
-
-              <div className="min-h-0 flex-1 overflow-auto p-3 pt-0">
-                <table className="w-full min-w-[850px] text-right text-xs">
-                  <thead className="sticky top-0 bg-slate-950 text-slate-300">
-                    <tr>
-                      {['التاريخ', 'نوع الحركة', 'رقم المستند', 'البيان', 'المرجع / الملاحظات', 'وارد', 'منصرف', 'الرصيد'].map(header => (
-                        <th key={header} className="border-b border-slate-700 p-2">{header}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800 text-slate-200">
-                    <tr className="bg-indigo-500/10 font-bold">
-                      <td className="p-2">—</td><td className="p-2">رصيد أول الفترة</td><td className="p-2">—</td><td className="p-2">—</td><td className="p-2">—</td>
-                      <td className="p-2">—</td><td className="p-2">—</td><td className="p-2 font-mono">{formatTotal(bankStatement.openingBalance)}</td>
-                    </tr>
-                    {bankStatement.rows.map(movement => (
-                      <tr key={`${movement.type}-${movement.id}`} className="hover:bg-white/5">
-                        <td className="whitespace-nowrap p-2">{formatReportDate({ date: movement.date })}</td>
-                        <td className="p-2">{movement.type}</td>
-                        <td className="p-2 font-mono">{movement.number}</td>
-                        <td className="p-2">{movement.party}</td>
-                        <td className="max-w-[220px] p-2">{[movement.reference, movement.notes].filter(Boolean).join(' / ') || '—'}</td>
-                        <td className="p-2 font-mono text-emerald-300">{movement.incoming ? formatTotal(movement.incoming) : '—'}</td>
-                        <td className="p-2 font-mono text-rose-300">{movement.outgoing ? formatTotal(movement.outgoing) : '—'}</td>
-                        <td className="p-2 font-mono font-bold">{formatTotal(movement.balance)}</td>
-                      </tr>
-                    ))}
-                    {!bankStatement.rows.length && (
-                      <tr><td colSpan={8} className="p-8 text-center text-slate-500">لا توجد حركات في الفترة المحددة</td></tr>
-                    )}
-                  </tbody>
-                  <tfoot className="bg-slate-950 font-bold text-white">
-                    <tr>
-                      <td colSpan={5} className="p-2">إجمالي الحركة / الرصيد الختامي</td>
-                      <td className="p-2 font-mono text-emerald-300">{formatTotal(bankStatement.totalIncoming)}</td>
-                      <td className="p-2 font-mono text-rose-300">{formatTotal(bankStatement.totalOutgoing)}</td>
-                      <td className="p-2 font-mono">{formatTotal(bankStatement.closingBalance)}</td>
-                    </tr>
-                  </tfoot>
-                </table>
-                <p className="mt-2 text-[10px] text-slate-500">يُستنتج رصيد أول الفترة من الرصيد الحالي والحركات المسجلة، ويُحسب الرصيد الجاري بعد كل حركة.</p>
-              </div>
-            </section>
-          </div>
-        )}
 
         {/* TAB 5: PAYMENTS */}
 
@@ -6562,12 +6174,7 @@ export default function POSDashboard() {
 
               <button
 
-                onClick={() => {
-                  setEditingPayment(null);
-                  setPaymentCorrectionHistory([]);
-                  setIsPaymentModalOpen(true);
-                  setPaymentForm({ customerId: '', bankId: '', amount: '', notes: '', reference: '', date: '' });
-                }}
+                onClick={() => { setIsPaymentModalOpen(true); setPaymentForm({ customerId: '', bankId: '', amount: '', notes: '', reference: '' }); }}
 
                 className="bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-2 py-2.5 rounded-sm font-bold text-xs flex gap-1.5 items-center transition-all duration-300 cursor-pointer shrink-0 shadow-lg"
 
@@ -6618,8 +6225,6 @@ export default function POSDashboard() {
 
                     <th className="p-2 font-bold">المبلغ</th>
 
-                    {currentUser?.role === 'ADMIN' && <th className="p-2 font-bold">إجراء</th>}
-
                   </tr>
 
                 </thead>
@@ -6638,20 +6243,7 @@ export default function POSDashboard() {
 
                       <td className="p-2 text-slate-300">{payment.bank?.name || 'غير معروف'}</td>
 
-                      <td className="p-2 font-mono font-bold text-emerald-400" dir="ltr">{formatTotal(payment.amount)} ج.م</td>
-
-                      {currentUser?.role === 'ADMIN' && (
-                        <td className="p-2">
-                          <button
-                            type="button"
-                            onClick={(event) => { event.stopPropagation(); handleEditPayment(payment); }}
-                            className="inline-flex items-center gap-1 rounded-sm border border-amber-500/20 bg-amber-500/10 px-2 py-1 text-xs font-bold text-amber-300 hover:bg-amber-500/20"
-                          >
-                            <PencilIcon size={13} />
-                            تصويب
-                          </button>
-                        </td>
-                      )}
+                      <td className="p-2 font-mono font-bold text-emerald-400" dir="ltr">{payment.amount.toFixed(2)} ج.م</td>
 
                     </tr>
 
@@ -6661,7 +6253,7 @@ export default function POSDashboard() {
 
                     <tr>
 
-                      <td colSpan={currentUser?.role === 'ADMIN' ? 6 : 5} className="p-10 text-center text-slate-500 font-bold">لا توجد سندات قبض مسجلة</td>
+                      <td colSpan={5} className="p-10 text-center text-slate-500 font-bold">لا توجد سندات قبض مسجلة</td>
 
                     </tr>
 
@@ -6838,17 +6430,10 @@ export default function POSDashboard() {
 
                       </td>
 
-                      <td className="p-2 font-mono font-bold text-white" dir="ltr">{formatTotal(inv.netAmount)} ج.م</td>
+                      <td className="p-2 font-mono font-bold text-white" dir="ltr">{inv.netAmount.toFixed(2)} ج.م</td>
                       <td className="p-2">
-                        {currentUser?.role === 'ADMIN' && inv.isQuotation && inv.status !== 'CONVERTED' && (
-                          <button type="button" className="rounded bg-indigo-600/20 px-2 py-1 text-xs font-bold text-indigo-300"
-                            onClick={event => { event.stopPropagation(); setEditingQuotation(inv); }}>تعديل عرض السعر</button>
-                        )}
                         {!inv.isQuotation && inv.status === 'COMPLETED' && (
                           <div className="flex flex-wrap gap-1">
-                            {currentUser?.role === 'ADMIN' && <button type="button"
-                              className="rounded bg-indigo-600/20 px-2 py-1 text-xs font-bold text-indigo-300"
-                              onClick={event => { event.stopPropagation(); setEditingInvoiceDetails(inv); }}>تعديل بيانات الفاتورة</button>}
                             <button
                               type="button"
                               disabled={!hasReturnableItems(inv)}
@@ -6903,58 +6488,16 @@ export default function POSDashboard() {
 
 
       {/* MODAL 1: INVOICE & QUOTATION PRINT MODAL */}
-      {printStocktake && <StocktakePrint document={printStocktake} onClose={() => setPrintStocktake(null)} />}
-      {printBankTransfer && <BankTransferPrint transfer={printBankTransfer} onClose={() => setPrintBankTransfer(null)} />}
-      {showQuotationPricing && currentUser?.role === 'ADMIN' && <QuotationPricingDraft user={currentUser} busy={submitting}
-        initialLines={cart.map(item => ({ productId: item.id, quantity: String(item.qty), unitPrice: String(item.price) }))}
-        names={Object.fromEntries(cart.map(item => [item.id, [item.code, item.name, item.size, item.color].filter(Boolean).join(' - ')]))}
-        taxRates={Object.fromEntries(cart.map(item => [item.id, ['فاتورة', 'فاتورة مبسطة'].includes(invoiceType) ? 0 : Number(products.find(product => product.id === item.id)?.taxRate)]))}
-        onClose={() => setShowQuotationPricing(false)} onSave={lines => handleCheckout(true, lines)} />}
-      {editingQuotation && currentUser?.role === 'ADMIN' && (
-        <QuotationEdit quotation={editingQuotation} products={products} user={currentUser}
-          onClose={() => setEditingQuotation(null)}
-          onSaved={saved => {
-            setEditingQuotation(null);
-            setInvoice(saved);
-            setQrCodeUrl('');
-            setShowModal(true);
-            fetchInvoices();
-            fetchCustomers();
-          }} />
-      )}
-      {editingInvoiceDetails && currentUser?.role === 'ADMIN' && (
-        <InvoiceDetailsEdit invoice={editingInvoiceDetails} customers={customers} user={currentUser}
-          onClose={() => setEditingInvoiceDetails(null)}
-          onSaved={async saved => {
-            setEditingInvoiceDetails(null);
-            setInvoice(saved);
-            setShowModal(true);
-            fetchInvoices();
-            fetchCustomers();
-            setQrCodeUrl('');
-            if (saved.qrCode) {
-              try { setQrCodeUrl(await QRCode.toDataURL(saved.qrCode, { width: 160, margin: 1 })); }
-              catch (error) {
-                console.error('Failed to render invoice QR after detail edit:', error);
-                alert('تم حفظ بيانات الفاتورة، لكن تعذر عرض رمز QR. أعد فتح الفاتورة.');
-              }
-            }
-          }} />
-      )}
 
       {showModal && invoice && (
         <InvoicePrint
-          invoice={invoice}
+          invoice={{ ...invoice, items: invoice.items ? sortCartAndInvoiceItems(invoice.items) : [] }}
           qrCodeUrl={qrCodeUrl}
           onClose={() => setShowModal(false)}
           actions={invoice.isQuotation && invoice.status !== 'CONVERTED' ? (
-            <>
-            {currentUser?.role === 'ADMIN' && <button type="button" onClick={() => { setShowModal(false); setEditingQuotation(invoice); }}>تعديل عرض السعر</button>}
             <button type="button" onClick={convertQuotationToInvoice}>تحويل لفاتورة</button>
-            </>
           ) : !invoice.isQuotation && invoice.status === 'COMPLETED' ? (
             <>
-              {currentUser?.role === 'ADMIN' && <button type="button" onClick={() => { setShowModal(false); setEditingInvoiceDetails(invoice); }}>تعديل بيانات الفاتورة</button>}
               {hasReturnableItems(invoice) && <button type="button" onClick={() => openReturnDialog(invoice)}>إنشاء مرتجع</button>}
               {!!invoice.orderReturns?.length && <button type="button" onClick={() => openReturnHistory(invoice)}>عرض المرتجعات ({invoice.orderReturns.length})</button>}
             </>
@@ -7015,6 +6558,9 @@ export default function POSDashboard() {
                 <div><span className="block text-xs text-slate-400">المبلغ المستحق رده</span><b className="font-mono text-lg text-rose-300">{formatTotal(returnPreviewRefund)} ج.م</b></div>
               </div>
               {!returnBalanceKnown && <p className="mt-2 text-sm font-bold text-red-300">تعذر تحميل رصيد العميل. حدّث قائمة العملاء قبل اعتماد المرتجع.</p>}
+              {returnBalanceKnown && (returnCustomer?.discounts?.length || 0) > 0 && (
+                <p className="mt-2 text-sm font-bold text-amber-300">تنبيه: سندات خصم العميل مستقلة ولا تُعكس تلقائيًا عند المرتجع، وقد تؤثر في مبلغ الرد.</p>
+              )}
               {returnPreviewRefund > 0 && (
                 <div className="mt-3 flex flex-wrap items-end gap-3">
                   <label className="flex flex-col gap-1 text-xs font-bold text-slate-300">
@@ -7270,17 +6816,35 @@ export default function POSDashboard() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-slate-900 border border-white/10 p-6 rounded-md w-full max-w-lg shadow-2xl relative">
             <h3 className="text-xl font-bold text-white mb-6 border-b border-white/10 pb-4">
-              {editingGeneralExpense ? 'تعديل مصروف عام' : 'تسجيل مصروف عام'}
+              تسجيل مصروف عام
             </h3>
 
-            <form onSubmit={handleSaveGeneralExpense} className="space-y-4">
-              {editingGeneralExpense && (
-                <label className="block text-xs text-slate-300">تاريخ المستند
-                  <input type="date" required aria-label="تاريخ المصروف العام" value={editingGeneralExpense.date}
-                    onChange={e => setEditingGeneralExpense({ ...editingGeneralExpense, date: e.target.value })}
-                    className="w-full bg-slate-950 border border-white/10 rounded-sm py-2 px-3 mt-1" />
-                </label>
-              )}
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                if (typeof window !== 'undefined' && (window as any).electronAPI) {
+                  await (window as any).electronAPI.createGeneralExpense(generalExpenseForm);
+                } else {
+                  const res = await fetch('/api/general-expenses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(generalExpenseForm)
+                  });
+                  if (!res.ok) {
+                    const error = await res.json();
+                    alert(error.error || 'حدث خطأ أثناء الحفظ');
+                    return;
+                  }
+                }
+                setShowGeneralExpenseModal(false);
+                setGeneralExpenseForm({ categoryId: '', bankId: '', amount: '', notes: '', reference: '' });
+                fetchGeneralExpenses();
+                fetchBanks();
+              } catch (err) {
+                console.error(err);
+                alert('حدث خطأ');
+              }
+            }} className="space-y-4">
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
@@ -7308,7 +6872,7 @@ export default function POSDashboard() {
                   >
                     <option value="">-- اختر الحساب --</option>
                     {banks.map((b: any) => (
-                      <option key={b.id} value={b.id}>{b.name} (الرصيد: {formatTotal(b.balance)})</option>
+                      <option key={b.id} value={b.id}>{b.name} (الرصيد: {Number(b.balance).toLocaleString()})</option>
                     ))}
                   </select>
                 </div>
@@ -7317,12 +6881,13 @@ export default function POSDashboard() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs text-slate-400 block mb-1 text-slate-300">المبلغ *</label>
-                  <MoneyInput
+                  <input
+                    type="number"
                     step="0.01"
                     min="0.01"
                     required
                     value={generalExpenseForm.amount}
-                    onValueChange={(value) => setGeneralExpenseForm(prev => ({ ...prev, amount: value }))}
+                    onChange={(e) => setGeneralExpenseForm(prev => ({ ...prev, amount: e.target.value }))}
                     className="w-full bg-white/5 border border-white/10 rounded-sm py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                     placeholder="المبلغ..."
                   />
@@ -7353,15 +6918,13 @@ export default function POSDashboard() {
               <div className="pt-4 border-t border-slate-800 flex gap-1.5">
                 <button
                   type="submit"
-                  disabled={submitting}
                   className="flex-1 bg-emerald-600/80 hover:bg-emerald-600 text-white py-2 rounded-sm font-bold flex gap-2 items-center justify-center transition-all cursor-pointer shadow-lg shadow-emerald-900/20"
                 >
                   <CheckCircle2Icon size={16} />
-                  <span>{submitting ? 'جارٍ الحفظ...' : editingGeneralExpense ? 'حفظ التعديل' : 'حفظ واعتماد'}</span>
+                  <span>حفظ واعتماد</span>
                 </button>
                 <button
                   type="button"
-                  disabled={submitting}
                   onClick={() => setShowGeneralExpenseModal(false)}
                   className="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-2 rounded-sm font-bold transition-all cursor-pointer"
                 >
@@ -7564,7 +7127,7 @@ export default function POSDashboard() {
 
                   <span className="text-[10px] text-slate-400 block">سعر البيع</span>
 
-                  <span className="text-sm font-bold text-emerald-400 font-mono">{formatTotal(selectedProduct.price)} ج.م</span>
+                  <span className="text-sm font-bold text-emerald-400 font-mono">{selectedProduct.price} ج.م</span>
 
                 </div>
 
@@ -7879,13 +7442,14 @@ export default function POSDashboard() {
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs text-slate-400 block mb-1 text-slate-300">رصيد أول المدة</label>
-                  <MoneyInput
+                  <input
+                    type="number"
                     min="0"
                     step="0.01"
                     className="w-full bg-white/5 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-xs"
                     placeholder="رصيد أول المدة..."
                     value={customerForm.openingBalance}
-                    onValueChange={(value) => setCustomerForm(prev => ({ ...prev, openingBalance: value }))}
+                    onChange={(e) => setCustomerForm(prev => ({ ...prev, openingBalance: e.target.value }))}
                   />
 
               </div>
@@ -8263,14 +7827,15 @@ export default function POSDashboard() {
                 {currentUser?.role !== 'STOREKEEPER' && (
                   <div className="space-y-1">
                     <label className="text-xs text-slate-400 block mb-1 text-slate-300">سعر الكيلو</label>
-                    <MoneyInput
+                    <input
+                      type="number"
                       min="0"
                       step="0.01"
                       className="w-full bg-white/5 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                       placeholder="سعر الكيلو..."
                       value={productForm.pricePerKilo}
-                      onValueChange={(value) => {
-                        const ppk = value;
+                      onChange={(e) => {
+                        const ppk = e.target.value;
                         setProductForm(prev => {
                           const cost = (parseFloat(prev.weight) || 0) * (parseFloat(ppk) || 0);
                           const computedPrice = cost * (1 + (parseFloat(prev.markup) || 30) / 100);
@@ -8300,16 +7865,19 @@ export default function POSDashboard() {
 
                     <label className="text-xs text-slate-400 block mb-1 text-slate-300">سعر الشراء (التكلفة) *</label>
 
-                    <MoneyInput
+                    <input
+
+                      type="number"
+
                       step="0.01"
 
                       required
 
                       value={productForm.costPrice}
 
-                      onValueChange={(value) => {
+                      onChange={(e) => {
 
-                        const cost = value;
+                        const cost = e.target.value;
 
                         setProductForm(prev => {
 
@@ -8385,14 +7953,17 @@ export default function POSDashboard() {
 
                     <label className="text-xs text-slate-400 block mb-1 text-slate-300">سعر البيع *</label>
 
-                    <MoneyInput
+                    <input
+
+                      type="number"
+
                       step="0.01"
 
                       required
 
                       value={productForm.price}
 
-                      onValueChange={(value) => setProductForm(prev => ({ ...prev, price: value }))}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
 
                       placeholder="سعر البيع النهائي"
 
@@ -8412,7 +7983,10 @@ export default function POSDashboard() {
 
                     <label className="text-xs text-slate-400 block mb-1 text-slate-300">سعر البيع *</label>
 
-                    <MoneyInput
+                    <input
+
+                      type="number"
+
                       step="0.01"
 
                       required
@@ -8557,7 +8131,7 @@ export default function POSDashboard() {
 
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-2 animate-fade-in no-print">
 
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-md max-h-[95vh] overflow-y-auto rounded-sm shadow-2xl flex flex-col">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-sm overflow-hidden shadow-2xl flex flex-col">
 
             <div className="p-2 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
 
@@ -8597,7 +8171,7 @@ export default function POSDashboard() {
 
                 <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">الرصيد الافتتاحي *</label>
 
-                <MoneyInput  step="0.01" required value={bankForm.balance} onValueChange={value => setBankForm({ ...bankForm, balance: value })} className="w-full bg-white/5 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-mono" />
+                <input type="number" step="0.01" required value={bankForm.balance} onChange={e => setBankForm({ ...bankForm, balance: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-mono" />
 
               </div>
 
@@ -8631,7 +8205,7 @@ export default function POSDashboard() {
 
               <div>
 
-                <h3 className="text-lg font-bold text-white">{editingPayment ? 'تصويب سند القبض' : 'إصدار سند قبض جديد'}</h3>
+                <h3 className="text-lg font-bold text-white">إصدار سند قبض جديد</h3>
 
               </div>
 
@@ -8673,7 +8247,7 @@ export default function POSDashboard() {
 
                   {banks.map(b => (
 
-                    <option key={b.id} value={b.id}>{b.name} ({formatTotal(b.balance)} ج.م)</option>
+                    <option key={b.id} value={b.id}>{b.name} ({b.balance.toFixed(2)} ج.م)</option>
 
                   ))}
 
@@ -8681,36 +8255,12 @@ export default function POSDashboard() {
 
               </div>
 
-              {editingPayment && (
-                <div className="space-y-1">
-                  <label className="text-xs text-slate-300 block">تاريخ السند *</label>
-                  <input
-                    type="date"
-                    required
-                    value={paymentForm.date}
-                    onChange={e => setPaymentForm({ ...paymentForm, date: e.target.value })}
-                    className="w-full bg-slate-900 border border-white/10 rounded-sm py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50"
-                  />
-                </div>
-              )}
-
               <div className="space-y-1">
 
                 <label className="text-xs text-slate-400 block mb-1 mb-1 mb-1 text-slate-300">المبلغ المدفوع *</label>
 
-                <MoneyInput  min="0.01" step="0.01" required value={paymentForm.amount} onValueChange={value => setPaymentForm({ ...paymentForm, amount: value })} className="w-full bg-white/5 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-mono text-xl text-emerald-400" placeholder="0.00" />
+                <input type="number" step="0.01" required value={paymentForm.amount} onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-mono text-xl text-emerald-400" placeholder="0.00" />
 
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs text-slate-300 block">رقم المرجع / الشيك</label>
-                <input
-                  type="text"
-                  value={paymentForm.reference}
-                  onChange={e => setPaymentForm({ ...paymentForm, reference: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
-                  placeholder="رقم المرجع أو الشيك"
-                />
               </div>
 
               <div className="space-y-1">
@@ -8721,44 +8271,11 @@ export default function POSDashboard() {
 
               </div>
 
-              {editingPayment && paymentCorrectionHistory.length > 0 && (
-                <details className="rounded-sm border border-white/10 bg-white/5 p-2">
-                  <summary className="cursor-pointer text-xs font-bold text-amber-300">
-                    سجل التصويبات السابقة ({paymentCorrectionHistory.length})
-                  </summary>
-                  <div className="mt-2 max-h-32 space-y-2 overflow-y-auto">
-                    {paymentCorrectionHistory.map((entry, index) => (
-                      <div key={`${entry.correctedAt || 'correction'}-${index}`} className="border-t border-white/10 pt-2 text-xs text-slate-300">
-                        <div>{entry.correctedAt ? new Date(entry.correctedAt).toLocaleString('ar-EG') : 'تاريخ غير متوفر'}</div>
-                        <div>
-                          المبلغ: {formatTotal(Number(entry.before?.amount || 0))} ← {formatTotal(Number(entry.after?.amount || 0))} ج.م
-                          {' | '}
-                          العميل: {customers.find(customer => customer.id === entry.before?.customerId)?.name || 'غير معروف'}
-                          {' ← '}
-                          {customers.find(customer => customer.id === entry.after?.customerId)?.name || 'غير معروف'}
-                        </div>
-                        <div>
-                          البنك: {banks.find(bank => bank.id === entry.before.bankId)?.name || 'غير معروف'}
-                          {' ← '}
-                          {banks.find(bank => bank.id === entry.after.bankId)?.name || 'غير معروف'}
-                          {' | التاريخ: '}
-                          {new Date(entry.before.date).toLocaleDateString('ar-EG')}
-                          {' ← '}
-                          {new Date(entry.after.date).toLocaleDateString('ar-EG')}
-                        </div>
-                        <div>المرجع: {entry.before.reference || '—'} ← {entry.after.reference || '—'}</div>
-                        <div>الملاحظات: {entry.before.notes || '—'} ← {entry.after.notes || '—'}</div>
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              )}
-
               <div className="pt-4 border-t border-slate-800 flex gap-1.5">
 
                 <button type="submit" disabled={submitting} className="flex-1 bg-entlaq-primary text-white py-2 rounded-sm font-bold flex gap-2 items-center justify-center hover:bg-teal-500 transition-all cursor-pointer shadow-lg shadow-teal-500/10 disabled:opacity-50">
 
-                  {editingPayment ? 'حفظ التصويب' : 'حفظ وإصدار السند'}
+                  حفظ وإصدار السند
 
                 </button>
 
@@ -8788,14 +8305,15 @@ export default function POSDashboard() {
 
       {/* MODAL 8: CUSTOMER HISTORY MODAL */}
 
-      {showCustomerHistoryModal && selectedHistoryCustomer && !showModal && !showReceiptModal && (
+      {showCustomerHistoryModal && selectedHistoryCustomer && !showModal && !showReceiptModal && !selectedDiscountPrint && (
         <AccountStatement
           kind="customer"
           name={selectedHistoryCustomer.name}
-          openingBalance={currentHistoryCustomer.openingBalance || 0}
+          openingBalance={selectedHistoryCustomerRaw.openingBalance || 0}
           invoices={selectedHistoryCustomer.orders}
           payments={selectedHistoryCustomer.payments}
           returns={selectedHistoryCustomer.orderReturns}
+          discounts={selectedHistoryCustomer.discounts}
           from={stmtFrom}
           to={stmtTo}
           periodControls={renderStatementPeriod()}
@@ -8816,6 +8334,7 @@ export default function POSDashboard() {
             setSelectedOrderReturn({ ...orderReturn, customer: selectedHistoryCustomer });
             setShowReturnPrintModal(true);
           }}
+          onDiscount={discount => openDiscountPrint(discount, 'ALLOWED', selectedHistoryCustomer.name)}
         />
       )}
 
@@ -8823,13 +8342,14 @@ export default function POSDashboard() {
 
       {/* MODAL 8.5: SUPPLIER HISTORY MODAL */}
 
-      {showSupplierHistoryModal && selectedHistorySupplier && !showPurchaseDetailModal && !showExpenseReceiptModal && (
+      {showSupplierHistoryModal && selectedHistorySupplier && !showPurchaseDetailModal && !showExpenseReceiptModal && !selectedDiscountPrint && (
         <AccountStatement
           kind="supplier"
           name={selectedHistorySupplier.name}
           openingBalance={selectedHistorySupplierRaw.openingBalance || 0}
           invoices={selectedHistorySupplier.purchaseOrders}
           payments={selectedHistorySupplier.expenses}
+          discounts={selectedHistorySupplier.discounts}
           from={stmtFrom}
           to={stmtTo}
           periodControls={renderStatementPeriod()}
@@ -8843,7 +8363,12 @@ export default function POSDashboard() {
             setSelectedExpense({ ...payment, supplier: selectedHistorySupplier });
             setShowExpenseReceiptModal(true);
           }}
+          onDiscount={discount => openDiscountPrint(discount, 'EARNED', selectedHistorySupplier.name)}
         />
+      )}
+
+      {selectedDiscountPrint && (
+        <DiscountPrint discount={selectedDiscountPrint} onClose={() => setSelectedDiscountPrint(null)} />
       )}
 
 
@@ -9004,12 +8529,15 @@ export default function POSDashboard() {
 
                 {currentUser?.role === 'ADMIN' ? (
 
-                  <MoneyInput
+                  <input
+
+                    type="number"
+
                     step="0.01"
 
                     value={supplierForm.openingBalance}
 
-                    onValueChange={(value) => setSupplierForm(prev => ({ ...prev, openingBalance: value }))}
+                    onChange={(e) => setSupplierForm(prev => ({ ...prev, openingBalance: e.target.value }))}
 
                     placeholder="0.00"
 
@@ -9097,17 +8625,15 @@ export default function POSDashboard() {
 
                   <ShoppingBagIcon className="text-orange-400" size={18} />
 
-                  {editingPurchase ? 'تعديل فاتورة مشتريات' : 'إنشاء فاتورة مشتريات جديدة'}
+                  إنشاء فاتورة مشتريات جديدة
 
                 </h3>
 
-                <p className="text-xs text-slate-400 mt-1">{editingPurchase
-                  ? 'سيتم تسوية المخزون ومديونية المورد دون تغيير أسعار بطاقة الصنف الحالية'
-                  : 'سيتم تحديث المخزون تلقائياً عند حفظ الفاتورة'}</p>
+                <p className="text-xs text-slate-400 mt-1">سيتم تحديث المخزون تلقائياً عند حفظ الفاتورة</p>
 
               </div>
 
-              <button disabled={submitting} onClick={() => setShowPurchaseModal(false)} className="text-slate-400 hover:text-white p-2 rounded-sm bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+              <button onClick={() => setShowPurchaseModal(false)} className="text-slate-400 hover:text-white p-2 rounded-sm bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
 
                 <XIcon size={18} />
 
@@ -9135,8 +8661,7 @@ export default function POSDashboard() {
 
                       required
 
-                      disabled={!editingPurchase}
-                      onChange={e => setPurchaseForm((prev: typeof purchaseForm) => ({ ...prev, billNumber: e.target.value }))}
+                      disabled
 
                       value={purchaseForm.billNumber}
 
@@ -9196,13 +8721,6 @@ export default function POSDashboard() {
 
                   </div>
 
-                  {editingPurchase && (
-                    <label className="block text-xs text-slate-300">تاريخ الفاتورة
-                      <input type="date" required aria-label="تاريخ فاتورة الشراء" value={editingPurchase.date}
-                        onChange={e => setEditingPurchase({ ...editingPurchase, date: e.target.value })}
-                        className="w-full bg-slate-950 border border-white/10 rounded-sm py-2 px-3 mt-1" />
-                    </label>
-                  )}
                 </div>
 
 
@@ -9329,16 +8847,19 @@ export default function POSDashboard() {
 
                         {currentUser?.role === 'ADMIN' && (
 
-                          <MoneyInput
+                          <input
+
+                            type="number"
+
                             step="0.01"
 
                             value={item.unitCost}
 
-                            onValueChange={(value) => {
+                            onChange={(e) => {
 
                               const newItems = [...purchaseForm.items];
 
-                              newItems[idx] = { ...newItems[idx], unitCost: value };
+                              newItems[idx] = { ...newItems[idx], unitCost: e.target.value };
 
                               setPurchaseForm((prev: any) => ({ ...prev, items: newItems }));
 
@@ -9418,12 +8939,7 @@ export default function POSDashboard() {
 
                         const p = products.find((pr: any) => pr.id === i.productId);
 
-                        const original = editingPurchase ? purchases.find(purchase => purchase.id === editingPurchase.id) : null;
-                        const originalItem = original?.items?.find((item: { id: string; productId: string }) =>
-                          item.id === i.id && item.productId === i.productId);
-                        const rate = editingPurchase
-                          ? purchaseTaxRate(purchaseForm.invoiceType, p?.taxRate, originalItem, original?.invoiceType)
-                          : p?.taxRate || 0.14;
+                        const rate = p?.taxRate || 0.14;
 
                         return sum + ((Number(i.quantity) || 0) * (Number(i.unitCost) || 0) * rate);
 
@@ -9437,15 +8953,15 @@ export default function POSDashboard() {
 
                             <span>إجمالي التكلفة (بدون ضريبة):</span>
 
-                            <span className="font-bold">{formatTotal(subtotal)} ج.م</span>
+                            <span className="font-bold">{subtotal.toFixed(2)} ج.م</span>
 
                           </div>
 
                           <div className="flex justify-between text-slate-400 mt-1">
 
-                            <span>{isVat ? 'قيمة الضريبة المضافة:' : 'غير شامل للقيمة المضافة:'}</span>
+                            <span>{isVat ? 'قيمة الضريبة المضافة (14%):' : 'غير شامل للقيمة المضافة:'}</span>
 
-                            <span className="font-bold">{formatTotal(taxTotal)} ج.م</span>
+                            <span className="font-bold">{taxTotal.toFixed(2)} ج.م</span>
 
                           </div>
 
@@ -9453,7 +8969,7 @@ export default function POSDashboard() {
 
                             <span>الإجمالي الصافي:</span>
 
-                            <span>{formatTotal((subtotal + taxTotal))} ج.م</span>
+                            <span>{(subtotal + taxTotal).toFixed(2)} ج.م</span>
 
                           </div>
 
@@ -9485,7 +9001,7 @@ export default function POSDashboard() {
 
                   {submitting ? <Loader2Icon size={16} className="animate-spin" /> : <CheckCircle2Icon size={16} />}
 
-                  {editingPurchase ? 'حفظ تعديل الفاتورة وتسوية المخزون' : 'حفظ الفاتورة وتحديث المخزون'}
+                  حفظ الفاتورة وتحديث المخزون
 
                 </button>
 
@@ -9493,7 +9009,6 @@ export default function POSDashboard() {
 
                   type="button"
 
-                  disabled={submitting}
                   onClick={() => { setShowPurchaseModal(false); setPurchaseForm({ billNumber: '', supplierId: '', items: [] }); }}
 
                   className="bg-white/5 text-slate-300 px-3 py-2 rounded-sm font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
@@ -9532,17 +9047,15 @@ export default function POSDashboard() {
 
                   <BanknoteIcon className="text-purple-400" size={18} />
 
-                  {editingExpense ? 'تعديل سند صرف مورد' : 'إصدار سند صرف مورد'}
+                  إصدار سند صرف مورد
 
                 </h3>
 
-                <p className="text-xs text-slate-400 mt-1">{editingExpense
-                  ? 'سيتم تسوية أثر السند السابق والجديد على الخزينة ورصيد المورد'
-                  : 'سيتم خصم المبلغ من الخزينة وتخفيض رصيد المورد'}</p>
+                <p className="text-xs text-slate-400 mt-1">سيتم خصم المبلغ من الخزينة وتخفيض رصيد المورد</p>
 
               </div>
 
-              <button disabled={submitting} onClick={() => setShowExpenseModal(false)} className="text-slate-400 hover:text-white p-2 rounded-sm bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+              <button onClick={() => setShowExpenseModal(false)} className="text-slate-400 hover:text-white p-2 rounded-sm bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
 
                 <XIcon size={18} />
 
@@ -9551,13 +9064,6 @@ export default function POSDashboard() {
             </div>
 
             <form onSubmit={handleSaveExpense} className="p-2 space-y-3" dir="rtl">
-              {editingExpense && (
-                <label className="block text-xs text-slate-300">تاريخ السند
-                  <input type="date" required aria-label="تاريخ سند الصرف" value={editingExpense.date}
-                    onChange={e => setEditingExpense({ ...editingExpense, date: e.target.value })}
-                    className="w-full bg-slate-950 border border-white/10 rounded-sm py-2 px-3 mt-1" />
-                </label>
-              )}
 
               <div className="space-y-1">
 
@@ -9579,7 +9085,7 @@ export default function POSDashboard() {
 
                   {suppliers.map((s: any) => (
 
-                    <option key={s.id} value={s.id}>{s.name} (مديونية: {formatTotal(Number(s.balance))} ج.م)</option>
+                    <option key={s.id} value={s.id}>{s.name} (مديونية: {Number(s.balance).toFixed(2)} ج.م)</option>
 
                   ))}
 
@@ -9607,7 +9113,7 @@ export default function POSDashboard() {
 
                   {banks.map((b: any) => (
 
-                    <option key={b.id} value={b.id}>{b.name} (رصيد: {formatTotal(b.balance)} ج.م)</option>
+                    <option key={b.id} value={b.id}>{b.name} (رصيد: {b.balance.toFixed(2)} ج.م)</option>
 
                   ))}
 
@@ -9619,14 +9125,17 @@ export default function POSDashboard() {
 
                 <label className="text-xs text-slate-300 block mb-1">المبلغ المدفوع *</label>
 
-                <MoneyInput
+                <input
+
+                  type="number"
+
                   step="0.01"
 
                   required
 
                   value={expenseForm.amount}
 
-                  onValueChange={(value) => setExpenseForm(prev => ({ ...prev, amount: value }))}
+                  onChange={(e) => setExpenseForm(prev => ({ ...prev, amount: e.target.value }))}
 
                   className="w-full bg-white/5 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 font-mono text-xl text-purple-400"
 
@@ -9690,7 +9199,7 @@ export default function POSDashboard() {
 
                   {submitting ? <Loader2Icon size={16} className="animate-spin" /> : <BanknoteIcon size={16} />}
 
-                  {editingExpense ? 'حفظ تعديل سند الصرف' : 'إصدار سند الصرف'}
+                  إصدار سند الصرف
 
                 </button>
 
@@ -9698,7 +9207,6 @@ export default function POSDashboard() {
 
                   type="button"
 
-                  disabled={submitting}
                   onClick={() => setShowExpenseModal(false)}
 
                   className="bg-white/5 text-slate-300 px-3 py-2 rounded-sm font-bold hover:bg-white/10 transition-all border border-white/5 cursor-pointer"
@@ -9724,24 +9232,14 @@ export default function POSDashboard() {
       {/* MODAL 12: EXPENSE RECEIPT PRINT MODAL (سند صرف مورد - طباعة) */}
 
       {showExpenseReceiptModal && selectedExpense && (
-        <ReceiptPrint receipt={selectedExpense} expense onClose={() => setShowExpenseReceiptModal(false)}
-          actions={currentUser?.role === 'ADMIN' ? (
-            <button type="button" onClick={() => handleEditExpense(selectedExpense)}>
-              <PencilIcon size={16} /> تعديل سند الصرف
-            </button>
-          ) : undefined} />
+        <ReceiptPrint receipt={selectedExpense} expense onClose={() => setShowExpenseReceiptModal(false)} />
       )}
 
       {/* MODAL 13: PURCHASE DETAIL & PRINT MODAL */}
 
       {showPurchaseDetailModal && selectedPurchase && (
         <InvoicePrint invoice={selectedPurchase} purchase showAmounts={currentUser?.role === 'ADMIN'}
-          onClose={() => setShowPurchaseDetailModal(false)}
-          actions={currentUser?.role === 'ADMIN' ? (
-            <button type="button" onClick={() => handleEditPurchase(selectedPurchase)}>
-              <PencilIcon size={16} /> تعديل فاتورة الشراء
-            </button>
-          ) : undefined} />
+          onClose={() => setShowPurchaseDetailModal(false)} />
       )}
 
 
@@ -9899,8 +9397,7 @@ export default function POSDashboard() {
                                 ['الكود', p.code], ['النوع', p.type], ['المقاس', p.size],
                                 ['الدرجة', p.gauge], ['اللون', p.color],
                                 ['المورد', p.supplier?.name || suppliers.find(supplier => supplier.id === p.supplierId)?.name],
-                                ['الطول', p.length], ['الوزن', p.weight],
-                                ['سعر الكيلو', p.pricePerKilo === null || p.pricePerKilo === undefined ? '—' : formatTotal(p.pricePerKilo)]
+                                ['الطول', p.length], ['الوزن', p.weight], ['سعر الكيلو', p.pricePerKilo]
                               ].map(([label, value]) => (
                                 <div key={label} className="flex shrink-0 gap-1">
                                   <dt className="text-slate-500">{label}:</dt>
@@ -9912,13 +9409,15 @@ export default function POSDashboard() {
 
                         </td>
 
-                        <td className="p-2 font-mono text-slate-400">{formatTotal(p.price)} ج.م</td>
+                        <td className="p-2 font-mono text-slate-400">{p.price.toFixed(2)} ج.م</td>
 
                         <td className="p-2">
 
                           <div className="flex gap-2 items-center">
 
-                            <MoneyInput
+                            <input
+
+                              type="number"
                               min="0"
                               step="any"
                               aria-label={`السعر المخصص: ${p.name} - ${p.code} - ${p.color || ''} - ${p.supplier?.name || ''}`}
@@ -9926,13 +9425,13 @@ export default function POSDashboard() {
 
                               className={`w-24 bg-black border rounded px-2 py-1 font-mono text-center focus:outline-none focus:border-emerald-500 ${hasCustom ? 'border-emerald-500/50 text-emerald-400' : 'border-slate-700 text-white'}`}
 
-                              placeholder={formatTotal(p.price)}
+                              placeholder={p.price.toString()}
 
                               value={customerPricesMap[p.id] === undefined ? '' : customerPricesMap[p.id]}
 
-                              onValueChange={(value) => {
+                              onChange={(e) => {
 
-                                const val = parseFloat(value);
+                                const val = parseFloat(e.target.value);
 
                                 setCustomerPricesMap(prev => {
 

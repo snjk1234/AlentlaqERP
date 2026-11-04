@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { attachAccountDiscounts } from '@/lib/attach-account-discounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +38,11 @@ export async function GET() {
       },
       orderBy: { name: 'asc' }
     });
-    return NextResponse.json(customers);
+    const discounts = await prisma.accountDiscount.findMany({
+      where: { kind: 'ALLOWED' },
+      orderBy: { date: 'desc' }
+    });
+    return NextResponse.json(attachAccountDiscounts(customers, discounts, 'customerId'));
   } catch (error) {
     console.error('Error fetching customers:', error);
     return NextResponse.json({ error: 'Failed to fetch customers' }, { status: 500 });

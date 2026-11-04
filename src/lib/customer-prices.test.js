@@ -8,7 +8,6 @@ const { test } = require('node:test');
 const ts = require('typescript');
 const { renderToStaticMarkup } = require('react-dom/server');
 const { saveCustomerPrices } = require('./customer-prices');
-const { formatMoney: formatTotal } = require('./money-format');
 
 const root = path.resolve(__dirname, '..', '..');
 const read = (...parts) => fs.readFileSync(path.join(root, ...parts), 'utf8');
@@ -213,7 +212,7 @@ test('price list renders only requested product properties and preserves zero-va
   assert.ok(details);
   const exports = {};
   vm.runInNewContext(compile(`exports.details = (${details});`), {
-    exports, require, formatTotal, suppliers: [{ id: 'supplier', name: 'Variant supplier' }],
+    exports, require, suppliers: [{ id: 'supplier', name: 'Variant supplier' }],
     p: {
       name: 'Test product', imageUrl: null, code: 'P-1', type: 'PIPE', size: '20mm',
       gauge: 'Heavy', color: 'Blue', supplierId: 'supplier', length: '10m',
@@ -227,7 +226,7 @@ test('price list renders only requested product properties and preserves zero-va
   for (const label of ['اسم الصنف:', 'الكود:', 'النوع:', 'المقاس:', 'الدرجة:', 'اللون:', 'المورد:', 'الطول:', 'الوزن:', 'سعر الكيلو:']) {
     assert.ok(html.includes(label), label);
   }
-  assert.ok(html.includes('>0.00</dd>'));
+  assert.ok(html.includes('>0</dd>'));
   for (const omitted of ['BARCODE-123', 'الباركود', 'الضريبة', 'المخزون', 'الحد الأدنى', 'الحد الأقصى', 'التكلفة', 'معامل التسعير']) {
     assert.ok(!html.includes(omitted), omitted);
   }
@@ -264,7 +263,7 @@ test('custom-priced products move to the top and print reports include only assi
 
   const reports = [];
   const printContext = {
-    exports: {}, products, customerPricesMap, formatTotal, selectedCustomerForPrices: { name: 'Customer A' },
+    exports: {}, products, customerPricesMap, selectedCustomerForPrices: { name: 'Customer A' },
     suppliers: [{ id: 'supplier', name: 'Supplier A' }],
     setPrintTableData: report => reports.push(report)
   };
@@ -275,7 +274,7 @@ test('custom-priced products move to the top and print reports include only assi
   assert.equal(reports[0].rows.length, 2);
   assert.deepEqual(Array.from(reports[0].rows, row => row[0]), ['Custom', 'Also custom']);
   assert.equal(reports[0].rows[0][6], 'Supplier A');
-  assert.equal(reports[0].rows[0][9], '0.00');
+  assert.equal(reports[0].rows[0][9], 0);
   assert.equal(reports[0].rows[0][11], '0.00');
   assert.equal(reports[0].rows[1][11], '12.50');
   printContext.customerPricesMap = {};

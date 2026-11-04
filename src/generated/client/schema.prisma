@@ -84,6 +84,17 @@ model BankTransfer {
   updatedAt           DateTime @updatedAt
 }
 
+model ProductOption {
+  id        String   @id @default(cuid())
+  kind      String
+  value     String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([kind, value])
+}
+
 model StocktakeSetting {
   id           String   @id @default(cuid())
   passwordHash String
@@ -292,6 +303,7 @@ model Supplier {
 model PurchaseOrder {
   id          String              @id @default(cuid())
   billNumber  String              @unique
+  warehouseReceiptNumber String?
   supplierId  String
   invoiceType String              @default("فاتورة ضريبية")
   totalAmount Float

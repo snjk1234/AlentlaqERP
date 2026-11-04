@@ -3,8 +3,6 @@ const path = require('path');
 const fs = require('fs');
 const { createRemoteClient } = require('../src/lib/remote-client');
 const { saveCustomerPrices } = require('../src/lib/customer-prices');
-const { correctPayment } = require('../src/lib/payment-corrections');
-const { editDocument, editQuotation, editInvoiceDetails } = require('../src/lib/document-edits');
 
 // Register 'app' as a standard and secure scheme supporting fetch
 protocol.registerSchemesAsPrivileged([
@@ -22,7 +20,6 @@ const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
 let mainWindow = null;
 let prisma = null;
-const authenticatedUsers = new Map();
 
 function readServerConfig() {
   const configDirectory = path.join(app.getPath('appData'), 'AlEntlaqPOS');
@@ -233,6 +230,7 @@ ipcMain.handle('get-customers', async () => {
     return await prisma.customer.findMany({
       include: {
         customPrices: true,
+        discounts: { orderBy: { date: 'desc' } },
         payments: {
           include: {
             bank: true
@@ -505,6 +503,15 @@ ipcMain.handle('create-order-return', async (event, returnData) => {
   }
 });
 
+ipcMain.handle('create-account-discount', async (event, discountData) => {
+  try {
+    return await prisma.createAccountDiscount(discountData);
+  } catch (err) {
+    console.error('Error creating account discount:', err);
+    throw err;
+  }
+});
+
 ipcMain.handle('create-bank', async (event, bankData) => {
   try {
     const name = typeof bankData.name === 'string' ? bankData.name.trim() : '';
@@ -598,23 +605,6 @@ ipcMain.handle('create-payment', async (event, paymentData) => {
   }
 });
 
-ipcMain.handle('update-payment', async (event, paymentData) => {
-  try {
-    const user = authenticatedUsers.get(event.sender.id);
-    if (user?.role !== 'ADMIN') {
-      const error = new Error('تصويب الدفعات متاح لمدير النظام فقط.');
-      error.statusCode = 403;
-      throw error;
-    }
-    const payment = await correctPayment(prisma, { ...paymentData, userId: user.id });
-    if (!payment) throw new Error('سند القبض المطلوب غير موجود.');
-    return payment;
-  } catch (err) {
-    console.error('Error correcting payment:', err);
-    throw err;
-  }
-});
-
 // Suppliers IPC
 ipcMain.handle('get-suppliers', async () => {
   try {
@@ -622,6 +612,7 @@ ipcMain.handle('get-suppliers', async () => {
       orderBy: { name: 'asc' },
       include: {
         purchaseOrders: true,
+        discounts: { orderBy: { date: 'desc' } },
         expenses: {
           include: { bank: true }
         }
@@ -762,56 +753,6 @@ ipcMain.handle('create-purchase', async (event, purchaseData) => {
   }
 });
 
-for (const [channel, kind] of [
-  ['update-purchase', 'purchase'],
-  ['update-expense', 'expense'],
-  ['update-general-expense', 'generalExpense']
-]) {
-  ipcMain.handle(channel, async (event, data) => {
-    try {
-      const user = authenticatedUsers.get(event.sender.id);
-      if (user?.role !== 'ADMIN') throw new Error('تعديل المستندات متاح لمدير النظام فقط.');
-      return await editDocument(prisma, kind, { ...data, userId: user.id });
-    } catch (error) {
-      console.error(`Error updating ${kind}:`, error);
-      throw error;
-    }
-  });
-}
-
-ipcMain.handle('quotation-costs', async (event, data) => {
-  try {
-    const user = authenticatedUsers.get(event.sender.id);
-    if (user?.role !== 'ADMIN') throw new Error('تحليل أرباح عرض السعر متاح للمدير فقط.');
-    return await prisma.quotationCosts(data, user.sessionToken);
-  } catch (error) {
-    console.error('Quotation cost lookup failed:', error);
-    throw error;
-  }
-});
-
-ipcMain.handle('update-invoice-details', async (event, data) => {
-  try {
-    const user = authenticatedUsers.get(event.sender.id);
-    if (user?.role !== 'ADMIN') throw new Error('تعديل بيانات الفاتورة متاح للمدير فقط.');
-    return await editInvoiceDetails(prisma, { ...data, userId: user.id });
-  } catch (error) {
-    console.error('Invoice detail correction failed:', error);
-    throw error;
-  }
-});
-
-ipcMain.handle('update-quotation', async (event, data) => {
-  try {
-    const user = authenticatedUsers.get(event.sender.id);
-    if (user?.role !== 'ADMIN') throw new Error('تعديل عرض السعر متاح للمدير فقط.');
-    return await editQuotation(prisma, { ...data, userId: user.id });
-  } catch (error) {
-    console.error('Error editing quotation:', error);
-    throw error;
-  }
-});
-
 // Expenses IPC
 ipcMain.handle('get-expenses', async () => {
   try {
@@ -949,49 +890,27 @@ ipcMain.handle('create-general-expense', async (event, expenseData) => {
 // Users Management IPC
 ipcMain.handle('login', async (event, { username, password }) => {
   try {
-    const user = await prisma.login({ username: username.toLowerCase().trim(), password });
-    const authenticatedUser = {
+    const user = await prisma.user.findFirst({
+      where: {
+        username: username.toLowerCase().trim()
+      }
+    });
+    if (!user) {
+      throw new Error('المستخدم غير موجود!');
+    }
+    if (user.password !== password) {
+      throw new Error('كلمة المرور غير صحيحة!');
+    }
+    return {
       id: user.id,
       username: user.username,
       name: user.name,
-      role: user.role,
-      sessionToken: user.sessionToken
+      role: user.role
     };
-    authenticatedUsers.set(event.sender.id, authenticatedUser);
-    return authenticatedUser;
   } catch (err) {
     console.error('Login error:', err);
     throw err;
   }
-});
-
-ipcMain.handle('stocktake-operation', async (event, data) => {
-  try {
-    const user = authenticatedUsers.get(event.sender.id);
-    if (!user || !['ADMIN', 'STOREKEEPER'].includes(user.role)) {
-      throw new Error('الجرد متاح للمدير وأمين المخزن فقط. سجّل الدخول مجددًا.');
-    }
-    return await prisma.stocktakeOperation(data, user.sessionToken);
-  } catch (error) {
-    console.error('Stocktake operation failed:', error);
-    throw error;
-  }
-});
-
-ipcMain.handle('bank-transfer-operation', async (event, data) => {
-  try {
-    const user = authenticatedUsers.get(event.sender.id);
-    if (user?.role !== 'ADMIN') return { error: 'التحويلات بين الحسابات متاحة للمدير فقط. سجّل الدخول مجددًا.', statusCode: 403 };
-    const result = await prisma.bankTransferOperation(data, user.sessionToken);
-    return { data: result };
-  } catch (error) {
-    console.error('Bank transfer operation failed:', error);
-    return { error: error.message, statusCode: error.statusCode || 500 };
-  }
-});
-
-ipcMain.handle('logout', (event) => {
-  authenticatedUsers.delete(event.sender.id);
 });
 
 ipcMain.handle('get-users', async () => {

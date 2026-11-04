@@ -168,6 +168,15 @@ exports.Prisma.BankTransferScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ProductOptionScalarFieldEnum = {
+  id: 'id',
+  kind: 'kind',
+  value: 'value',
+  position: 'position',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.StocktakeSettingScalarFieldEnum = {
   id: 'id',
   passwordHash: 'passwordHash',
@@ -333,6 +342,7 @@ exports.Prisma.SupplierScalarFieldEnum = {
 exports.Prisma.PurchaseOrderScalarFieldEnum = {
   id: 'id',
   billNumber: 'billNumber',
+  warehouseReceiptNumber: 'warehouseReceiptNumber',
   supplierId: 'supplierId',
   invoiceType: 'invoiceType',
   totalAmount: 'totalAmount',
@@ -402,6 +412,7 @@ exports.Prisma.ModelName = {
   Product: 'Product',
   Category: 'Category',
   BankTransfer: 'BankTransfer',
+  ProductOption: 'ProductOption',
   StocktakeSetting: 'StocktakeSetting',
   Stocktake: 'Stocktake',
   StocktakeItem: 'StocktakeItem',

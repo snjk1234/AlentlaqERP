@@ -2,8 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { FileTextIcon, PrinterIcon, XIcon } from 'lucide-react';
-import { statementEntries, statementTotals } from '@/lib/account-period';
-import { formatMoney as money } from '../lib/money-format';
+import { statementEntries, statementTotals, type StatementDiscount } from '@/lib/account-period';
 
 type DatedDocument = { id: string; date?: string | Date | null; createdAt?: string | Date | null };
 export type StatementInvoice = DatedDocument & {
@@ -41,6 +40,7 @@ type Props = {
   invoices: StatementInvoice[];
   payments: StatementPayment[];
   returns?: StatementReturn[];
+  discounts?: StatementDiscount[];
   from: string;
   to: string;
   periodControls: ReactNode;
@@ -49,20 +49,24 @@ type Props = {
   onInvoice: (document: StatementInvoice) => void;
   onPayment: (document: StatementPayment) => void;
   onReturn?: (document: StatementReturn) => void;
+  onDiscount?: (document: StatementDiscount) => void;
 };
 
+const money = (value: number) => value.toLocaleString('en-US', {
+  minimumFractionDigits: 2, maximumFractionDigits: 2
+});
 const dateLabel = (value: string | Date) => new Date(value).toLocaleDateString('ar-EG', {
   year: 'numeric', month: '2-digit', day: '2-digit'
 });
 
 export default function AccountStatement({
-  kind, name, openingBalance, invoices, payments, returns = [], from, to, periodControls,
-  showInvoiceAmounts = true, onClose, onInvoice, onPayment, onReturn
+  kind, name, openingBalance, invoices, payments, returns = [], discounts = [], from, to, periodControls,
+  showInvoiceAmounts = true, onClose, onInvoice, onPayment, onReturn, onDiscount
 }: Props) {
   const supplier = kind === 'supplier';
   const title = supplier ? 'كشف حساب مورد' : 'كشف حساب عميل';
-  const entries = statementEntries(invoices, payments, openingBalance, returns);
-  const totals = statementTotals(invoices, payments, openingBalance, returns);
+  const entries = statementEntries(invoices, payments, openingBalance, returns, discounts);
+  const totals = statementTotals(invoices, payments, openingBalance, returns, discounts);
   const period = from || to ? `${from || 'البداية'} — ${to || 'اليوم'}` : 'جميع الحركات';
   const screenInvoices = invoices.filter(invoice => !invoice.isQuotation);
   const paymentReference = (payment: StatementPayment) => supplier
@@ -90,10 +94,11 @@ export default function AccountStatement({
         <div className="account-statement-scroll account-history-scroll">
           <div className="account-history-screen no-print flex flex-col gap-1.5">
             {!supplier && (
-              <div className="grid grid-cols-5 gap-2 mb-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2 mb-2">
                 {([
                   ['إجمالي الفواتير والرصيد الافتتاحي', totals.totalInvoices, 'text-white'],
                   ['إجمالي السدادات', totals.totalPayments, 'text-emerald-400'],
+                  ['إجمالي الخصم المسموح به', totals.totalDiscounts, 'text-sky-400'],
                   ['إجمالي المرتجعات', totals.totalReturns, 'text-amber-400'],
                   ['المبالغ المردودة', totals.totalRefunds, 'text-rose-400'],
                   ['إجمالي المطلوب', totals.totalDue, totals.totalDue > 0 ? 'text-red-400' : 'text-emerald-400']
@@ -202,6 +207,41 @@ export default function AccountStatement({
                 </div>
               </section>
             )}
+            {discounts.length > 0 && (
+              <section className="bg-slate-950 border border-slate-800 rounded p-2">
+                <h4 className="text-md font-bold text-white mb-2 border-b border-white/5 pb-1">
+                  {supplier ? 'سجل الخصم المكتسب' : 'سجل الخصم المسموح به'}
+                </h4>
+                <div className="max-h-44 overflow-auto custom-scrollbar">
+                  <table className="w-full text-right text-sm whitespace-nowrap">
+                    <thead className="bg-slate-900 text-slate-400">
+                      <tr>
+                        {['رقم سند الخصم', 'التاريخ', 'الملاحظات', 'المبلغ', 'طباعة'].map(label => (
+                          <th key={label} scope="col" className="p-3">{label}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/50">
+                      {discounts.map(discount => (
+                        <tr key={discount.id} className="text-white">
+                          <td className="p-3 font-mono font-bold"><bdi>{discount.discountNumber}</bdi></td>
+                          <td className="p-3 font-mono text-xs text-slate-300">{dateLabel(discount.date || discount.createdAt || '')}</td>
+                          <td className="p-3 text-slate-400">{discount.notes || '—'}</td>
+                          <td className="p-3 font-mono text-sky-400">{money(discount.amount)} ج.م</td>
+                          <td className="p-3 text-center">
+                            {onDiscount && <button type="button" onClick={() => onDiscount(discount)}
+                              aria-label={`طباعة سند الخصم ${discount.discountNumber}`}
+                              className="rounded-sm bg-white/5 p-1.5 text-slate-300 hover:bg-white/10 hover:text-white">
+                              <PrinterIcon size={14} />
+                            </button>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
             <section className="bg-slate-950 border border-slate-800 rounded p-2">
               <h4 className="text-md font-bold text-white mb-2 border-b border-white/5 pb-1">
                 {supplier ? 'سجل سندات الصرف والمدفوعات للمورد' : 'سجل سندات القبض والمدفوعات'}
@@ -291,10 +331,13 @@ export default function AccountStatement({
                   const invoice = entry.kind === 'invoice' ? entry.document : null;
                   const payment = entry.kind === 'payment' ? entry.document : null;
                   const orderReturn = entry.kind === 'return' ? entry.document : null;
+                  const discount = entry.kind === 'discount' ? entry.document : null;
                   const reference = invoice
                     ? invoice.invoiceNumber || invoice.billNumber || invoice.id
-                    : orderReturn
-                      ? orderReturn.returnNumber
+                    : discount
+                      ? discount.discountNumber
+                      : orderReturn
+                        ? orderReturn.returnNumber
                       : supplier
                         ? payment?.expenseNumber || entry.document.id
                         : payment?.receiptNumber ? `REC-${payment.receiptNumber}` : `REC-${entry.document.id.substring(0, 6).toUpperCase()}`;
@@ -303,7 +346,9 @@ export default function AccountStatement({
                       invoice.siteReceiptNumber && `إذن استلام: ${invoice.siteReceiptNumber}`,
                       invoice.receiverName && `المستلم: ${invoice.receiverName}`
                     ].filter(Boolean).join(' · ') || '—'
-                    : orderReturn
+                    : discount
+                      ? [supplier ? 'خصم مكتسب من المورد' : 'خصم مسموح به للعميل', discount.notes].filter(Boolean).join(' · ')
+                      : orderReturn
                       ? [
                         `مرتجع من الفاتورة ${orderReturn.order?.invoiceNumber || '—'}`,
                         orderReturn.refundAmount > 0
@@ -315,8 +360,8 @@ export default function AccountStatement({
                     <tr key={`${entry.kind}-${entry.document.id}`} className={`statement-${entry.kind}`}>
                       <td className="statement-date">{dateLabel(entry.document.date || entry.document.createdAt || '')}</td>
                       <td className="statement-reference">
-                        {(invoice || payment) && <button type="button" className="no-print" aria-label={`فتح ${reference}`}
-                          onClick={() => { if (invoice) onInvoice(invoice); else if (payment) onPayment(payment); }}>
+                        {(invoice || payment || (discount && onDiscount)) && <button type="button" className="no-print" aria-label={`فتح ${reference}`}
+                          onClick={() => { if (invoice) onInvoice(invoice); else if (payment) onPayment(payment); else if (discount) onDiscount?.(discount); }}>
                           <bdi>{reference}</bdi>
                         </button>}
                         <span className="statement-print-reference"><bdi>{reference}</bdi></span>
@@ -341,6 +386,10 @@ export default function AccountStatement({
                   <th colSpan={5} scope="row">إجمالي السدادات</th>
                   <td className="statement-number">{money(totals.totalPayments)}</td>
                 </tr>
+                <tr className="statement-total">
+                  <th colSpan={5} scope="row">{supplier ? 'إجمالي الخصم المكتسب' : 'إجمالي الخصم المسموح به'}</th>
+                  <td className="statement-number">{money(totals.totalDiscounts)}</td>
+                </tr>
                 {!supplier && <>
                   <tr className="statement-total">
                     <th colSpan={5} scope="row">إجمالي المرتجعات</th>
@@ -359,7 +408,9 @@ export default function AccountStatement({
             </table>
             <footer className="statement-footer document-footer">
               <span>الإنطلاق · كشف حساب تفصيلي</span>
-              <span>الرصيد الافتتاحي + الفواتير − السدادات = إجمالي المطلوب</span>
+              <span>{supplier
+                ? 'الرصيد الافتتاحي + الفواتير − السدادات − الخصومات = إجمالي المطلوب'
+                : 'الرصيد الافتتاحي + الفواتير − السدادات − الخصومات − المرتجعات + المبالغ المردودة = إجمالي المطلوب'}</span>
               <span><bdi>https://www.alentlaq.online/</bdi></span>
               <span><bdi>01030099400 / 01021683030</bdi> · <bdi>admin@alentlaq.online</bdi></span>
             </footer>

@@ -11,7 +11,6 @@ type AccessModelName =
   | 'orderReturn'
   | 'orderReturnItem'
   | 'bank'
-  | 'bankTransfer'
   | 'customerCeilingQuota'
   | 'payment'
   | 'supplier'
@@ -19,17 +18,35 @@ type AccessModelName =
   | 'purchaseOrderItem'
   | 'expensePayment'
   | 'expenseCategory'
-  | 'generalExpense'
-  | 'stocktake'
-  | 'stocktakeItem'
-  | 'stocktakeSetting';
+  | 'generalExpense';
 
 type AccessOperation = 'findMany' | 'findFirst' | 'findUnique' | 'count' | 'create' | 'update' | 'delete' | 'upsert';
 type AccessDelegate<ModelName extends AccessModelName> = Pick<PrismaClient[ModelName], AccessOperation>;
 
+export type AccountDiscountRecord = {
+  id: string;
+  discountNumber: string;
+  requestId: string;
+  kind: 'ALLOWED' | 'EARNED';
+  customerId: string | null;
+  supplierId: string | null;
+  amount: number;
+  date: Date;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type AccountDiscountDelegate = {
+  findMany(args?: {
+    where?: { kind?: 'ALLOWED' | 'EARNED'; customerId?: string; supplierId?: string };
+    orderBy?: { date: 'asc' | 'desc' };
+  }): Promise<AccountDiscountRecord[]>;
+};
+
 export type AccessTransactionClient = {
   [ModelName in AccessModelName]: AccessDelegate<ModelName>;
-};
+} & { accountDiscount: AccountDiscountDelegate };
 
 export type AccessClient = AccessTransactionClient & {
   $transaction<Result>(

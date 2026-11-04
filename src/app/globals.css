@@ -234,7 +234,6 @@ body {
 .document-parties strong { display: block; }
 .document-parties p { color: var(--statement-muted); font-size: 10px; line-height: 1.6; }
 .document-meta { display: flex; flex-wrap: wrap; gap: 8px 20px; padding-top: 8px; color: var(--statement-muted); font-size: 11px; }
-.stocktake-print-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; break-inside: avoid; }
 .document-invoice-note { display: flex; align-items: center; gap: 16px; padding-top: 12px; color: var(--statement-muted); font-size: 11px; break-inside: avoid; }
 .document-invoice-note img { width: 24mm; height: 24mm; object-fit: contain; flex-shrink: 0; }
 .document-signatures { display: flex; justify-content: space-between; gap: 30px; padding: 16px 6px 8px; color: var(--statement-muted); font-size: 11px; break-inside: avoid; }

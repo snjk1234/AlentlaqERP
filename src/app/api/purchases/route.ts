@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { updateDocument } from '@/lib/document-edit-route';
 
 export const dynamic = 'force-dynamic';
-
-export async function PUT(request: Request) {
-  return updateDocument(request, 'purchase');
-}
 
 // GET all purchase orders
 export async function GET() {

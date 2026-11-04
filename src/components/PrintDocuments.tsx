@@ -2,8 +2,6 @@
 
 import type { ReactNode } from 'react';
 import { PrinterIcon, XIcon } from 'lucide-react';
-import { formatMoney as money } from '../lib/money-format';
-import { stocktakeTotals } from '../lib/stocktake-totals';
 
 type Party = {
   name?: string; phone?: string | null; address?: string | null;
@@ -27,28 +25,28 @@ export type PrintReceipt = Dated & {
   amount: number; notes?: string | null; reference?: string | null;
   customer?: Party | null; supplier?: Party | null; bank?: { name: string } | null;
 };
+export type PrintAccountDiscount = {
+  discountNumber: string;
+  kind: 'ALLOWED' | 'EARNED';
+  partyName: string;
+  date: string | Date;
+  amount: number;
+  notes?: string | null;
+};
 export type PrintTableData = {
   title: string; headers: string[]; rows: ReactNode[][]; footer?: ReactNode[];
   period?: { from: string; to: string };
 };
-export type PrintStocktake = {
-  documentNumber: string; status: string; notes: string | null; createdBy: string; createdAt: string | Date;
-  approvedBy: string | null; approvedAt: string | Date | null;
-  items: { productLabel: string; bookQty: number; countedQty: number | null; unitCost: number | null }[];
-};
-export type PrintBankTransfer = {
-  id: string; transferNumber: string; fromBankId: string; toBankId: string;
-  fromBankName: string; toBankName: string; fromAccountNumber: string | null; toAccountNumber: string | null;
-  amount: number; date: string | Date; reference: string | null; notes: string | null;
-  status: string; reversalOf: string | null; createdByName: string; createdAt: string | Date;
-  fromBalanceBefore: number; fromBalanceAfter: number; toBalanceBefore: number; toBalanceAfter: number;
-  reversedByNumber?: string;
-};
+const money = (value: number) => Number(value).toLocaleString('en-US', {
+  minimumFractionDigits: 2, maximumFractionDigits: 2
+});
 const printCell = (value: ReactNode) => {
   if (typeof value !== 'string') return value;
   const amount = value.match(/^(-?\d+)(\.\d{2})(\s*ج\.م)?$/);
   if (!amount) return value;
-  return `${money(Number(`${amount[1]}${amount[2]}`))}${amount[3] || ''}`;
+  return `${Number(`${amount[1]}${amount[2]}`).toLocaleString('en-US', {
+    minimumFractionDigits: 2, maximumFractionDigits: 2
+  })}${amount[3] || ''}`;
 };
 const date = (value: string | Date, includeTime = false) => new Date(value).toLocaleString('ar-EG', {
   year: 'numeric', month: '2-digit', day: '2-digit',
@@ -271,8 +269,8 @@ export function ReturnPrint({ orderReturn, onClose }: {
   );
 }
 
-export function ReceiptPrint({ receipt, expense = false, onClose, actions }: {
-  receipt: PrintReceipt; expense?: boolean; onClose: () => void; actions?: ReactNode;
+export function ReceiptPrint({ receipt, expense = false, onClose }: {
+  receipt: PrintReceipt; expense?: boolean; onClose: () => void;
 }) {
   const title = expense ? 'سند صرف' : 'سند قبض';
   const number = expense ? receipt.expenseNumber || receipt.id
@@ -280,7 +278,7 @@ export function ReceiptPrint({ receipt, expense = false, onClose, actions }: {
   const party = expense ? receipt.supplier?.name : receipt.customer?.name;
   const description = receipt.notes || (expense ? 'سداد دفعة للمورد' : 'سداد دفعة من الحساب');
   return (
-    <DocumentFrame id={expense ? 'printable-expense-receipt' : 'printable-receipt'} title={title} onClose={onClose} actions={actions}>
+    <DocumentFrame id={expense ? 'printable-expense-receipt' : 'printable-receipt'} title={title} onClose={onClose}>
       <table className="statement-ledger document-table document-receipt">
         <colgroup><col style={{ width: '28%' }} /><col style={{ width: '72%' }} /></colgroup>
         <thead>
@@ -329,74 +327,40 @@ export function ReceiptPrint({ receipt, expense = false, onClose, actions }: {
   );
 }
 
-export function BankTransferPrint({ transfer, onClose }: { transfer: PrintBankTransfer; onClose: () => void }) {
-  const title = transfer.reversalOf ? 'سند عكس تحويل داخلي' : 'سند تحويل داخلي';
-  return <DocumentFrame id="printable-bank-transfer" title={title} onClose={onClose}>
-    <DocumentHeader title={title} number={transfer.transferNumber} issuedAt={transfer.date} includeTime>
-      <div className="document-meta">
-        <span>الحالة: {transfer.status === 'REVERSED' ? `تم عكس هذا التحويل — السند العكسي ${transfer.reversedByNumber || ''}` : transfer.reversalOf ? 'سند عكسي منفّذ' : 'منفّذ'}</span>
-        <span>المنفّذ: {transfer.createdByName}</span>
-        <span>وقت التسجيل: <bdi>{date(transfer.createdAt, true)}</bdi></span>
+export function DiscountPrint({ discount, onClose }: {
+  discount: PrintAccountDiscount; onClose: () => void;
+}) {
+  const earned = discount.kind === 'EARNED';
+  const title = earned ? 'سند خصم مكتسب' : 'سند خصم مسموح به';
+  return (
+    <DocumentFrame id="printable-discount" title={title} onClose={onClose}>
+      <table className="statement-ledger document-table document-receipt">
+        <colgroup><col style={{ width: '28%' }} /><col style={{ width: '72%' }} /></colgroup>
+        <thead>
+          <tr className="statement-document-heading"><th colSpan={2}>
+            <DocumentHeader title={title} number={discount.discountNumber} issuedAt={discount.date}>
+              <div className="statement-account-row">
+                <div><span>{earned ? 'المورد' : 'العميل'}</span><strong>{discount.partyName}</strong></div>
+                <div><span>العملة</span><strong>جنيه مصري · EGP</strong></div>
+              </div>
+            </DocumentHeader>
+          </th></tr>
+          <tr className="statement-column-heading"><th scope="col">البيان</th><th scope="col">التفاصيل</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">{earned ? 'المورد' : 'العميل'}</th><td>{discount.partyName}</td></tr>
+          <tr><th scope="row">الملاحظات</th><td>{discount.notes || '—'}</td></tr>
+          <tr><th scope="row">نوع الحركة</th><td>تسوية رصيد دون حركة نقدية</td></tr>
+          <tr className="statement-closing"><th scope="row">مبلغ الخصم <span>· جنيه مصري</span></th><td className="statement-number">{money(discount.amount)}</td></tr>
+        </tbody>
+      </table>
+      <div className="document-signatures">
+        <div><span>المفوض باعتماد الخصم</span><p>التوقيع</p></div>
+        <div><span>{earned ? 'المورد' : 'العميل'}</span><p>التوقيع</p></div>
       </div>
-    </DocumentHeader>
-    <table className="statement-ledger document-table">
-      <thead><tr className="statement-column-heading">{['البيان', 'حساب المصدر', 'حساب المستلم'].map(title => <th key={title} scope="col">{title}</th>)}</tr></thead>
-      <tbody>
-        <tr><td>اسم الحساب</td><td>{transfer.fromBankName}</td><td>{transfer.toBankName}</td></tr>
-        <tr><td>رقم الحساب</td><td><bdi>{transfer.fromAccountNumber || '—'}</bdi></td><td><bdi>{transfer.toAccountNumber || '—'}</bdi></td></tr>
-        <tr><td>الرصيد قبل التنفيذ</td><td><bdi>{money(transfer.fromBalanceBefore)}</bdi></td><td><bdi>{money(transfer.toBalanceBefore)}</bdi></td></tr>
-        <tr><td>مبلغ التحويل</td><td><bdi>−{money(transfer.amount)}</bdi></td><td><bdi>+{money(transfer.amount)}</bdi></td></tr>
-        <tr><td>الرصيد بعد التنفيذ</td><td><bdi>{money(transfer.fromBalanceAfter)}</bdi></td><td><bdi>{money(transfer.toBalanceAfter)}</bdi></td></tr>
-      </tbody>
-    </table>
-    <p className="document-meta">قيمة التحويل: <bdi>{money(transfer.amount)}</bdi> جنيه مصري · تحويل داخلي وليس مصروفًا أو إيرادًا</p>
-    {transfer.reference && <p className="document-meta">{transfer.reversalOf ? 'رقم السند الأصلي' : 'المرجع'}: <bdi>{transfer.reference}</bdi></p>}
-    {transfer.notes && <p className="document-meta" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{transfer.reversalOf ? 'سبب العكس' : 'الملاحظات'}: {transfer.notes}</p>}
-    <div className="document-signatures"><div>توقيع المُسلّم<p /></div><div>توقيع المستلم<p /></div><div>اعتماد المدير<p /></div></div>
-    <DocumentFooter />
-  </DocumentFrame>;
-}
-
-export function StocktakePrint({ document, onClose }: { document: PrintStocktake; onClose: () => void }) {
-  const title = document.status === 'APPROVED' ? 'جرد مخزون معتمد' : 'مسودة جرد مخزون — غير معتمدة';
-  const totals = stocktakeTotals(document.items);
-  return <DocumentFrame id="printable-stocktake" title={title} onClose={onClose}>
-    <table className="statement-ledger document-table">
-      <colgroup>
-        {[40, 11, 12, 10, 13, 14].map((width, index) => <col key={index} style={{ width: `${width}%` }} />)}
-      </colgroup>
-      <thead>
-        <tr className="statement-document-heading"><th colSpan={6}>
-          <DocumentHeader title={title} number={document.documentNumber} issuedAt={document.createdAt} includeTime>
-            <div className="document-meta">
-              <span>إعداد: {document.createdBy}</span>
-              {document.approvedAt && <span>اعتماد: {document.approvedBy} · {date(document.approvedAt, true)}</span>}
-              <span>التقييم بسعر التكلفة · جنيه مصري</span>
-            </div>
-          </DocumentHeader>
-        </th></tr>
-        <tr className="statement-column-heading">{['الصنف', 'رصيد الدفتر', 'الكمية الفعلية', 'فرق الكمية', 'تكلفة الوحدة', 'قيمة الفرق'].map(heading =>
-          <th scope="col" key={heading}>{heading}</th>)}</tr>
-      </thead>
-      <tbody>{document.items.map((item, index) => <tr key={index}>
-        <td>{item.productLabel}</td>
-        <td><bdi>{item.bookQty.toLocaleString('en-US')}</bdi></td>
-        <td><bdi>{item.countedQty === null ? 'لم يُعدّ بعد' : item.countedQty.toLocaleString('en-US')}</bdi></td>
-        <td><bdi>{item.countedQty === null ? '—' : (item.countedQty - item.bookQty).toLocaleString('en-US')}</bdi></td>
-        <td><bdi>{item.unitCost === null ? 'غير محفوظة' : money(item.unitCost)}</bdi></td>
-        <td><bdi>{item.countedQty === null || item.unitCost === null ? '—'
-          : money((item.countedQty - item.bookQty) * item.unitCost)}</bdi></td>
-      </tr>)}</tbody>
-    </table>
-    <div className="document-totals stocktake-print-totals">
-      <p>قيمة النقص: <bdi>{totals.unvalued ? 'غير متاحة' : money(totals.shortage)}</bdi></p>
-      <p>قيمة الزيادة: <bdi>{totals.unvalued ? 'غير متاحة' : money(totals.surplus)}</bdi></p>
-      <p>الصافي (الزيادة − النقص): <bdi>{totals.unvalued ? 'غير متاح' : money(totals.net)}</bdi></p>
-    </div>
-    <p>القيم للأصناف المعدودة فقط؛ الخانة غير المعدودة ليست صفرًا.</p>
-    {document.notes && <div className="document-meta" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>ملاحظات الجرد: {document.notes}</div>}
-    <DocumentFooter />
-  </DocumentFrame>;
+      <DocumentFooter />
+    </DocumentFrame>
+  );
 }
 
 export function TablePrint({ report, onClose }: { report: PrintTableData; onClose: () => void }) {

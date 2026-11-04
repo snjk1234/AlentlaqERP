@@ -54,14 +54,11 @@ export async function POST(request: Request) {
     if (typeof body.modelName !== 'string' || !modelNames.includes(body.modelName)) {
       return NextResponse.json({ error: 'Unknown database model.' }, { status: 400 });
     }
-    if (['stocktake', 'stocktakeItem', 'stocktakeSetting'].includes(body.modelName)) {
-      return NextResponse.json({ error: 'استخدم واجهة الجرد المصرح بها.' }, { status: 403 });
-    }
-    if (body.modelName === 'bankTransfer') {
-      return NextResponse.json({ error: 'استخدم واجهة التحويلات المصرح بها.' }, { status: 403 });
-    }
     if (typeof body.operation !== 'string') {
       return NextResponse.json({ error: 'A database operation is required.' }, { status: 400 });
+    }
+    if (body.modelName === 'accountDiscount' && ['create', 'update', 'delete', 'upsert'].includes(body.operation)) {
+      return NextResponse.json({ error: 'Use the account discount endpoint to record a discount.' }, { status: 403 });
     }
     if (body.transactionId !== undefined && typeof body.transactionId !== 'string') {
       return NextResponse.json({ error: 'Invalid transaction ID.' }, { status: 400 });

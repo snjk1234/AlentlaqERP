@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { createUserSessionToken } from '@/lib/user-session-token';
 
 export async function POST(request: Request) {
   try {
@@ -21,20 +20,11 @@ export async function POST(request: Request) {
 
     // In a real app, you'd return a JWT token here.
     // For this simple POS, we just return the user object (excluding password).
-    return NextResponse.json({
-      id: user.id,
-      username: user.username,
-      name: user.name,
-      role: user.role,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      sessionToken: createUserSessionToken(user),
-    });
+    const { password: _, ...userWithoutPassword } = user;
+    
+    return NextResponse.json(userWithoutPassword);
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'فشل تسجيل الدخول' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'فشل تسجيل الدخول' }, { status: 500 });
   }
 }

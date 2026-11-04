@@ -10,7 +10,9 @@ function customerAccountBalance(customer) {
     .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
   const returns = (customer.orderReturns || [])
     .reduce((sum, orderReturn) => sum + Number(orderReturn.netAmount || 0) - Number(orderReturn.refundAmount || 0), 0);
-  return money(Number(customer.openingBalance || 0) + invoices - payments - returns);
+  const discounts = (customer.discounts || [])
+    .reduce((sum, discount) => sum + Number(discount.amount || 0), 0);
+  return money(Number(customer.openingBalance || 0) + invoices - payments - returns - discounts);
 }
 
 function calculateRefundAmount(returnAmount, customerBalance) {
@@ -95,7 +97,7 @@ async function createOrderReturn(prisma, input) {
     if (order.customerId) {
       const customer = await tx.customer.findUnique({
         where: { id: order.customerId },
-        include: { orders: true, payments: true, orderReturns: true }
+        include: { orders: true, payments: true, orderReturns: true, discounts: true }
       });
       if (!customer) invalid('العميل المرتبط بالفاتورة غير موجود.');
       customerBalance = customerAccountBalance(customer);
