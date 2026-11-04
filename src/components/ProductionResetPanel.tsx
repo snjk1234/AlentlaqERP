@@ -88,7 +88,8 @@ export default function ProductionResetPanel({ sessionToken, onCompleted }: { se
     }
   };
 
-  return <section className="flex-1 min-h-0 flex flex-col p-2 space-y-3 overflow-auto custom-scrollbar no-print" dir="rtl" aria-label="تفريغ البيانات">
+  return <section className="flex-1 min-h-0 overflow-auto custom-scrollbar no-print p-2" dir="rtl" aria-label="تفريغ البيانات">
+    <div className="w-full max-w-3xl space-y-3">
     <div>
       <h2 className="text-xl font-bold text-white">تفريغ البيانات</h2>
       <p className="text-xs text-slate-400 mt-0.5">يحذف الفواتير والدفعات وسندات الخصم والمشتريات والمصروفات والتحويلات والجرد، ويُبقي الأصناف والموردين والعملاء والبنوك والمستخدمين.</p>
@@ -115,7 +116,7 @@ export default function ProductionResetPanel({ sessionToken, onCompleted }: { se
         </div>
         <div className="max-h-56 overflow-auto custom-scrollbar">
           <table className="w-full text-right text-xs">
-            <thead className="bg-white/5 text-slate-300 sticky top-0"><tr><th className="py-1.5 px-2">الاسم</th><th className="py-1.5 px-2">القيمة الحالية</th><th className="py-1.5 px-2">القيمة بعد التفريغ ({section.unit})</th></tr></thead>
+            <thead className="bg-white/5 text-slate-300 sticky top-0"><tr><th className="py-1.5 px-2">الاسم</th><th className="py-1.5 px-2 w-36 whitespace-nowrap">القيمة الحالية</th><th className="py-1.5 px-2 w-44 whitespace-nowrap">القيمة بعد التفريغ ({section.unit})</th></tr></thead>
             <tbody className="divide-y divide-white/5">
               {preview.entities[section.kind].map(row => <tr key={row.id}>
                 <td className="py-1 px-2 text-slate-200">{row.name}</td>
@@ -142,5 +143,6 @@ export default function ProductionResetPanel({ sessionToken, onCompleted }: { se
       </div>
     </>}
     {!preview && !error && <p className="text-xs text-slate-400">جارٍ التحميل...</p>}
+    </div>
   </section>;
 }
