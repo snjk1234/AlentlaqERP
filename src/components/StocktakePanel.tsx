@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from 'react';
+import { SearchIcon } from 'lucide-react';
 import { formatMoney } from '@/lib/money-format';
 import { stocktakeTotals } from '@/lib/stocktake-totals';
 import type { PrintStocktake } from '@/components/PrintDocuments';
@@ -218,8 +219,11 @@ export default function StocktakePanel({ user, onInventoryChanged, onPrint }: {
         </div>
         {!approved && <div className="rounded-xl border border-slate-700 p-3 space-y-2">
           <div className="flex flex-wrap gap-2">
-            <input aria-label="بحث أصناف الجرد" placeholder="بحث بالكود أو الاسم أو المواصفات أو المورد" className={`${fieldClass} w-[260px]`}
-              value={search} onChange={event => setSearch(event.target.value)} />
+            <span className="relative w-[460px]">
+              <SearchIcon size={16} className="pointer-events-none absolute inset-y-0 right-3 my-auto text-slate-400" />
+              <input aria-label="بحث أصناف الجرد" placeholder="بحث بالكود أو الاسم أو المواصفات أو المورد" className={`${fieldClass} w-full pr-9`}
+                value={search} onChange={event => setSearch(event.target.value)} />
+            </span>
             <button className={buttonClass} disabled={!canEdit} onClick={() => {
               setLines(previous => [...previous, ...listing.products.filter(product => !selected.has(product.id) && !reserved.has(product.id))
                 .map(product => ({ productId: product.id, productLabel: label(product), bookQty: product.stockQty, countedQty: '', unitCost: product.costPrice }))]);

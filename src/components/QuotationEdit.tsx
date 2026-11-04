@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { SearchIcon } from 'lucide-react';
 import MoneyInput from './MoneyInput';
 import { formatMoney } from '../lib/money-format';
 import QuotationPricing from './QuotationPricing';
@@ -75,7 +76,10 @@ export default function QuotationEdit({ quotation, products, user, onClose, onSa
       </div>
       <p className="text-sm text-slate-400">تعديل البنود والكميات والأسعار فقط. يبقى رقم العرض والعميل ونوعه وبيانات الاستلام دون تغيير، ولا يتأثر المخزون.</p>
       {error && <p role="alert" className="rounded bg-red-950 p-3 text-red-200">{error}</p>}
-      <input aria-label="بحث أصناف عرض السعر" placeholder="بحث لإضافة صنف" className={`${field} w-full`} value={search} disabled={busy} onChange={event => setSearch(event.target.value)} />
+      <span className="relative block w-full">
+        <SearchIcon size={16} className="pointer-events-none absolute inset-y-0 right-3 my-auto text-slate-400" />
+        <input aria-label="بحث أصناف عرض السعر" placeholder="بحث لإضافة صنف" className={`${field} w-full pr-9`} value={search} disabled={busy} onChange={event => setSearch(event.target.value)} />
+      </span>
       {search.trim() && <div className="max-h-36 overflow-auto space-y-1">
         {products.filter(product => !items.some(item => item.productId === product.id)
           && description(product).toLowerCase().includes(search.toLowerCase())).map(product =>

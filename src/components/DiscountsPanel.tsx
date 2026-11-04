@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from 'react';
-import { PercentIcon, PlusIcon, PrinterIcon, XIcon } from 'lucide-react';
+import { PercentIcon, PlusIcon, PrinterIcon, SearchIcon, XIcon } from 'lucide-react';
 import { inAccountPeriod, statementTotals, type StatementDiscount } from '@/lib/account-period';
 import { formatMoney as money } from '@/lib/money-format';
 import MoneyInput from '@/components/MoneyInput';
@@ -199,7 +199,10 @@ export default function DiscountsPanel({
       {notice && <p role="status" className="rounded-sm border border-sky-500/30 bg-sky-500/10 p-2 text-sm text-sky-200">{notice}</p>}
       <div className="flex flex-wrap items-end gap-2 rounded-sm border border-white/10 bg-slate-900 p-2">
         <label className="w-[260px] text-xs font-bold text-slate-300">بحث
-          <input value={search} onChange={event => setSearch(event.target.value)} placeholder="اسم الطرف أو رقم السند" className={inputClass} />
+          <span className="relative block">
+            <SearchIcon size={14} className="pointer-events-none absolute inset-y-0 right-2.5 my-auto text-slate-400" />
+            <input value={search} onChange={event => setSearch(event.target.value)} placeholder="اسم الطرف أو رقم السند" className={`${inputClass} pr-8`} />
+          </span>
         </label>
         <button type="button" onClick={openForm}
           disabled={!(canAllow && customersReady) && !(canEarn && suppliersReady)}

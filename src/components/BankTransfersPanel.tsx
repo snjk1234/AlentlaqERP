@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { SearchIcon } from 'lucide-react';
 import MoneyInput from './MoneyInput';
 import { formatMoney } from '../lib/money-format';
 import type { PrintBankTransfer } from './PrintDocuments';
@@ -100,7 +101,10 @@ export default function BankTransfersPanel({ user, banks, onSnapshot, onLoading,
     {message && <p role="status" className="rounded bg-emerald-950 p-3 text-emerald-200">{message}</p>}
     {loading && <p className="text-slate-400">جارٍ تحميل التحويلات والأرصدة...</p>}
     <div className="flex flex-wrap gap-2">
-      <input aria-label="بحث التحويلات" placeholder="رقم السند أو الحساب أو المرجع" className={`${field} min-w-56 flex-1`} value={search} onChange={event => setSearch(event.target.value)} />
+      <span className="relative min-w-56 flex-1">
+        <SearchIcon size={16} className="pointer-events-none absolute inset-y-0 right-3 my-auto text-slate-400" />
+        <input aria-label="بحث التحويلات" placeholder="رقم السند أو الحساب أو المرجع" className={`${field} w-full pr-9`} value={search} onChange={event => setSearch(event.target.value)} />
+      </span>
       <select aria-label="حساب التحويلات" className={field} value={bankId} onChange={event => setBankId(event.target.value)}>
         <option value="">كل الحسابات</option>
         {banks.map(bank => <option key={bank.id} value={bank.id}>{bank.name}</option>)}
