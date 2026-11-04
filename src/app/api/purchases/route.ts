@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { updateDocument } from '@/lib/document-edit-route';
+import { normalizeWarehouseReceiptNumber } from '@/lib/document-edits';
 
 export const dynamic = 'force-dynamic';
+
+export async function PUT(request: Request) {
+  return updateDocument(request, 'purchase');
+}
 
 // GET all purchase orders
 export async function GET() {
@@ -27,6 +33,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { billNumber, supplierId, invoiceType, items } = body;
+    const warehouseReceiptNumber = normalizeWarehouseReceiptNumber(body.warehouseReceiptNumber);
 
     if (!billNumber || !supplierId || !items || items.length === 0) {
       return NextResponse.json({ error: 'Missing required purchase order fields' }, { status: 400 });
@@ -94,6 +101,7 @@ export async function POST(request: Request) {
       const purchaseOrder = await tx.purchaseOrder.create({
         data: {
           billNumber,
+          warehouseReceiptNumber,
           supplierId,
           invoiceType: invoiceType || 'فاتورة ضريبية',
           totalAmount,
@@ -120,6 +128,6 @@ export async function POST(request: Request) {
     if (error.code === 'P2002') {
       return NextResponse.json({ error: 'رقم فاتورة الشراء/التوريد مسجل بالفعل' }, { status: 400 });
     }
-    return NextResponse.json({ error: error.message || 'Failed to create purchase order' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to create purchase order' }, { status: error.statusCode || 500 });
   }
 }

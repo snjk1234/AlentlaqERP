@@ -21,7 +21,7 @@ const models = [
 ];
 
 function createRemoteClient(getConfig, transactionId = null) {
-  async function request(path, payload) {
+  async function request(path, payload, sessionToken, unwrap = true, method = 'POST') {
     const config = getConfig();
     if (!config || !config.serverUrl) {
       throw new Error('Configure serverUrl in the AlEntlaqPOS server.json file.');
@@ -44,10 +44,10 @@ function createRemoteClient(getConfig, transactionId = null) {
 
     const headers = {
       'content-type': 'application/json',
-      authorization: `Bearer ${config.apiToken}`
+      authorization: `Bearer ${sessionToken || config.apiToken}`
     };
     const response = await fetch(serverUrl, {
-      method: 'POST',
+      method,
       headers,
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(30000)
@@ -61,9 +61,10 @@ function createRemoteClient(getConfig, transactionId = null) {
     if (!response.ok) {
       const error = new Error(result.error || `POS server request failed (${response.status}).`);
       if (typeof result.code === 'string') error.code = result.code;
+      error.statusCode = response.status;
       throw error;
     }
-    return result.data;
+    return unwrap ? result.data : result;
   }
 
   const send = payload => request('/api/db', payload);
@@ -99,8 +100,46 @@ function createRemoteClient(getConfig, transactionId = null) {
     }
   };
   client.createOrderReturn = data => request('/api/order-returns', data);
-  client.createAccountDiscount = data => request('/api/discounts', data);
+  client.createAccountDiscount = (data, sessionToken) => {
+    if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وتأكد من تحديث الخادم.');
+    return request('/api/discounts', data, sessionToken);
+  };
+  client.editInvoiceDetails = (data, sessionToken) => {
+    if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وتأكد من تحديث الخادم.');
+    return request('/api/invoice-details', data, sessionToken, false, 'PUT');
+  };
+  client.login = async credentials => {
+    const user = await request('/api/users/login', credentials, undefined, false);
+    if (!user || typeof user.sessionToken !== 'string' || !user.sessionToken.trim()) {
+      throw new Error('خادم البيانات لا يُصدر جلسة المستخدم المطلوبة لهذه النسخة. حدّث خادم البيانات وأعد تشغيله، ثم سجّل الدخول مجددًا. تثبيت المحطة وحده لا يحدّث الخادم.');
+    }
+    return user;
+  };
+  client.stocktakeOperation = (data, sessionToken) => {
+    if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وإذا استمرت المشكلة فحدّث خادم البيانات وأعد تشغيله.');
+    return request('/api/stocktakes', data, sessionToken);
+  };
+  client.productionResetOperation = (data, sessionToken) => {
+    if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وتأكد من تحديث الخادم.');
+    return request('/api/production-reset', data, sessionToken);
+  };
+  client.expenseCategoryOperation = (data, sessionToken) => {
+    if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وتأكد من تحديث الخادم.');
+    return request('/api/expense-categories', data, sessionToken);
+  };
+  client.productOptionOperation = (data, sessionToken) => {
+    if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وتأكد من تحديث الخادم.');
+    return request('/api/product-options', data, sessionToken);
+  };
+  client.bankTransferOperation = (data, sessionToken) => {
+    if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وتأكد من تحديث الخادم.');
+    return request('/api/bank-transfers', data, sessionToken);
+  };
   client.$disconnect = async () => {};
+  client.quotationCosts = (data, sessionToken) => {
+    if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وتأكد من تحديث الخادم.');
+    return request('/api/quotation-costs', data, sessionToken, false);
+  };
   return client;
 }
 

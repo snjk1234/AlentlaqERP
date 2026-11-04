@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { FileTextIcon, PrinterIcon, XIcon } from 'lucide-react';
 import { statementEntries, statementTotals, type StatementDiscount } from '@/lib/account-period';
+import { formatMoney as money } from '../lib/money-format';
 
 type DatedDocument = { id: string; date?: string | Date | null; createdAt?: string | Date | null };
 export type StatementInvoice = DatedDocument & {
@@ -52,9 +53,6 @@ type Props = {
   onDiscount?: (document: StatementDiscount) => void;
 };
 
-const money = (value: number) => value.toLocaleString('en-US', {
-  minimumFractionDigits: 2, maximumFractionDigits: 2
-});
 const dateLabel = (value: string | Date) => new Date(value).toLocaleDateString('ar-EG', {
   year: 'numeric', month: '2-digit', day: '2-digit'
 });
@@ -94,7 +92,7 @@ export default function AccountStatement({
         <div className="account-statement-scroll account-history-scroll">
           <div className="account-history-screen no-print flex flex-col gap-1.5">
             {!supplier && (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2 mb-2">
+              <div className="grid grid-cols-6 gap-2 mb-2">
                 {([
                   ['إجمالي الفواتير والرصيد الافتتاحي', totals.totalInvoices, 'text-white'],
                   ['إجمالي السدادات', totals.totalPayments, 'text-emerald-400'],
@@ -109,6 +107,41 @@ export default function AccountStatement({
                   </div>
                 ))}
               </div>
+            )}
+            {discounts.length > 0 && (
+              <section className="bg-slate-950 border border-slate-800 rounded p-2">
+                <h4 className="text-md font-bold text-white mb-2 border-b border-white/5 pb-1">
+                  {supplier ? 'سجل الخصم المكتسب' : 'سجل الخصم المسموح به'}
+                </h4>
+                <div className="max-h-44 overflow-auto custom-scrollbar">
+                  <table className="w-full text-right text-sm whitespace-nowrap">
+                    <thead className="bg-slate-900 text-slate-400">
+                      <tr>
+                        {['رقم سند الخصم', 'التاريخ', 'الملاحظات', 'المبلغ', 'طباعة'].map(label => (
+                          <th key={label} scope="col" className="p-3">{label}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/50">
+                      {discounts.map(discount => (
+                        <tr key={discount.id} className="text-white">
+                          <td className="p-3 font-mono font-bold"><bdi>{discount.discountNumber}</bdi></td>
+                          <td className="p-3 font-mono text-xs text-slate-300">{dateLabel(discount.date || discount.createdAt || '')}</td>
+                          <td className="p-3 text-slate-400">{discount.notes || '—'}</td>
+                          <td className="p-3 font-mono text-sky-400">{money(discount.amount)} ج.م</td>
+                          <td className="p-3 text-center">
+                            {onDiscount && <button type="button" onClick={() => onDiscount(discount)}
+                              aria-label={`طباعة سند الخصم ${discount.discountNumber}`}
+                              className="rounded-sm bg-white/5 p-1.5 text-slate-300 hover:bg-white/10 hover:text-white">
+                              <PrinterIcon size={14} />
+                            </button>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
             )}
             <section className="bg-slate-950 border border-slate-800 rounded p-2">
               <h4 className="text-md font-bold text-white mb-2 border-b border-white/5 pb-1">
@@ -196,41 +229,6 @@ export default function AccountStatement({
                           <td className="p-3 text-center">
                             {onReturn && <button type="button" onClick={() => onReturn(orderReturn)}
                               aria-label={`طباعة المرتجع ${orderReturn.returnNumber}`}
-                              className="rounded-sm bg-white/5 p-1.5 text-slate-300 hover:bg-white/10 hover:text-white">
-                              <PrinterIcon size={14} />
-                            </button>}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            )}
-            {discounts.length > 0 && (
-              <section className="bg-slate-950 border border-slate-800 rounded p-2">
-                <h4 className="text-md font-bold text-white mb-2 border-b border-white/5 pb-1">
-                  {supplier ? 'سجل الخصم المكتسب' : 'سجل الخصم المسموح به'}
-                </h4>
-                <div className="max-h-44 overflow-auto custom-scrollbar">
-                  <table className="w-full text-right text-sm whitespace-nowrap">
-                    <thead className="bg-slate-900 text-slate-400">
-                      <tr>
-                        {['رقم سند الخصم', 'التاريخ', 'الملاحظات', 'المبلغ', 'طباعة'].map(label => (
-                          <th key={label} scope="col" className="p-3">{label}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/50">
-                      {discounts.map(discount => (
-                        <tr key={discount.id} className="text-white">
-                          <td className="p-3 font-mono font-bold"><bdi>{discount.discountNumber}</bdi></td>
-                          <td className="p-3 font-mono text-xs text-slate-300">{dateLabel(discount.date || discount.createdAt || '')}</td>
-                          <td className="p-3 text-slate-400">{discount.notes || '—'}</td>
-                          <td className="p-3 font-mono text-sky-400">{money(discount.amount)} ج.م</td>
-                          <td className="p-3 text-center">
-                            {onDiscount && <button type="button" onClick={() => onDiscount(discount)}
-                              aria-label={`طباعة سند الخصم ${discount.discountNumber}`}
                               className="rounded-sm bg-white/5 p-1.5 text-slate-300 hover:bg-white/10 hover:text-white">
                               <PrinterIcon size={14} />
                             </button>}
@@ -349,7 +347,7 @@ export default function AccountStatement({
                     : discount
                       ? [supplier ? 'خصم مكتسب من المورد' : 'خصم مسموح به للعميل', discount.notes].filter(Boolean).join(' · ')
                       : orderReturn
-                      ? [
+                        ? [
                         `مرتجع من الفاتورة ${orderReturn.order?.invoiceNumber || '—'}`,
                         orderReturn.refundAmount > 0
                           ? `رد ${money(orderReturn.refundAmount)} ج.م ${orderReturn.refundMethod === 'BANK' ? `من ${orderReturn.bank?.name || 'البنك'}` : 'نقدًا'}`
@@ -408,9 +406,7 @@ export default function AccountStatement({
             </table>
             <footer className="statement-footer document-footer">
               <span>الإنطلاق · كشف حساب تفصيلي</span>
-              <span>{supplier
-                ? 'الرصيد الافتتاحي + الفواتير − السدادات − الخصومات = إجمالي المطلوب'
-                : 'الرصيد الافتتاحي + الفواتير − السدادات − الخصومات − المرتجعات + المبالغ المردودة = إجمالي المطلوب'}</span>
+              <span>الرصيد الافتتاحي + الفواتير − السدادات − الخصومات − المرتجعات + المبالغ المردودة = إجمالي المطلوب</span>
               <span><bdi>https://www.alentlaq.online/</bdi></span>
               <span><bdi>01030099400 / 01021683030</bdi> · <bdi>admin@alentlaq.online</bdi></span>
             </footer>

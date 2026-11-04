@@ -1,1 +1,0 @@
-{"version":3,"sources":["../../../src/lib/prisma.ts"],"sourcesContent":["import { createAccessClient } from './access-client';\r\n\r\nexport const prisma = createAccessClient();\r\n"],"names":["prisma"],"mappings":"oqCAEO,IAAMA,EAAS,CAAA,EAFtB,AAEsB,EAFtB,CAAA,CAAA,MAEsB,kBAAA,AAAkB"}

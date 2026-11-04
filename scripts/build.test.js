@@ -31,6 +31,15 @@ test('desktop export excludes TS APIs and proxy without changing host routing or
   assert.ok(host.serverExternalPackages.includes('odbc'));
 });
 
+test('host package uses isolated standalone output without changing desktop output', () => {
+  const host = loadConfig('host');
+  assert.equal(host.output, 'standalone');
+  assert.equal(host.distDir, '.next-host');
+  assert.ok(host.pageExtensions.includes('ts'));
+  assert.ok(host.outputFileTracingIncludes['/*'].includes('./node_modules/odbc/**/*'));
+  assert.ok(host.outputFileTracingIncludes['/*'].includes('./node_modules/dotenv/**/*'));
+});
+
 for (const [name, result, exitCode] of [
   ['successful build', { status: 0 }, 0],
   ['failed build', { status: 2 }, 2],

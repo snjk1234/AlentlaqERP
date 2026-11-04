@@ -12,7 +12,7 @@ const exportsPrint = {};
 vm.runInNewContext(ts.transpileModule(fs.readFileSync(componentPath, 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2022 }
 }).outputText, { exports: exportsPrint, require });
-const { DiscountPrint, InvoicePrint, ReceiptPrint, TablePrint } = exportsPrint;
+const { InvoicePrint, ReceiptPrint, TablePrint, StocktakePrint } = exportsPrint;
 const render = (component, props) => renderToStaticMarkup(React.createElement(component, { onClose() {}, ...props }));
 const invoice = {
   createdAt: '2026-10-01T14:35:00', invoiceNumber: 'INV-123', billNumber: 'PUR-123',
@@ -23,6 +23,42 @@ const invoice = {
   items: [{ id: 'item', product: { name: 'Product', code: 'P-123', size: '20', color: 'Blue' },
     quantity: 2, unitCost: 50, unitPrice: 50, taxAmount: 14, total: 114 }]
 };
+
+test('draft and approved stocktake printouts retain saved notes, status, item order, blank counts and cost-valued totals', () => {
+  const document = {
+    documentNumber: 'STK-00000025', status: 'DRAFT', createdAt: '2026-10-24T12:00:00Z', createdBy: 'Keeper',
+    notes: 'ملاحظات بعد الحفظ\nسطر آخر', approvedBy: null, approvedAt: null,
+    items: [
+      { productLabel: 'Z-PIPE', bookQty: 100, countedQty: 90, unitCost: 150 },
+      { productLabel: 'A-HOSE', bookQty: 10, countedQty: 20, unitCost: 200 },
+      { productLabel: 'Uncounted', bookQty: 1000, countedQty: null, unitCost: 300 },
+      { productLabel: 'Zero', bookQty: 2, countedQty: 0, unitCost: 0 }
+    ]
+  };
+  const html = render(StocktakePrint, { document });
+  assert.ok(html.includes('<colgroup><col style="width:40%"/><col style="width:11%"/><col style="width:12%"/><col style="width:10%"/><col style="width:13%"/><col style="width:14%"/></colgroup>'));
+  for (const text of ['printable-stocktake', 'STK-00000025', 'مسودة جرد مخزون', 'غير معتمدة', 'Keeper',
+    'ملاحظات بعد الحفظ', 'سطر آخر', 'لم يُعدّ بعد', '1,500.00', '2,000.00', '500.00', 'قيمة النقص', 'قيمة الزيادة', 'الصافي']) {
+    assert.ok(html.includes(text), text);
+  }
+  assert.ok(html.indexOf('Z-PIPE') < html.indexOf('A-HOSE'));
+  const totalsRow = html.match(/<div class="document-totals stocktake-print-totals">([\s\S]*?)<\/div>/);
+  assert.ok(totalsRow);
+  assert.equal((totalsRow[1].match(/<p>/g) || []).length, 3);
+  for (const label of ['قيمة النقص', 'قيمة الزيادة', 'الصافي']) assert.ok(totalsRow[1].includes(label));
+  const css = fs.readFileSync(path.join(__dirname, '..', 'app', 'globals.css'), 'utf8');
+  assert.match(css, /\.stocktake-print-totals\s*\{[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.equal((html.match(/scope="col"/g) || []).length, 6);
+  const approved = render(StocktakePrint, { document: {
+    ...document, status: 'APPROVED', approvedBy: 'Manager', approvedAt: '2026-10-24T13:00:00Z'
+  } });
+  assert.ok(approved.includes('جرد مخزون معتمد') && approved.includes('Manager'));
+  assert.ok(!approved.includes('غير معتمدة'));
+  const legacy = render(StocktakePrint, { document: {
+    ...document, items: [{ productLabel: 'Legacy', bookQty: 10, countedQty: 9, unitCost: null }]
+  } });
+  assert.ok(legacy.includes('غير محفوظة') && legacy.includes('غير متاحة'));
+});
 
 test('sales invoices and quotations preserve items, tax, totals, parties, QR and conversion actions', () => {
   const html = render(InvoicePrint, {
@@ -55,6 +91,64 @@ test('purchase invoices preserve supplier details and hide cost/tax/totals for n
   for (const value of ['50.00', '14.00', '114.00', 'document-totals']) assert.ok(!restricted.includes(value), value);
   assert.equal((restricted.match(/scope="col"/g) || []).length, 4);
   assert.ok(restricted.includes('colSpan="4"'));
+});
+
+test('warehouse receipt number prints only on purchase invoices, including quantity-only copies', () => {
+  for (const showAmounts of [true, false]) {
+    const printed = render(InvoicePrint, { invoice: { ...invoice, warehouseReceiptNumber: 'WR-0007' }, purchase: true, showAmounts });
+    assert.ok(printed.includes('رقم استلام المخزن'));
+    assert.ok(printed.includes('WR-0007'));
+  }
+  assert.ok(!render(InvoicePrint, { invoice: { ...invoice, warehouseReceiptNumber: 'WR-0007' } }).includes('WR-0007'));
+  assert.ok(!render(InvoicePrint, { invoice, purchase: true }).includes('رقم استلام المخزن'));
+});
+
+test('supplier statement loads purchase items and products through both API and Electron for printing', async () => {
+  const root = path.join(__dirname, '..', '..');
+  const queries = [];
+  const prisma = { supplier: { findMany: async args => {
+    queries.push(args);
+    assert.equal(args.include.purchaseOrders.include.items.include.product, true);
+    assert.equal(args.include.expenses.include.bank, true);
+    return [{ ...invoice.supplier, purchaseOrders: [invoice], expenses: [] }];
+  } } };
+  const routeExports = {};
+  const source = fs.readFileSync(path.join(root, 'src', 'app', 'api', 'suppliers', 'route.ts'), 'utf8');
+  vm.runInNewContext(ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
+  }).outputText, {
+    exports: routeExports, console,
+    require: name => {
+      if (name === '@/lib/prisma') return { prisma };
+      if (name === 'next/server') return { NextResponse: { json: data => data } };
+      throw new Error(`Unexpected import: ${name}`);
+    }
+  });
+  const handlers = {};
+  const main = ts.createSourceFile('main.js', fs.readFileSync(path.join(root, 'electron', 'main.js'), 'utf8'), ts.ScriptTarget.Latest, true);
+  const statement = main.statements.find(node => ts.isExpressionStatement(node)
+    && ts.isCallExpression(node.expression)
+    && node.expression.expression.getText(main) === 'ipcMain.handle'
+    && node.expression.arguments[0]?.text === 'get-suppliers');
+  assert.ok(statement);
+  vm.runInNewContext(statement.getText(main), {
+    prisma, console, ipcMain: { handle: (name, callback) => { handlers[name] = callback; } }
+  });
+  for (const suppliers of [await routeExports.GET(), await handlers['get-suppliers']()]) {
+    const supplier = suppliers[0];
+    const html = render(InvoicePrint, {
+      invoice: { ...supplier.purchaseOrders[0], supplier }, purchase: true
+    });
+    for (const value of ['Product', 'P-123', '20', 'Blue', 'PUR-123', '114.00']) {
+      assert.ok(html.includes(value), value);
+    }
+    const restricted = render(InvoicePrint, {
+      invoice: { ...supplier.purchaseOrders[0], supplier }, purchase: true, showAmounts: false
+    });
+    assert.ok(restricted.includes('Product'));
+    assert.ok(!restricted.includes('114.00'));
+  }
+  assert.equal(queries.length, 2);
 });
 
 test('printed invoices omit registration numbers and tax classifications without changing amounts', () => {
@@ -95,20 +189,6 @@ test('receipts retain payment details, references, signatures and detachable stu
     assert.ok(html.includes(expense ? 'EXP-123' : 'REC-123'));
     assert.ok(html.includes(expense ? 'Supplier' : 'Customer'));
     assert.ok(!html.includes('border-black') && !html.includes('font-black'));
-  }
-});
-
-test('discount vouchers print the party and amount without presenting a cash receipt', () => {
-  for (const kind of ['ALLOWED', 'EARNED']) {
-    const html = render(DiscountPrint, { discount: {
-      kind, discountNumber: 'DSC-123', date: '2026-10-02', partyName: 'Account',
-      amount: 25, notes: 'Settlement'
-    } });
-    for (const value of ['printable-discount', 'DSC-123', 'Account', '25.00', 'Settlement', 'دون حركة نقدية']) {
-      assert.ok(html.includes(value), value);
-    }
-    assert.ok(html.includes(kind === 'ALLOWED' ? 'سند خصم مسموح به' : 'سند خصم مكتسب'));
-    assert.ok(!html.includes('خزينة / بنك'));
   }
 });
 
@@ -181,7 +261,7 @@ test('all original print surfaces use the shared components and retain their dat
   };
   visit(tree);
   assert.equal(tags.length, 5);
-  assert.ok(tags.some(tag => tag.includes('sortCartAndInvoiceItems') && tag.includes('convertQuotationToInvoice') && tag.includes('qrCodeUrl')));
+  assert.ok(tags.some(tag => tag.includes('invoice={invoice}') && tag.includes('convertQuotationToInvoice') && tag.includes('qrCodeUrl')));
   assert.ok(tags.some(tag => tag.includes('selectedPurchase') && tag.includes("currentUser?.role === 'ADMIN'")));
   assert.ok(tags.some(tag => tag.includes('selectedReceipt')));
   assert.ok(tags.some(tag => tag.includes('selectedExpense') && tag.includes('expense')));

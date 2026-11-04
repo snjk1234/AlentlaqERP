@@ -19,6 +19,7 @@ function loadOrderHandler(client) {
       };
       if (id === '../src/lib/remote-client') return { createRemoteClient: () => client };
       if (id === '../src/lib/customer-prices') return require('./customer-prices');
+      if (id.startsWith('../src/lib/')) return require(id.replace('../src/lib/', './'));
       return require(id);
     },
     process, Buffer, console: { ...console, error() {} }, __dirname: path.join(root, 'electron')

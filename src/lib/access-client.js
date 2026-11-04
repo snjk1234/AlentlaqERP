@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const odbc = require('odbc');
 const path = require('path');
+const { nextPaymentNumber, assignMissingPaymentNumbers } = require('./payment-numbers');
 
 const field = (type, options = {}) => ({ type, ...options });
 const timestamp = field('date', { nullable: false });
@@ -124,7 +125,7 @@ const models = {
     table: 'OrderItem',
     fields: {
       id, orderId: text({ size: 50, nullable: false }), productId: text({ size: 50, nullable: false }),
-      quantity: integer({ nullable: false }), unitPrice: number({ nullable: false }),
+      position: integer(), quantity: integer({ nullable: false }), unitPrice: number({ nullable: false }),
       taxAmount: number({ nullable: false }), total: number({ nullable: false })
     },
     defaults: {},
@@ -199,6 +200,25 @@ const models = {
       generalExpenses: { model: 'generalExpense', many: true, foreignKey: 'bankId' }
     }
   },
+  bankTransfer: {
+    table: 'BankTransfer',
+    fields: {
+      id, transferNumber: text({ nullable: false }), requestId: text({ size: 50, nullable: false }),
+      fromBankId: text({ size: 50, nullable: false }), toBankId: text({ size: 50, nullable: false }),
+      fromBankName: text({ nullable: false }), toBankName: text({ nullable: false }),
+      fromAccountNumber: text(), toAccountNumber: text(),
+      amount: number({ nullable: false }), date: timestamp, reference: text(), notes: text({ memo: true }),
+      status: text({ nullable: false }), reversalOf: text({ size: 50 }),
+      createdBy: text({ size: 50, nullable: false }), createdByName: text({ nullable: false }),
+      fromBalanceBefore: number({ nullable: false }), fromBalanceAfter: number({ nullable: false }),
+      toBalanceBefore: number({ nullable: false }), toBalanceAfter: number({ nullable: false }),
+      createdAt: timestamp, updatedAt: timestamp
+    },
+    defaults: { status: 'POSTED' },
+    unique: [['transferNumber'], ['requestId']],
+    foreignKeys: [{ field: 'fromBankId', model: 'bank' }, { field: 'toBankId', model: 'bank' }],
+    relations: {}
+  },
   customerCeilingQuota: {
     table: 'CustomerCeilingQuota',
     fields: {
@@ -223,7 +243,8 @@ const models = {
     fields: {
       id, customerId: text({ size: 50, nullable: false }), bankId: text({ size: 50, nullable: false }),
       amount: number({ nullable: false }), reference: text(), receiptNumber: text(),
-      date: timestamp, notes: text({ memo: true }), createdAt: timestamp, updatedAt: timestamp
+      date: timestamp, notes: text({ memo: true }), correctionHistory: text({ memo: true }),
+      createdAt: timestamp, updatedAt: timestamp
     },
     defaults: {},
     unique: [],
@@ -255,6 +276,7 @@ const models = {
     table: 'PurchaseOrder',
     fields: {
       id, billNumber: text({ nullable: false }), supplierId: text({ size: 50, nullable: false }),
+      warehouseReceiptNumber: text(),
       invoiceType: text({ nullable: false }), totalAmount: number({ nullable: false }),
       taxAmount: number({ nullable: false }), netAmount: number({ nullable: false }),
       date: timestamp, createdAt: timestamp, updatedAt: timestamp
@@ -313,6 +335,44 @@ const models = {
       expenses: { model: 'generalExpense', many: true, foreignKey: 'categoryId' }
     }
   },
+  productOption: {
+    table: 'ProductOption',
+    fields: {
+      id, kind: text({ size: 20, nullable: false }), value: text({ size: 100, nullable: false }),
+      position: integer({ nullable: false }), createdAt: timestamp, updatedAt: timestamp
+    },
+    defaults: { position: 0 }, unique: [['kind', 'value']], relations: {}
+  },
+  stocktakeSetting: {
+    table: 'StocktakeSetting',
+    fields: { id, passwordHash: text({ nullable: false }), createdAt: timestamp, updatedAt: timestamp },
+    defaults: {}, unique: [], relations: {}
+  },
+  stocktake: {
+    table: 'Stocktake',
+    fields: {
+      id, documentNumber: text({ nullable: false }), status: text({ nullable: false }),
+      notes: text({ memo: true }), revision: integer({ nullable: false }),
+      createdBy: text({ nullable: false }), approvedBy: text(), approvedAt: field('date'),
+      createdAt: timestamp, updatedAt: timestamp
+    },
+    defaults: { status: 'DRAFT', revision: 1 }, unique: [['documentNumber']],
+    relations: { items: { model: 'stocktakeItem', many: true, foreignKey: 'stocktakeId', onDelete: 'cascade' } }
+  },
+  stocktakeItem: {
+    table: 'StocktakeItem',
+    fields: {
+      id, stocktakeId: text({ size: 50, nullable: false }), productId: text({ size: 50, nullable: false }),
+      position: integer({ nullable: false }), productLabel: text({ memo: true, nullable: false }),
+      bookQty: integer({ nullable: false }), countedQty: integer(), unitCost: number()
+    },
+    defaults: {}, unique: [['stocktakeId', 'productId']],
+    foreignKeys: [
+      { field: 'stocktakeId', model: 'stocktake' },
+      { field: 'productId', model: 'product' }
+    ],
+    relations: { stocktake: { model: 'stocktake', foreignKey: 'stocktakeId' } }
+  },
   generalExpense: {
     table: 'GeneralExpense',
     fields: {
@@ -354,8 +414,8 @@ const models = {
 };
 
 const modelNames = Object.keys(models);
-let pool;
-let initialization;
+const poolKey = Symbol.for('alentlaq.access.poolState');
+const poolState = globalThis[poolKey] || (globalThis[poolKey] = {});
 const queueKey = Symbol.for('alentlaq.access.transactionQueue');
 const transactionQueue = globalThis[queueKey] || (globalThis[queueKey] = { tail: Promise.resolve() });
 const remoteTransactions = new Map();
@@ -477,12 +537,14 @@ function normalizeError(error) {
   if (state === '23000') mapped.code = 'P2002';
   else if (typeof error?.code === 'string') mapped.code = error.code;
   if (error?.odbcErrors) mapped.odbcErrors = error.odbcErrors;
+  if (typeof error?.statusCode === 'number') mapped.statusCode = error.statusCode;
   return mapped;
 }
 
 async function ensureSchema() {
-  if (!pool) pool = await odbc.pool({ connectionString: connectionString(), maxSize: 5, initialSize: 1 });
-  const connection = await pool.connect();
+  // Separate Access connections can retain stale snapshots after a rollback.
+  if (!poolState.pool) poolState.pool = await odbc.pool({ connectionString: connectionString(), maxSize: 1, initialSize: 1 });
+  const connection = await poolState.pool.connect();
   try {
     const existingTables = await connection.tables(null, null, null, 'TABLE');
     const tableNames = new Set(existingTables.map((entry) => entry.TABLE_NAME));
@@ -504,8 +566,28 @@ async function ensureSchema() {
     if (!supplierColumns.some(column => column.COLUMN_NAME.toLowerCase() === 'openingbalance')) {
       await connection.query('ALTER TABLE [Supplier] ADD COLUMN [openingBalance] DOUBLE');
     }
+    const paymentColumns = await connection.columns(null, null, 'Payment', null);
+    if (!paymentColumns.some(column => column.COLUMN_NAME.toLowerCase() === 'correctionhistory')) {
+      await connection.query('ALTER TABLE [Payment] ADD COLUMN [correctionHistory] MEMO');
+    }
+    const orderItemColumns = await connection.columns(null, null, 'OrderItem', null);
+    if (!orderItemColumns.some(column => column.COLUMN_NAME.toLowerCase() === 'position')) {
+      await connection.query('ALTER TABLE [OrderItem] ADD COLUMN [position] LONG');
+    }
+    const stocktakeItemColumns = await connection.columns(null, null, 'StocktakeItem', null);
+    if (!stocktakeItemColumns.some(column => column.COLUMN_NAME.toLowerCase() === 'unitcost')) {
+      await connection.query('ALTER TABLE [StocktakeItem] ADD COLUMN [unitCost] DOUBLE');
+    }
+    const purchaseOrderColumns = await connection.columns(null, null, 'PurchaseOrder', null);
+    if (!purchaseOrderColumns.some(column => column.COLUMN_NAME.toLowerCase() === 'warehousereceiptnumber')) {
+      await connection.query('ALTER TABLE [PurchaseOrder] ADD COLUMN [warehouseReceiptNumber] VARCHAR(255)');
+    }
     await connection.beginTransaction();
     try {
+      const customerPayments = await connection.query('SELECT [id], [receiptNumber] FROM [Payment] ORDER BY [createdAt], [date], [id]');
+      await assignMissingPaymentNumbers(customerPayments, async (paymentId, receiptNumber) => {
+        await connection.query(`UPDATE [Payment] SET [receiptNumber] = ${encodeText(receiptNumber)} WHERE [id] = ${encodeText(paymentId)}`);
+      });
       const suppliers = await connection.query('SELECT [id], [balance] FROM [Supplier] WHERE [openingBalance] IS NULL');
       for (const supplier of suppliers) {
         const where = `[supplierId] = ${encodeText(supplier.id)}`;
@@ -521,7 +603,7 @@ async function ensureSchema() {
       try {
         await connection.rollback();
       } catch (rollbackError) {
-        console.error('Failed to roll back supplier opening balance migration:', rollbackError);
+        console.error('Failed to roll back payment numbering and supplier opening balance migration:', rollbackError);
       }
       throw error;
     }
@@ -545,8 +627,8 @@ async function ensureSchema() {
 }
 
 function ready() {
-  if (!initialization) initialization = ensureSchema();
-  return initialization;
+  if (!poolState.initialization) poolState.initialization = ensureSchema();
+  return poolState.initialization;
 }
 
 function flattenWhere(modelName, where) {
@@ -683,9 +765,12 @@ function ensureField(modelName, name) {
   return definition;
 }
 
-async function execute(connection, sql) {
+async function execute(connection, sql, parameters) {
   try {
-    return connection ? await connection.query(sql) : await pool.query(sql);
+    const target = connection || poolState.pool;
+    return parameters === undefined
+      ? await target.query(sql)
+      : await target.query(sql, parameters);
   } catch (error) {
     throw normalizeError(error);
   }
@@ -744,10 +829,11 @@ async function findMany(connection, modelName, args = {}) {
   const top = take === null ? '' : ` TOP ${take}`;
   const columns = Object.entries(model.fields).map(([name, definition]) =>
     definition.type === 'date'
-      ? `CDbl(${quoteIdentifier(name)}) AS ${quoteIdentifier(`__access_date_${name}`)}`
+      ? `${definition.nullable === false ? `CDbl(${quoteIdentifier(name)})` : `(${quoteIdentifier(name)} - #12/30/1899#)`} AS ${quoteIdentifier(`__access_date_${name}`)}`
       : quoteIdentifier(name)
   );
-  const sql = `SELECT${top} ${columns.join(', ')} FROM ${quoteIdentifier(model.table)}${whereSql(modelName, args.where)}${orderBySql(modelName, args.orderBy)}`;
+  const orderBy = args.orderBy ?? (['orderItem', 'stocktakeItem'].includes(modelName) ? { position: 'asc' } : undefined);
+  const sql = `SELECT${top} ${columns.join(', ')} FROM ${quoteIdentifier(model.table)}${whereSql(modelName, args.where)}${orderBySql(modelName, orderBy)}`;
   const rows = await executeRows(connection, modelName, sql);
   const included = await loadIncludes(connection, modelName, rows, args.include);
   return included.map((row) => selectedRow(row, args.select));
@@ -761,6 +847,10 @@ async function findOne(connection, modelName, args = {}) {
 async function insert(connection, modelName, input, include) {
   const model = models[modelName];
   const data = defaultedData(modelName, input);
+  if (modelName === 'payment' && !String(data.receiptNumber || '').trim()) {
+    const payments = await connection.query('SELECT [receiptNumber] FROM [Payment]');
+    data.receiptNumber = nextPaymentNumber(payments);
+  }
   if (modelName === 'supplier') {
     data.openingBalance = Number(input?.openingBalance ?? input?.balance ?? 0);
     data.balance = data.openingBalance;
@@ -769,6 +859,9 @@ async function insert(connection, modelName, input, include) {
   for (const relationName of Object.keys(model.relations)) {
     const relation = model.relations[relationName];
     if (relation.many && data[relationName] && typeof data[relationName] === 'object') {
+      if (relation.model === 'accountDiscount') {
+        throw new Error('يجب تسجيل سندات الخصم من خلال واجهتها المصرح بها.');
+      }
       nested[relationName] = data[relationName].create;
       delete data[relationName];
     }
@@ -786,8 +879,12 @@ async function insert(connection, modelName, input, include) {
   for (const [relationName, children] of Object.entries(nested)) {
     const relation = model.relations[relationName];
     const list = Array.isArray(children) ? children : children ? [children] : [];
-    for (const child of list) {
-      await insert(connection, relation.model, { ...child, [relation.foreignKey]: data.id }, undefined);
+    for (const [position, child] of list.entries()) {
+      await insert(connection, relation.model, {
+        ...child,
+        ...(modelName === 'order' && relationName === 'items' ? { position } : {}),
+        [relation.foreignKey]: data.id
+      }, undefined);
     }
   }
 
@@ -874,7 +971,7 @@ async function runMutation(connection, callback) {
   if (connection) return callback(connection);
   await ready();
   const queued = transactionQueue.tail.then(async () => {
-    const active = await pool.connect();
+    const active = await poolState.pool.connect();
     try {
       await active.beginTransaction();
       const result = await callback(active);
@@ -907,10 +1004,10 @@ function createClient(connection = null) {
     return runMutation(null, async (active) => callback(createClient(active)));
   };
   client.$disconnect = async () => {
-    if (pool) {
-      await pool.close();
-      pool = undefined;
-      initialization = undefined;
+    if (poolState.pool) {
+      await poolState.pool.close();
+      poolState.pool = undefined;
+      poolState.initialization = undefined;
     }
   };
   return client;
@@ -929,7 +1026,7 @@ async function beginRemoteTransaction() {
   await previous;
   let connection;
   try {
-    connection = await pool.connect();
+    connection = await poolState.pool.connect();
     await connection.beginTransaction();
   } catch (error) {
     if (connection) await connection.close();

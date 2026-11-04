@@ -43,7 +43,7 @@ function createStore({ openingBalance = 0, payments = [], customerId = 'customer
         return created;
       }
     },
-    customer: { findUnique: async () => state.customer },
+    customer: { findUnique: async ({ include }) => { assert.equal(include.discounts, true); return state.customer; } },
     bank: {
       findUnique: async ({ where }) => where.id === 'bank-1' ? { id: 'bank-1', balance: state.bankBalance } : null,
       update: async ({ data }) => { state.bankBalance -= data.balance.decrement; }
@@ -76,34 +76,6 @@ test('refund calculation first clears customer debt and only refunds excess', ()
     payments: [{ amount: 30 }],
     orderReturns: [{ netAmount: 14, refundAmount: 2 }]
   }), 78);
-});
-
-test('customer discounts reduce debt before calculating a return refund', async () => {
-  const { client, state } = createStore({ payments: [{ amount: 20 }] });
-  state.customer.discounts = [{ amount: 30 }];
-  assert.equal(customerAccountBalance(state.customer), 7);
-  const orderReturn = await createOrderReturn(client, {
-    orderId: 'order-1', items: [{ orderItemId: 'order-item-1', quantity: 2 }],
-    refundMethod: 'BANK', bankId: 'bank-1'
-  });
-  assert.equal(orderReturn.refundAmount, 15.8);
-  assert.equal(state.bankBalance, 484.2);
-});
-
-test('a full return does not reverse an independent discount, even without a payment', async () => {
-  const { client, state } = createStore();
-  state.order.netAmount = 100;
-  state.order.items[0].unitPrice = 20;
-  state.order.items[0].taxAmount = 0;
-  state.customer.orders[0].netAmount = 100;
-  state.customer.discounts = [{ amount: 20 }];
-  const input = { orderId: 'order-1', items: [{ orderItemId: 'order-item-1', quantity: 5 }] };
-  await assert.rejects(createOrderReturn(client, input), /اختر طريقة رد المبلغ/);
-  const orderReturn = await createOrderReturn(client, { ...input, refundMethod: 'CASH' });
-  assert.equal(orderReturn.netAmount, 100);
-  assert.equal(orderReturn.refundAmount, 20);
-  assert.deepEqual(state.customer.discounts, [{ amount: 20 }]);
-  assert.equal(customerAccountBalance(state.customer), 0);
 });
 
 test('allows separate partial returns up to the original quantity and updates stock once per return', async () => {
@@ -164,6 +136,24 @@ test('refunds only the amount above customer debt and reduces the selected bank'
   assert.equal(orderReturn.refundMethod, 'BANK');
   assert.equal(state.bankBalance, 484.2);
   assert.equal(customerAccountBalance(state.customer), 0);
+});
+
+test('a full return accounts for an independent customer discount without reversing it', async () => {
+  const { client, state } = createStore();
+  state.order.netAmount = 100;
+  state.order.items[0].unitPrice = 20;
+  state.order.items[0].taxAmount = 0;
+  state.order.items[0].total = 100;
+  state.customer.orders[0].netAmount = 100;
+  state.customer.discounts = [{ id: 'discount', amount: 20 }];
+  const orderReturn = await createOrderReturn(client, {
+    orderId: 'order-1', items: [{ orderItemId: 'order-item-1', quantity: 5 }], refundMethod: 'CASH'
+  });
+  assert.equal(orderReturn.netAmount, 100);
+  assert.equal(orderReturn.refundAmount, 20);
+  assert.deepEqual(state.customer.discounts, [{ id: 'discount', amount: 20 }]);
+  assert.equal(customerAccountBalance(state.customer), 0);
+  assert.equal(state.bankBalance, 500);
 });
 
 test('requires a refund method only when a cash or bank refund is due', async () => {

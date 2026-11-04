@@ -11,7 +11,7 @@ function discountLimit(balance) {
   return Math.max(0, Math.floor((Number(balance) + 1e-8) * 100) / 100);
 }
 
-async function createAccountDiscount(prisma, input) {
+async function createAccountDiscount(prisma, userId, input) {
   const { kind, accountId, requestId } = input || {};
   if (kind !== 'ALLOWED' && kind !== 'EARNED') invalid('اختر نوع الخصم الصحيح.');
   if (typeof accountId !== 'string' || !accountId.trim()) invalid('اختر العميل أو المورد.');
@@ -29,10 +29,17 @@ async function createAccountDiscount(prisma, input) {
   }
   if (input.notes != null && typeof input.notes !== 'string') invalid('الملاحظات غير صالحة.');
   const notes = typeof input.notes === 'string' && input.notes.trim() ? input.notes.trim() : null;
+  if (notes && notes.includes('\0')) invalid('الملاحظات غير صالحة.');
   if (notes && notes.length > 500) invalid('يجب ألا تتجاوز الملاحظات 500 حرف.');
   const normalizedAmount = cents / 100;
 
   return prisma.$transaction(async tx => {
+    const user = typeof userId === 'string' ? await tx.user.findUnique({ where: { id: userId } }) : null;
+    const allowedRoles = kind === 'ALLOWED' ? ['ADMIN', 'CASHIER'] : ['ADMIN', 'STOREKEEPER'];
+    if (!user || !allowedRoles.includes(user.role)) {
+      throw Object.assign(new Error('لا تملك صلاحية تسجيل هذا النوع من الخصم. سجّل الدخول مجددًا.'), { statusCode: 403 });
+    }
+
     const existing = await tx.accountDiscount.findUnique({ where: { requestId } });
     if (existing) {
       const existingAccountId = existing.kind === 'ALLOWED' ? existing.customerId : existing.supplierId;
@@ -59,6 +66,7 @@ async function createAccountDiscount(prisma, input) {
     if (!Number.isFinite(balance)) throw new Error('تعذر حساب الرصيد المستحق للطرف المحدد.');
     const limit = discountLimit(balance);
     if (normalizedAmount > limit) {
+      if (kind === 'EARNED' && user.role === 'STOREKEEPER') invalid('مبلغ الخصم يتجاوز الرصيد المستحق للمورد.');
       invalid(`مبلغ الخصم يتجاوز الرصيد المستحق. الحد الأقصى ${limit.toFixed(2)} ج.م.`);
     }
 

@@ -3,6 +3,8 @@
 import { useState, type FormEvent } from 'react';
 import { PercentIcon, PlusIcon, PrinterIcon, XIcon } from 'lucide-react';
 import { inAccountPeriod, statementTotals, type StatementDiscount } from '@/lib/account-period';
+import { formatMoney as money } from '@/lib/money-format';
+import MoneyInput from '@/components/MoneyInput';
 import type { PrintTableData } from '@/components/PrintDocuments';
 
 export type DiscountKind = 'ALLOWED' | 'EARNED';
@@ -38,14 +40,12 @@ type Props = {
   showSupplierBalance: boolean;
   customersReady: boolean;
   suppliersReady: boolean;
+  sessionToken?: string;
   onSaved: (kind: DiscountKind) => Promise<boolean>;
   onPrint: (discount: StatementDiscount, kind: DiscountKind, partyName: string) => void;
   onPrintTable: (report: PrintTableData) => void;
 };
 
-const money = (value: number) => value.toLocaleString('en-US', {
-  minimumFractionDigits: 2, maximumFractionDigits: 2
-});
 const kindLabel = (kind: DiscountKind) => kind === 'ALLOWED' ? 'خصم مسموح به' : 'خصم مكتسب';
 const inputClass = 'w-full rounded-sm border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500';
 
@@ -59,7 +59,7 @@ function createDiscountRequestId() {
 
 export default function DiscountsPanel({
   customers, suppliers, canAllow, canEarn, showSupplierBalance, customersReady, suppliersReady,
-  onSaved, onPrint, onPrintTable
+  sessionToken, onSaved, onPrint, onPrintTable
 }: Props) {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -138,9 +138,10 @@ export default function DiscountsPanel({
       if (desktop.electronAPI) {
         discount = await desktop.electronAPI.createAccountDiscount(form);
       } else {
+        if (!sessionToken) throw new Error('انتهت الجلسة. سجّل الدخول مجددًا.');
         const response = await fetch('/api/discounts', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sessionToken}` },
           body: JSON.stringify(form)
         });
         const result: unknown = await response.json();
@@ -290,8 +291,8 @@ export default function DiscountsPanel({
                 <p className="text-xs text-sky-300">أقصى خصم متاح حاليًا: {money(limit)} ج.م</p>
               )}
               <label className="block text-xs font-bold text-slate-300">مبلغ الخصم (ج.م) *
-                <input required type="number" min="0.01" step="0.01" value={form.amount}
-                  onChange={event => setForm({ ...form, amount: event.target.value })} className={inputClass} />
+                <MoneyInput required min="0.01" step="0.01" value={form.amount}
+                  onValueChange={amount => setForm({ ...form, amount })} className={inputClass} />
               </label>
               <label className="block text-xs font-bold text-slate-300">السبب أو الملاحظات
                 <textarea maxLength={500} rows={3} value={form.notes}

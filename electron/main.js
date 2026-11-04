@@ -3,6 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const { createRemoteClient } = require('../src/lib/remote-client');
 const { saveCustomerPrices } = require('../src/lib/customer-prices');
+const { correctPayment } = require('../src/lib/payment-corrections');
+const { editDocument, editQuotation, normalizeWarehouseReceiptNumber } = require('../src/lib/document-edits');
 
 // Register 'app' as a standard and secure scheme supporting fetch
 protocol.registerSchemesAsPrivileged([
@@ -20,6 +22,7 @@ const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
 let mainWindow = null;
 let prisma = null;
+const authenticatedUsers = new Map();
 
 function readServerConfig() {
   const configDirectory = path.join(app.getPath('appData'), 'AlEntlaqPOS');
@@ -67,7 +70,9 @@ function createWindow() {
   });
 
   if (isDev) {
-    mainWindow.loadURL('http://localhost:3000');
+    // ELECTRON_START_URL is set by scripts/electron-dev.js to the dedicated dev
+    // port, so development never collides with the production host on port 3000.
+    mainWindow.loadURL(process.env.ELECTRON_START_URL || 'http://localhost:3000');
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadURL('app://-/index.html');
@@ -230,7 +235,7 @@ ipcMain.handle('get-customers', async () => {
     return await prisma.customer.findMany({
       include: {
         customPrices: true,
-        discounts: { orderBy: { date: 'desc' } },
+        discounts: true,
         payments: {
           include: {
             bank: true
@@ -503,15 +508,6 @@ ipcMain.handle('create-order-return', async (event, returnData) => {
   }
 });
 
-ipcMain.handle('create-account-discount', async (event, discountData) => {
-  try {
-    return await prisma.createAccountDiscount(discountData);
-  } catch (err) {
-    console.error('Error creating account discount:', err);
-    throw err;
-  }
-});
-
 ipcMain.handle('create-bank', async (event, bankData) => {
   try {
     const name = typeof bankData.name === 'string' ? bankData.name.trim() : '';
@@ -605,14 +601,33 @@ ipcMain.handle('create-payment', async (event, paymentData) => {
   }
 });
 
+ipcMain.handle('update-payment', async (event, paymentData) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    if (user?.role !== 'ADMIN') {
+      const error = new Error('تصويب الدفعات متاح لمدير النظام فقط.');
+      error.statusCode = 403;
+      throw error;
+    }
+    const payment = await correctPayment(prisma, { ...paymentData, userId: user.id });
+    if (!payment) throw new Error('سند القبض المطلوب غير موجود.');
+    return payment;
+  } catch (err) {
+    console.error('Error correcting payment:', err);
+    throw err;
+  }
+});
+
 // Suppliers IPC
 ipcMain.handle('get-suppliers', async () => {
   try {
     return await prisma.supplier.findMany({
       orderBy: { name: 'asc' },
       include: {
-        purchaseOrders: true,
-        discounts: { orderBy: { date: 'desc' } },
+        discounts: true,
+        purchaseOrders: {
+          include: { items: { include: { product: true } } }
+        },
         expenses: {
           include: { bank: true }
         }
@@ -683,6 +698,7 @@ ipcMain.handle('get-purchases', async () => {
 ipcMain.handle('create-purchase', async (event, purchaseData) => {
   const { billNumber, supplierId, invoiceType, items } = purchaseData;
   try {
+    const warehouseReceiptNumber = normalizeWarehouseReceiptNumber(purchaseData.warehouseReceiptNumber);
     return await prisma.$transaction(async (tx) => {
       let totalAmount = 0;
       let taxAmount = 0;
@@ -734,6 +750,7 @@ ipcMain.handle('create-purchase', async (event, purchaseData) => {
       return await tx.purchaseOrder.create({
         data: {
           billNumber,
+          warehouseReceiptNumber,
           supplierId,
           invoiceType: invoiceType || 'فاتورة ضريبية',
           totalAmount,
@@ -750,6 +767,56 @@ ipcMain.handle('create-purchase', async (event, purchaseData) => {
   } catch (err) {
     console.error('Error creating purchase order native:', err);
     throw err;
+  }
+});
+
+for (const [channel, kind] of [
+  ['update-purchase', 'purchase'],
+  ['update-expense', 'expense'],
+  ['update-general-expense', 'generalExpense']
+]) {
+  ipcMain.handle(channel, async (event, data) => {
+    try {
+      const user = authenticatedUsers.get(event.sender.id);
+      if (user?.role !== 'ADMIN') throw new Error('تعديل المستندات متاح لمدير النظام فقط.');
+      return await editDocument(prisma, kind, { ...data, userId: user.id });
+    } catch (error) {
+      console.error(`Error updating ${kind}:`, error);
+      throw error;
+    }
+  });
+}
+
+ipcMain.handle('quotation-costs', async (event, data) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    if (user?.role !== 'ADMIN') throw new Error('تحليل أرباح عرض السعر متاح للمدير فقط.');
+    return await prisma.quotationCosts(data, user.sessionToken);
+  } catch (error) {
+    console.error('Quotation cost lookup failed:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('update-invoice-details', async (event, data) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    if (user?.role !== 'ADMIN') throw new Error('تعديل بيانات الفاتورة متاح للمدير فقط.');
+    return await prisma.editInvoiceDetails(data, user.sessionToken);
+  } catch (error) {
+    console.error('Invoice detail correction failed:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('update-quotation', async (event, data) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    if (user?.role !== 'ADMIN') throw new Error('تعديل عرض السعر متاح للمدير فقط.');
+    return await editQuotation(prisma, { ...data, userId: user.id });
+  } catch (error) {
+    console.error('Error editing quotation:', error);
+    throw error;
   }
 });
 
@@ -823,15 +890,25 @@ ipcMain.handle('get-expense-categories', async () => {
   }
 });
 
-ipcMain.handle('create-expense-category', async (event, categoryData) => {
+ipcMain.handle('production-reset-operation', async (event, data) => {
   try {
-    return await prisma.expenseCategory.create({
-      data: {
-        name: categoryData.name
-      }
-    });
+    const user = authenticatedUsers.get(event.sender.id);
+    if (user?.role !== 'ADMIN') throw new Error('تفريغ البيانات متاح للمدير فقط. سجّل الدخول مجددًا.');
+    return await prisma.productionResetOperation(data, user.sessionToken);
   } catch (err) {
-    console.error('Error creating expense category:', err);
+    console.error('Production reset failed:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('expense-category-operation', async (event, data) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    if (!user) throw new Error('سجّل الدخول مجددًا.');
+    if (data?.action !== 'list' && user.role !== 'ADMIN') throw new Error('إدارة تصنيفات المصروفات متاحة للمدير فقط.');
+    return await prisma.expenseCategoryOperation(data, user.sessionToken);
+  } catch (err) {
+    console.error('Expense category operation failed:', err);
     throw err;
   }
 });
@@ -890,27 +967,74 @@ ipcMain.handle('create-general-expense', async (event, expenseData) => {
 // Users Management IPC
 ipcMain.handle('login', async (event, { username, password }) => {
   try {
-    const user = await prisma.user.findFirst({
-      where: {
-        username: username.toLowerCase().trim()
-      }
-    });
-    if (!user) {
-      throw new Error('المستخدم غير موجود!');
-    }
-    if (user.password !== password) {
-      throw new Error('كلمة المرور غير صحيحة!');
-    }
-    return {
+    const user = await prisma.login({ username: username.toLowerCase().trim(), password });
+    const authenticatedUser = {
       id: user.id,
       username: user.username,
       name: user.name,
-      role: user.role
+      role: user.role,
+      sessionToken: user.sessionToken
     };
+    authenticatedUsers.set(event.sender.id, authenticatedUser);
+    return authenticatedUser;
   } catch (err) {
     console.error('Login error:', err);
     throw err;
   }
+});
+
+ipcMain.handle('create-account-discount', async (event, data) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    const allowed = data?.kind === 'ALLOWED' && ['ADMIN', 'CASHIER'].includes(user?.role)
+      || data?.kind === 'EARNED' && ['ADMIN', 'STOREKEEPER'].includes(user?.role);
+    if (!allowed) throw new Error('لا تملك صلاحية تسجيل هذا النوع من الخصم. سجّل الدخول مجددًا.');
+    return await prisma.createAccountDiscount(data, user.sessionToken);
+  } catch (error) {
+    console.error('Account discount creation failed:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('stocktake-operation', async (event, data) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    if (!user || !['ADMIN', 'STOREKEEPER'].includes(user.role)) {
+      throw new Error('الجرد متاح للمدير وأمين المخزن فقط. سجّل الدخول مجددًا.');
+    }
+    return await prisma.stocktakeOperation(data, user.sessionToken);
+  } catch (error) {
+    console.error('Stocktake operation failed:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('product-option-operation', async (event, data) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    if (!user) throw new Error('سجّل الدخول مجددًا.');
+    if (data?.action !== 'list' && user.role !== 'ADMIN') throw new Error('إدارة خيارات الأصناف متاحة للمدير فقط.');
+    return await prisma.productOptionOperation(data, user.sessionToken);
+  } catch (error) {
+    console.error('Product option operation failed:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('bank-transfer-operation', async (event, data) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    if (user?.role !== 'ADMIN') return { error: 'التحويلات بين الحسابات متاحة للمدير فقط. سجّل الدخول مجددًا.', statusCode: 403 };
+    const result = await prisma.bankTransferOperation(data, user.sessionToken);
+    return { data: result };
+  } catch (error) {
+    console.error('Bank transfer operation failed:', error);
+    return { error: error.message, statusCode: error.statusCode || 500 };
+  }
+});
+
+ipcMain.handle('logout', (event) => {
+  authenticatedUsers.delete(event.sender.id);
 });
 
 ipcMain.handle('get-users', async () => {

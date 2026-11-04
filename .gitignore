@@ -15,6 +15,7 @@
 
 # next.js
 /.next/
+/.next-host/
 /out/
 
 # production
@@ -44,6 +45,8 @@ next-env.d.ts
 # electron build artifacts
 /dist/
 /dist-v4/
+/dist-v*/
+/app-asar-unpacked/
 /dist-new/
 /dist_alt/
 /release/

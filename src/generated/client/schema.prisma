@@ -169,6 +169,7 @@ model Customer {
   orders         Order[]
   orderReturns   OrderReturn[]
   payments       Payment[]
+  discounts      AccountDiscount[]
   customPrices   CustomerPrice[]
   ceilingQuotas  CustomerCeilingQuota[]
 }
@@ -298,6 +299,23 @@ model Supplier {
   expenses       ExpensePayment[]
   purchaseOrders PurchaseOrder[]
   products       Product[]
+  discounts      AccountDiscount[]
+}
+
+model AccountDiscount {
+  id             String    @id @default(cuid())
+  discountNumber String    @unique
+  requestId      String    @unique
+  kind           String
+  customerId     String?
+  supplierId     String?
+  amount         Float
+  date           DateTime  @default(now())
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  customer       Customer? @relation(fields: [customerId], references: [id])
+  supplier       Supplier? @relation(fields: [supplierId], references: [id])
 }
 
 model PurchaseOrder {

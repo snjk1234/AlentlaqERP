@@ -1,3 +1,5 @@
+import { formatMoney } from '../lib/money-format';
+
 type Product = {
   name: string; code: string; type: string; size: string; gauge?: string | null;
   color?: string | null; weight?: string | null; length?: string | null;
@@ -51,7 +53,7 @@ export default function ProductCardDetails({ product, children, actions }: {
         {children}
       </div>
       <div className="product-card-bottom">
-        <span className="product-card-price font-bold text-white">البيع: {product.price.toFixed(2)} ج.م</span>
+        <span className="product-card-price font-bold text-white">البيع: {formatMoney(product.price)} ج.م</span>
         <p className={`product-card-stock ${out ? 'text-red-500' : low ? 'text-amber-500' : 'text-emerald-400'}`}>
           المخزون: <bdi>{product.stockQty}</bdi>{out ? ' (نافذ)' : low ? ' (منخفض)' : ''}
         </p>

@@ -5,6 +5,7 @@ const path = require('node:path');
 const { test } = require('node:test');
 const vm = require('node:vm');
 const ts = require('typescript');
+const { formatMoney: formatTotal } = require('./money-format');
 
 const exportsPeriod = {};
 vm.runInNewContext(ts.transpileModule(
@@ -42,15 +43,22 @@ test('customer returns credit the account and cash or bank refunds reduce that c
   ]);
 });
 
-test('discounts are separate credit movements in both account totals and the running ledger', () => {
+test('discounts are dated credit movements in both account totals and period ledgers', () => {
   const invoices = [{ id: 'invoice', netAmount: 100, createdAt: '2026-10-01' }];
   const payments = [{ id: 'payment', amount: 20, date: '2026-10-02' }];
-  const discounts = [{ id: 'discount', discountNumber: 'DSC-1', amount: 15, date: '2026-10-03' }];
-  const totals = statementTotals(invoices, payments, 5, [], discounts);
-  assert.equal(totals.totalPayments, 20);
+  const discounts = [
+    { id: 'old', discountNumber: 'DSC-OLD', amount: 12, date: '2026-09-10' },
+    { id: 'discount', discountNumber: 'DSC-1', amount: 15, date: '2026-10-03' }
+  ];
+  const customer = customerInPeriod({ openingBalance: 5, orders: invoices, payments, discounts }, '2026-10-01', '2026-10-31');
+  const supplier = supplierInPeriod({ balance: 123, purchaseOrders: invoices, expenses: payments, discounts }, '2026-10-01', '2026-10-31');
+  assert.equal(customer.discounts.length, 1);
+  assert.equal(supplier.discounts.length, 1);
+  assert.equal(supplier.balance, 65);
+  const totals = statementTotals(customer.orders, customer.payments, 5, [], customer.discounts);
   assert.equal(totals.totalDiscounts, 15);
   assert.equal(totals.totalDue, 70);
-  const entries = statementEntries(invoices, payments, 5, [], discounts);
+  const entries = statementEntries(customer.orders, customer.payments, 5, [], customer.discounts);
   assert.deepEqual(JSON.parse(JSON.stringify(entries.map(entry => [entry.kind, entry.credit, entry.balance]))), [
     ['invoice', 0, 105], ['payment', 20, 85], ['discount', 15, 70]
   ]);
@@ -73,13 +81,17 @@ test('customer and supplier reports use original opening and filtered movements'
     orders: [{ createdAt: '2026-09-01', netAmount: 800 }, { createdAt: '2026-10-10', netAmount: 100 }],
     payments: [{ date: '2026-09-01', amount: 200 }, { date: '2026-10-10', amount: 30 }],
     purchaseOrders: [{ date: '2026-09-01', netAmount: 800 }, { date: '2026-10-10', netAmount: 100 }],
-    expenses: [{ date: '2026-09-01', amount: 200 }, { date: '2026-10-10', amount: 30 }]
+    expenses: [{ date: '2026-09-01', amount: 200 }, { date: '2026-10-10', amount: 30 }],
+    discounts: [
+      { id: 'old', discountNumber: 'DSC-OLD', date: '2026-09-10', amount: 25 },
+      { id: 'current', discountNumber: 'DSC-CURRENT', date: '2026-10-10', amount: 10 }
+    ]
   };
   for (const report of reports) {
     const context = {
       exports: {}, AccountStatement: 'report', currentUser: { role: 'ADMIN' },
       stmtFrom: '2026-10-01', stmtTo: '2026-10-31', renderStatementPeriod: () => null,
-      selectedHistoryCustomerRaw: raw, selectedHistorySupplierRaw: raw,
+      selectedHistoryCustomerRaw: raw, currentHistoryCustomer: raw, selectedHistorySupplierRaw: raw, currentHistorySupplier: raw,
       selectedHistoryCustomer: customerInPeriod(raw, '2026-10-01', '2026-10-31'),
       selectedHistorySupplier: supplierInPeriod(raw, '2026-10-01', '2026-10-31'),
       React: { createElement: (_type, props) => props }
@@ -91,10 +103,11 @@ test('customer and supplier reports use original opening and filtered movements'
     assert.equal(props.openingBalance, 500);
     assert.equal(props.from, '2026-10-01');
     assert.equal(props.to, '2026-10-31');
-    const totals = statementTotals(props.invoices, props.payments, props.openingBalance);
+    const totals = statementTotals(props.invoices, props.payments, props.openingBalance, props.returns, props.discounts);
     assert.equal(totals.totalInvoices, 600);
     assert.equal(totals.totalPayments, 30);
-    assert.equal(totals.totalDue, 570);
+    assert.equal(totals.totalDiscounts, 10);
+    assert.equal(totals.totalDue, 560);
   }
 });
 
@@ -151,20 +164,6 @@ test('customer return movements are filtered to the selected account period', ()
   assert.equal(customer.orderReturns.length, 2);
 });
 
-test('customer and supplier period views include and filter discount-only movements', () => {
-  const discounts = [
-    { id: 'before', discountNumber: 'DSC-1', date: '2026-09-30', amount: 5 },
-    { id: 'inside', discountNumber: 'DSC-2', date: '2026-10-15', amount: 20 }
-  ];
-  const customer = customerInPeriod({ openingBalance: 100, orders: [], payments: [], discounts }, '2026-10-01', '2026-10-31');
-  const supplier = supplierInPeriod({ balance: 75, purchaseOrders: [], expenses: [], discounts }, '2026-10-01', '2026-10-31');
-  assert.equal(customer.discounts.length, 1);
-  assert.equal(supplier.discounts.length, 1);
-  assert.equal(statementTotals(customer.orders, customer.payments, customer.openingBalance, [], customer.discounts).totalDue, -20);
-  assert.equal(supplier.balance, -20);
-  assert.equal(discounts.length, 2);
-});
-
 test('supplier period computes movement balance and does not mutate stored balance', () => {
   const supplier = {
     balance: 950,
@@ -203,13 +202,13 @@ test('customer and supplier print handlers use period rows and print the selecte
     name: 'Customer', openingBalance: 500,
     orders: [{ createdAt: '2026-09-01', netAmount: 999 }, { createdAt: '2026-10-10', netAmount: 100 }],
     payments: [{ date: '2026-10-20', amount: 30 }],
-    discounts: [{ id: 'customer-discount', discountNumber: 'DSC-1', date: '2026-10-21', amount: 10 }]
+    discounts: [{ id: 'c-discount', discountNumber: 'DSC-C', date: '2026-10-25', amount: 10 }]
   }, '2026-10-01', '2026-10-31');
   const supplier = supplierInPeriod({
     name: 'Supplier', balance: 950,
     purchaseOrders: [{ date: '2026-09-01', netAmount: 999 }, { date: '2026-10-10', netAmount: 150 }],
     expenses: [{ date: '2026-10-20', amount: 200 }],
-    discounts: [{ id: 'supplier-discount', discountNumber: 'DSC-2', date: '2026-10-21', amount: 20 }]
+    discounts: [{ id: 's-discount', discountNumber: 'DSC-S', date: '2026-10-25', amount: 20 }]
   }, '2026-10-01', '2026-10-31');
   const reports = [];
   for (const handler of handlers) {
@@ -219,6 +218,7 @@ test('customer and supplier print handlers use period rows and print the selecte
     vm.runInNewContext(compiled, {
       filteredCustomers: [customer], filteredSuppliers: [supplier],
       currentUser: { role: 'ADMIN' }, totalsFrom: '2026-10-01', totalsTo: '2026-10-31',
+      formatTotal,
       setPrintTableData: (report) => reports.push(report)
     });
   }
@@ -391,7 +391,6 @@ test('printed statement keeps the unified ledger while the screen restores separ
   vm.runInNewContext(compiled, {
     exports, require: name => name === '@/lib/account-period' ? exportsPeriod : require(name)
   });
-
   const Component = exports.default;
   for (const kind of ['customer', 'supplier']) {
     for (const opening of [500, 0, -125.5]) {
@@ -474,35 +473,4 @@ test('printed statement keeps the unified ledger while the screen restores separ
   buttons.find(button => button.props['aria-label'] === 'طباعة السند REC-PAYMEN').props.onClick();
   buttons.find(button => button.props['aria-label'] === 'إغلاق كشف الحساب').props.onClick();
   assert.deepEqual(opened, [document, payment, document, payment, 'close']);
-});
-
-test('both account statements show and print discount vouchers separately from payments', () => {
-  const React = require('react');
-  const { renderToStaticMarkup } = require('react-dom/server');
-  const exports = {};
-  const compiled = ts.transpileModule(
-    fs.readFileSync(path.join(__dirname, '..', 'components', 'AccountStatement.tsx'), 'utf8'),
-    { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2022 } }
-  ).outputText;
-  vm.runInNewContext(compiled, {
-    exports, require: name => name === '@/lib/account-period' ? exportsPeriod : require(name)
-  });
-  const discount = { id: 'discount', discountNumber: 'DSC-00001', date: '2026-10-03', amount: 15, notes: 'Settlement' };
-  for (const kind of ['customer', 'supplier']) {
-    const html = renderToStaticMarkup(React.createElement(exports.default, {
-      kind, name: 'Account', openingBalance: 0,
-      invoices: [{ id: 'invoice', netAmount: 100, createdAt: '2026-10-01' }],
-      payments: [{ id: 'payment', amount: 20, date: '2026-10-02' }],
-      discounts: [discount], from: '', to: '', periodControls: null,
-      onClose() {}, onInvoice() {}, onPayment() {}, onDiscount() {}
-    }));
-    const screen = html.slice(html.indexOf('class="account-history-screen'), html.indexOf('<article'));
-    const print = html.slice(html.indexOf('<article'));
-    assert.ok(screen.includes(kind === 'customer' ? 'سجل الخصم المسموح به' : 'سجل الخصم المكتسب'));
-    assert.ok(screen.includes('DSC-00001') && screen.includes('Settlement'));
-    assert.ok(print.includes('statement-discount') && print.includes('DSC-00001'));
-    assert.ok(print.includes(kind === 'customer' ? 'خصم مسموح به للعميل' : 'خصم مكتسب من المورد'));
-    assert.ok(print.includes('65.00'));
-    assert.ok(print.includes('إجمالي السدادات') && print.includes('20.00'));
-  }
 });

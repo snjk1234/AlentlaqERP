@@ -80,6 +80,7 @@ test('Electron exposes and executes update-bank without creating a bank', async 
       if (id === 'electron') return electron;
       if (id === '../src/lib/remote-client') return { createRemoteClient: () => store.prisma };
       if (id === '../src/lib/customer-prices') return require('./customer-prices');
+      if (id.startsWith('../src/lib/')) return require(id.replace('../src/lib/', './'));
       return require(id);
     },
     process, Error, Buffer, console: quietConsole, __dirname: path.join(root, 'electron')

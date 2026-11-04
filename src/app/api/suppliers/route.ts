@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { attachAccountDiscounts } from '@/lib/attach-account-discounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,17 +9,16 @@ export async function GET() {
     const suppliers = await prisma.supplier.findMany({
       orderBy: { name: 'asc' },
       include: {
-        purchaseOrders: true,
+        discounts: true,
+        purchaseOrders: {
+          include: { items: { include: { product: true } } }
+        },
         expenses: {
           include: { bank: true }
         }
       }
     });
-    const discounts = await prisma.accountDiscount.findMany({
-      where: { kind: 'EARNED' },
-      orderBy: { date: 'desc' }
-    });
-    return NextResponse.json(attachAccountDiscounts(suppliers, discounts, 'supplierId'));
+    return NextResponse.json(suppliers);
   } catch (error) {
     console.error('Error fetching suppliers:', error);
     return NextResponse.json({ error: 'Failed to fetch suppliers' }, { status: 500 });

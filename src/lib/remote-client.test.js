@@ -38,6 +38,37 @@ test('successful bank creation returns the server data unchanged', async (t) => 
   );
 });
 
+test('login rejects an older server that authenticates without issuing a user session', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => Response.json({
+    id: 'admin', username: 'admin', role: 'ADMIN'
+  }));
+  await assert.rejects(
+    createRemoteClient(config).login({ username: 'admin', password: 'test-password' }),
+    /حدّث خادم البيانات وأعد تشغيله/
+  );
+});
+
+test('login rejects empty session responses instead of creating a sessionless authenticated client', async (t) => {
+  for (const result of [null, {}, { sessionToken: null }, { sessionToken: '' }, { sessionToken: '   ' }]) {
+    t.mock.method(globalThis, 'fetch', async () => Response.json(result));
+    await assert.rejects(
+      createRemoteClient(config).login({ username: 'admin', password: 'test-password' }),
+      /تثبيت المحطة وحده لا يحدّث الخادم/
+    );
+  }
+});
+
+test('login preserves a compatible server session and surfaces real authentication failures', async (t) => {
+  const user = { id: 'admin', role: 'ADMIN', sessionToken: 'signed-session' };
+  t.mock.method(globalThis, 'fetch', async () => Response.json(user));
+  assert.deepEqual(await createRemoteClient(config).login({ username: 'admin', password: 'test-password' }), user);
+  t.mock.method(globalThis, 'fetch', async () => Response.json({ error: 'Incorrect password' }, { status: 401 }));
+  await assert.rejects(
+    createRemoteClient(config).login({ username: 'admin', password: 'incorrect' }),
+    /Incorrect password/
+  );
+});
+
 test('creating an invoice return calls the dedicated authenticated server endpoint', async (t) => {
   const orderReturn = { id: 'return-id', returnNumber: 'RET-2026-00001' };
   let request;
@@ -55,19 +86,21 @@ test('creating an invoice return calls the dedicated authenticated server endpoi
   assert.equal(request.options.headers.authorization, 'Bearer test-token');
 });
 
-test('creating an account discount calls the dedicated server endpoint', async (t) => {
-  const discount = { id: 'discount-id', discountNumber: 'DSC-2026-00001' };
-  let request;
+test('discount creation and invoice edits use signed user sessions and dedicated routes', async (t) => {
+  const requests = [];
   t.mock.method(globalThis, 'fetch', async (url, options) => {
-    request = { url: String(url), options };
-    return Response.json({ data: discount }, { status: 201 });
+    requests.push({ url: String(url), options });
+    return Response.json(options.method === 'PUT' ? { id: 'invoice' } : { data: { id: 'discount' } });
   });
-
-  assert.deepEqual(
-    await createRemoteClient(config).createAccountDiscount({ kind: 'ALLOWED', accountId: 'customer-id' }),
-    discount
-  );
-  assert.equal(request.url, 'http://localhost:3000/api/discounts');
-  assert.equal(request.options.method, 'POST');
-  assert.equal(JSON.parse(request.options.body).accountId, 'customer-id');
+  const client = createRemoteClient(config);
+  assert.throws(() => client.createAccountDiscount({}, ''), /جلسة المستخدم/);
+  assert.throws(() => client.editInvoiceDetails({}, ''), /جلسة المستخدم/);
+  assert.deepEqual(await client.createAccountDiscount({ kind: 'ALLOWED' }, 'signed-session'), { id: 'discount' });
+  assert.deepEqual(await client.editInvoiceDetails({ id: 'invoice', userId: 'forged' }, 'signed-session'), { id: 'invoice' });
+  assert.equal(requests[0].url, 'http://localhost:3000/api/discounts');
+  assert.equal(requests[0].options.method, 'POST');
+  assert.equal(requests[0].options.headers.authorization, 'Bearer signed-session');
+  assert.equal(requests[1].url, 'http://localhost:3000/api/invoice-details');
+  assert.equal(requests[1].options.method, 'PUT');
+  assert.equal(requests[1].options.headers.authorization, 'Bearer signed-session');
 });

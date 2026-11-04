@@ -339,6 +339,20 @@ exports.Prisma.SupplierScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.AccountDiscountScalarFieldEnum = {
+  id: 'id',
+  discountNumber: 'discountNumber',
+  requestId: 'requestId',
+  kind: 'kind',
+  customerId: 'customerId',
+  supplierId: 'supplierId',
+  amount: 'amount',
+  date: 'date',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.PurchaseOrderScalarFieldEnum = {
   id: 'id',
   billNumber: 'billNumber',
@@ -426,6 +440,7 @@ exports.Prisma.ModelName = {
   CustomerCeilingQuota: 'CustomerCeilingQuota',
   Payment: 'Payment',
   Supplier: 'Supplier',
+  AccountDiscount: 'AccountDiscount',
   PurchaseOrder: 'PurchaseOrder',
   PurchaseOrderItem: 'PurchaseOrderItem',
   ExpensePayment: 'ExpensePayment',

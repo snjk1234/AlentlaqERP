@@ -1,3 +1,0 @@
-module.exports=[58196,a=>{a.v({className:"tajawal_2852e83d-module__0r5_eW__className",variable:"tajawal_2852e83d-module__0r5_eW__variable"})},27572,a=>{"use strict";var b=a.i(10299),c=a.i(58196);let d={className:c.default.className,style:{fontFamily:"'Tajawal', 'Tajawal Fallback'",fontStyle:"normal"}};null!=c.default.variable&&(d.variable=c.default.variable),a.s(["default",0,function({children:a}){return(0,b.jsx)("html",{lang:"ar",dir:"rtl",children:(0,b.jsx)("body",{className:`${d.variable} antialiased`,children:a})})},"metadata",0,{title:"الانطلاق - نظام إدارة المبيعات",description:"نظام ERP و POS مخصص لشركة الانطلاق لتصنيع وتوريد خراطيم ومواسير وأسلاك الكهرباء"}],27572)},50645,a=>{a.n(a.i(27572))}];
-
-//# sourceMappingURL=%5Broot-of-the-server%5D__0.~_0sa._.js.map

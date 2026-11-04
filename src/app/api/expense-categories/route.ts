@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { expenseCategoryOperation } from '@/lib/expense-categories';
+import { verifyUserSessionToken } from '@/lib/user-session-token';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,23 +18,21 @@ export async function GET() {
   }
 }
 
-// POST create expense category
 export async function POST(request: Request) {
+  if (!process.env.POS_API_TOKEN) {
+    return NextResponse.json({ error: 'POS_API_TOKEN is not configured on the server.' }, { status: 503 });
+  }
+  const authorization = request.headers.get('authorization') || '';
+  const session = verifyUserSessionToken(authorization.startsWith('Bearer ') ? authorization.slice(7) : '');
+  if (!session) return NextResponse.json({ error: 'انتهت الجلسة. سجّل الدخول مجددًا.' }, { status: 401 });
+  let body;
+  try { body = await request.json(); }
+  catch { return NextResponse.json({ error: 'بيانات التصنيف غير صالحة.' }, { status: 400 }); }
   try {
-    const body = await request.json();
-    const { name } = body;
-
-    if (!name) {
-      return NextResponse.json({ error: 'Category name is required' }, { status: 400 });
-    }
-
-    const category = await prisma.expenseCategory.create({
-      data: { name }
-    });
-
-    return NextResponse.json(category);
-  } catch (error: any) {
-    console.error('Error creating expense category:', error);
-    return NextResponse.json({ error: error.message || 'Failed to create expense category' }, { status: 500 });
+    return NextResponse.json({ data: await expenseCategoryOperation(prisma, session.userId, body) });
+  } catch (error) {
+    console.error('Expense category operation failed:', error);
+    const status = error instanceof Error && 'statusCode' in error && typeof error.statusCode === 'number' ? error.statusCode : 500;
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'تعذر تنفيذ إجراء التصنيفات.' }, { status });
   }
 }
