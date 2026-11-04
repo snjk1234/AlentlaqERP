@@ -195,20 +195,21 @@ export default function DiscountsPanel({
           <h2 className="flex items-center gap-2 text-xl font-black text-white"><PercentIcon size={22} /> الخصومات</h2>
           <p className="mt-1 text-xs text-slate-400">تسويات مستقلة لحسابات العملاء والموردين دون حركة نقدية</p>
         </div>
-        <div className="flex gap-2">
-          <button type="button" onClick={openForm}
-            disabled={!(canAllow && customersReady) && !(canEarn && suppliersReady)}
-            className="flex items-center gap-1 rounded-sm bg-indigo-600 px-3 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">
-            <PlusIcon size={16} /> سند خصم جديد
-          </button>
-          <button type="button" onClick={printTable}
-            className="flex items-center gap-1 rounded-sm bg-emerald-600 px-3 py-2 text-xs font-bold text-white">
-            <PrinterIcon size={16} /> طباعة الجدول
-          </button>
-        </div>
       </div>
       {notice && <p role="status" className="rounded-sm border border-sky-500/30 bg-sky-500/10 p-2 text-sm text-sky-200">{notice}</p>}
       <div className="flex flex-wrap items-end gap-2 rounded-sm border border-white/10 bg-slate-900 p-2">
+        <label className="w-[260px] text-xs font-bold text-slate-300">بحث
+          <input value={search} onChange={event => setSearch(event.target.value)} placeholder="اسم الطرف أو رقم السند" className={inputClass} />
+        </label>
+        <button type="button" onClick={openForm}
+          disabled={!(canAllow && customersReady) && !(canEarn && suppliersReady)}
+          className="flex items-center gap-1 rounded-sm bg-indigo-600 px-3 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">
+          <PlusIcon size={16} /> سند خصم جديد
+        </button>
+        <button type="button" onClick={printTable}
+          className="flex items-center gap-1 rounded-sm bg-emerald-600 px-3 py-2 text-xs font-bold text-white">
+          <PrinterIcon size={16} /> طباعة الجدول
+        </button>
         <label className="text-xs font-bold text-slate-300">من
           <input type="date" value={from} max={to || undefined} onChange={event => setFrom(event.target.value)} className={inputClass} />
         </label>
@@ -224,9 +225,6 @@ export default function DiscountsPanel({
             {canAllow && <option value="ALLOWED">مسموح به</option>}
             {canEarn && <option value="EARNED">مكتسب</option>}
           </select>
-        </label>
-        <label className="min-w-40 flex-1 text-xs font-bold text-slate-300">بحث
-          <input value={search} onChange={event => setSearch(event.target.value)} placeholder="اسم الطرف أو رقم السند" className={inputClass} />
         </label>
         {(from || to) && <button type="button" onClick={() => { setFrom(''); setTo(''); }}
           className="rounded-sm border border-white/10 px-2 py-2 text-xs font-bold text-slate-300">عرض الكل</button>}
