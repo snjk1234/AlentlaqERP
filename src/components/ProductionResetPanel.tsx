@@ -89,7 +89,7 @@ export default function ProductionResetPanel({ sessionToken, onCompleted }: { se
   };
 
   return <section className="flex-1 min-h-0 overflow-auto custom-scrollbar no-print p-2" dir="rtl" aria-label="تفريغ البيانات">
-    <div className="w-full max-w-3xl space-y-3">
+    <div className="w-full max-w-6xl space-y-3">
     <div>
       <h2 className="text-xl font-bold text-white">تفريغ البيانات</h2>
       <p className="text-xs text-slate-400 mt-0.5">يحذف الفواتير والدفعات وسندات الخصم والمشتريات والمصروفات والتحويلات والجرد، ويُبقي الأصناف والموردين والعملاء والبنوك والمستخدمين.</p>
@@ -109,6 +109,7 @@ export default function ProductionResetPanel({ sessionToken, onCompleted }: { se
           {Object.keys(LABELS).map(model => <div key={model} className="flex justify-between bg-white/5 rounded-sm px-2 py-1"><span>{LABELS[model]}</span><span className="font-bold text-white">{preview.counts[model] ?? 0}</span></div>)}
         </div>
       </div>
+      <div className="grid gap-3 lg:grid-cols-2 items-start">
       {SECTIONS.map(section => <div key={section.kind} className="bg-slate-900 border border-slate-800 rounded">
         <div className="flex items-center justify-between gap-2 p-2 border-b border-slate-800">
           <div><h3 className="text-sm font-bold text-white">{section.title} ({preview.entities[section.kind].length})</h3><p className="text-[11px] text-slate-400">{section.hint}</p></div>
@@ -129,6 +130,7 @@ export default function ProductionResetPanel({ sessionToken, onCompleted }: { se
           </table>
         </div>
       </div>)}
+      </div>
       <div className="bg-slate-900 border border-slate-800 rounded p-2 grid md:grid-cols-3 gap-2 items-end">
         <label className="grid gap-1 text-xs text-slate-300">كلمة مرور حساب المدير
           <input type="password" autoComplete="current-password" className={inputClass + ' w-full text-right'} value={password} disabled={busy} onChange={event => setPassword(event.target.value)} />
