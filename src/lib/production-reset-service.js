@@ -20,13 +20,24 @@ async function loadEntities(tx) {
     tx.bank.findMany({ orderBy: { name: 'asc' } }),
     tx.supplier.findMany({ orderBy: { name: 'asc' } }),
     tx.customer.findMany({ orderBy: { name: 'asc' } }),
-    tx.product.findMany({ orderBy: { code: 'asc' } })
+    tx.product.findMany({ orderBy: { code: 'asc' }, include: { supplier: true } })
   ]);
   return {
     bank: banks.map(row => ({ id: row.id, name: row.name, value: Number(row.balance) })),
     supplier: suppliers.map(row => ({ id: row.id, name: row.name, value: Number(row.openingBalance), current: Number(row.balance) })),
     customer: customers.filter(row => row.id !== 'CASH').map(row => ({ id: row.id, name: row.name, value: Number(row.openingBalance) })),
-    product: products.map(row => ({ id: row.id, name: [row.code, row.name, row.size, row.color].filter(Boolean).join(' - '), value: Number(row.stockQty) }))
+    product: products.map(row => ({
+      id: row.id,
+      name: [row.code, row.name, row.size, row.color].filter(Boolean).join(' - '),
+      details: [
+        `النوع: ${row.type || 'غير مسجل'}`,
+        `الدرجة: ${row.gauge || 'غير مسجلة'}`,
+        `المورد: ${(row.supplier && row.supplier.name) || 'غير مسجل'}`,
+        `الطول: ${row.length || 'غير مسجل'}`,
+        `الوزن: ${row.weight || 'غير مسجل'}`
+      ].join(' · '),
+      value: Number(row.stockQty)
+    }))
   };
 }
 
