@@ -89,7 +89,7 @@ export default function ProductionResetPanel({ sessionToken, onCompleted }: { se
   };
 
   return <section className="flex-1 min-h-0 overflow-auto custom-scrollbar no-print p-2" dir="rtl" aria-label="تفريغ البيانات">
-    <div className="w-full max-w-6xl space-y-3">
+    <div className="w-full space-y-3">
     <div>
       <h2 className="text-xl font-bold text-white">تفريغ البيانات</h2>
       <p className="text-xs text-slate-400 mt-0.5">يحذف الفواتير والدفعات وسندات الخصم والمشتريات والمصروفات والتحويلات والجرد، ويُبقي الأصناف والموردين والعملاء والبنوك والمستخدمين.</p>
@@ -110,14 +110,14 @@ export default function ProductionResetPanel({ sessionToken, onCompleted }: { se
         </div>
       </div>
       <div className="grid gap-3 lg:grid-cols-2 items-start">
-      {SECTIONS.map(section => <div key={section.kind} className="bg-slate-900 border border-slate-800 rounded">
+      {SECTIONS.map(section => <div key={section.kind} className="bg-slate-900 border border-slate-800 rounded min-w-0">
         <div className="flex items-center justify-between gap-2 p-2 border-b border-slate-800">
           <div><h3 className="text-sm font-bold text-white">{section.title} ({preview.entities[section.kind].length})</h3><p className="text-[11px] text-slate-400">{section.hint}</p></div>
           <button type="button" className={buttonClass} disabled={busy} onClick={() => zero(section.kind)}>تصفير الكل</button>
         </div>
-        <div className="max-h-56 overflow-auto custom-scrollbar">
-          <table className="w-full text-right text-xs">
-            <thead className="bg-white/5 text-slate-300 sticky top-0"><tr><th className="py-1.5 px-2">الاسم</th><th className="py-1.5 px-2 w-36 whitespace-nowrap">القيمة الحالية</th><th className="py-1.5 px-2 w-44 whitespace-nowrap">القيمة بعد التفريغ ({section.unit})</th></tr></thead>
+        <div className="max-h-72 overflow-auto custom-scrollbar">
+          <table className="w-full text-right text-xs whitespace-nowrap">
+            <thead className="bg-white/5 text-slate-300 sticky top-0"><tr><th className="py-1.5 px-2 w-full">الاسم</th><th className="py-1.5 px-2">القيمة الحالية</th><th className="py-1.5 px-2">القيمة بعد التفريغ ({section.unit})</th></tr></thead>
             <tbody className="divide-y divide-white/5">
               {preview.entities[section.kind].map(row => <tr key={row.id}>
                 <td className="py-1 px-2 text-slate-200">{row.name}</td>
