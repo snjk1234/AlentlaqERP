@@ -117,7 +117,7 @@ export default function ProductionResetPanel({ sessionToken, onCompleted }: { se
         </div>
         <div className="max-h-72 overflow-auto custom-scrollbar">
           <table className="w-full text-right text-xs">
-            <thead className="bg-white/5 text-slate-300 sticky top-0"><tr><th className="py-1.5 px-2 w-full">الاسم</th><th className="py-1.5 px-2 whitespace-nowrap">القيمة الحالية</th><th className="py-1.5 px-2 whitespace-nowrap">القيمة بعد التفريغ ({section.unit})</th></tr></thead>
+            <thead className="bg-slate-800 text-slate-300 sticky top-0"><tr><th className="py-1.5 px-2 w-full">الاسم</th><th className="py-1.5 px-2 whitespace-nowrap">القيمة الحالية</th><th className="py-1.5 px-2 whitespace-nowrap">القيمة بعد التفريغ ({section.unit})</th></tr></thead>
             <tbody className="divide-y divide-white/5">
               {preview.entities[section.kind].map(row => <tr key={row.id}>
                 <td className="py-1 px-2 text-slate-200">{row.name}
