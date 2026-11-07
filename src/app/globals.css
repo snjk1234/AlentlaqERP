@@ -206,9 +206,9 @@ body {
 .statement-ledger .statement-number { direction: ltr; text-align: left; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 12px; }
 .statement-payment .statement-number { color: var(--statement-teal); }
 .statement-ledger .statement-empty { text-align: center; color: var(--statement-muted); padding-block: 24px; }
-.statement-ledger .statement-total th, .statement-ledger .statement-total td { padding-block: 10px; background: #f8fafc; font-size: 12px; }
+.statement-ledger .statement-total th, .statement-ledger .statement-total td { padding-block: 10px; background: #f8fafc; font-size: 12px; color: #000; }
 .statement-ledger .statement-total th { font-weight: 400; }
-.statement-ledger .statement-closing th, .statement-ledger .statement-closing td { padding-block: 15px; background: #e9f6f3; color: var(--statement-teal); border-bottom: 2px solid #0d9488; font-weight: 500; }
+.statement-ledger .statement-closing th, .statement-ledger .statement-closing td { padding-block: 15px; background: #e9f6f3; color: #000; border-bottom: 2px solid #0d9488; font-weight: 500; }
 .statement-closing th span { font-size: 10px; font-weight: 400; }
 .statement-ledger .statement-closing .statement-number { font-size: 17px; }
 .statement-footer { display: flex; justify-content: space-between; gap: 12px; padding-top: 18px; color: var(--statement-muted); font-size: 10px; }
@@ -340,9 +340,9 @@ body {
   .account-statement .statement-ledger .statement-number { font-size: 12px; }
   .account-statement .statement-date { font-size: 11px; }
   .account-statement .statement-total th,
-  .account-statement .statement-total td { background: #f8fafc !important; font-size: 11px; }
+  .account-statement .statement-total td { background: #f8fafc !important; color: #000 !important; font-size: 11px; }
   .account-statement .statement-closing th,
-  .account-statement .statement-closing td { background: #e9f6f3 !important; color: var(--statement-teal) !important; border-bottom: 1pt solid #0d9488 !important; font-size: 12px; font-weight: 500; padding-block: 11px; }
+  .account-statement .statement-closing td { background: #e9f6f3 !important; color: #000 !important; border-bottom: 1pt solid #0d9488 !important; font-size: 12px; font-weight: 500; padding-block: 11px; }
   .account-statement .statement-closing .statement-number { font-size: 16px; }
   .account-statement .statement-print-reference { display: inline; }
   .account-statement .statement-footer { break-inside: avoid; }
