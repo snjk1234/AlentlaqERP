@@ -110,7 +110,7 @@ export default function ProductionResetPanel({ sessionToken, onCompleted }: { se
         </div>
       </div>
       <div className="grid gap-3 lg:grid-cols-2 items-start">
-      {SECTIONS.map(section => <div key={section.kind} className={`bg-slate-900 border border-slate-800 rounded min-w-0${section.kind === 'product' ? ' lg:col-span-2' : ''}`}>
+      {SECTIONS.map(section => <div key={section.kind} className="bg-slate-900 border border-slate-800 rounded min-w-0">
         <div className="flex items-center justify-between gap-2 p-2 border-b border-slate-800">
           <div><h3 className="text-sm font-bold text-white">{section.title} ({preview.entities[section.kind].length})</h3><p className="text-[11px] text-slate-400">{section.hint}</p></div>
           <button type="button" className={buttonClass} disabled={busy} onClick={() => zero(section.kind)}>تصفير الكل</button>
