@@ -121,7 +121,7 @@ ipcMain.handle('get-products', async () => {
 
 ipcMain.handle('create-product', async (event, productData) => {
   try {
-    // Check for uniqueness based on (code, color, gauge, weight)
+    // Check for uniqueness based on (code, size, color, gauge, weight)
     const existingProducts = await prisma.product.findMany({
       where: { code: productData.code }
     });
@@ -129,6 +129,7 @@ ipcMain.handle('create-product', async (event, productData) => {
     if (existingProducts.length > 0) {
       const isDuplicate = existingProducts.some(p => 
         (p.supplierId || null) === (productData.supplierId || null) &&
+        (p.size || null) === (productData.size || null) &&
         (p.color || null) === (productData.color || null) &&
         (p.gauge || null) === (productData.gauge || null) &&
         (p.weight || null) === (productData.weight || null)
@@ -187,6 +188,7 @@ ipcMain.handle('update-product', async (event, productData) => {
       if (existingProducts.length > 0) {
         const isDuplicate = existingProducts.some(p => 
           (p.supplierId || null) === (data.supplierId || null) &&
+          (p.size || null) === (data.size || null) &&
           (p.color || null) === (data.color || null) &&
           (p.gauge || null) === (data.gauge || null) &&
           (p.weight || null) === (data.weight || null)
