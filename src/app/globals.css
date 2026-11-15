@@ -215,7 +215,8 @@ body {
 
 @page account-statement {
   size: A4;
-  margin: 2mm 2mm 14mm;
+  /* Left margin is widened for hole punching and filing in binders. */
+  margin: 2mm 2mm 14mm 20mm;
 }
 
 .print-document-overlay { z-index: 60; }
