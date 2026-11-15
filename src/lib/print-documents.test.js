@@ -240,7 +240,7 @@ test('all print formats reuse the statement layout, headings, totals and portrai
   const css = fs.readFileSync(path.join(__dirname, '..', 'app', 'globals.css'), 'utf8');
   assert.ok(css.includes('@page account-statement') && css.includes('size: A4;'));
   assert.ok(css.includes('.account-statement .statement-closing .statement-number { font-size: 16px; }'));
-  assert.ok(css.includes('margin: 2mm 2mm 14mm;'), 'minimize page margins while reserving footer space');
+  assert.ok(css.includes('margin: 2mm 2mm 14mm 20mm;'), 'keep a wide left margin for hole punching while reserving footer space');
   assert.ok(css.includes('padding: 0 !important;'), 'remove extra paper padding inside printed documents');
   assert.ok(css.includes('position: fixed !important;') && css.includes('bottom: 0 !important;'),
     'anchor the footer inside the current printed page');
