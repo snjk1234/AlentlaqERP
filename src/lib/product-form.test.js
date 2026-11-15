@@ -78,6 +78,31 @@ test('existing product edits close on success while failures keep the form and r
   }
 });
 
+test('zero sale price saves successfully while negative prices stay rejected', async () => {
+  for (const [price, shouldSave] of [['0', true], ['-5', false]]) {
+    const exports = {};
+    const state = { saving: [], notices: [] };
+    const calls = [];
+    vm.runInNewContext(compiled, {
+      exports, productForm: { code: 'P-0', name: 'Bundled', price }, currentUser: { role: 'ADMIN' },
+      isEditingProduct: false, savingProduct: false,
+      setSavingProduct: value => state.saving.push(value),
+      setProductSaveNotice: value => { if (value) state.notices.push(value); },
+      setShowProductFormModal() {}, fetchProducts() {},
+      alert: () => assert.fail('Saving products must not use native alerts'),
+      window: { electronAPI: { createProduct: async data => calls.push(data.price) } }
+    });
+    await exports.save({ preventDefault() {} });
+    if (shouldSave) {
+      assert.deepEqual(calls, [0]);
+      assert.equal(state.notices[0].kind, 'success');
+    } else {
+      assert.equal(calls.length, 0);
+      assert.equal(state.notices[0].kind, 'error');
+    }
+  }
+});
+
 test('saving indicator and inline notices belong to the product form only', () => {
   const tree = ts.createSourceFile('page.tsx', page, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   let form;

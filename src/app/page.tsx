@@ -843,7 +843,7 @@ export default function POSDashboard() {
 
     const newPrice = parseFloat(newPriceStr);
 
-    if (isNaN(newPrice) || newPrice <= 0) return;
+    if (isNaN(newPrice) || newPrice < 0) return;
 
 
 
@@ -2037,18 +2037,6 @@ export default function POSDashboard() {
 
 
 
-    const hasUnpriced = cart.some(item => item.originalPrice <= 0);
-
-    if (hasUnpriced) {
-
-      alert("لا يمكن إتمام العملية! بعض الأصناف في السلة لم يتم تسعيرها من قبل المدير بعد.");
-
-      return;
-
-    }
-
-
-
     setSubmitting(true);
 
 
@@ -2357,9 +2345,9 @@ export default function POSDashboard() {
 
     }
 
-    if (currentUser?.role === 'ADMIN' && parseFloat(productForm.price) <= 0) {
+    if (currentUser?.role === 'ADMIN' && parseFloat(productForm.price) < 0) {
 
-      setProductSaveNotice({ kind: 'error', message: 'يجب أن يكون سعر البيع أكبر من الصفر!' });
+      setProductSaveNotice({ kind: 'error', message: 'لا يمكن أن يكون سعر البيع بالسالب! السعر صفر مسموح للأصناف المدرجة قيمتها ضمن صنف آخر.' });
 
       return;
 
@@ -3642,7 +3630,7 @@ export default function POSDashboard() {
 
         <div className="py-2 text-[9px] text-indigo-400/50 text-center font-mono shrink-0 bg-slate-950">
 
-          <span>الإصدار 2.0.0</span>
+          <span>الإصدار 2.2.0</span>
 
         </div>
 
@@ -4180,9 +4168,9 @@ export default function POSDashboard() {
 
                         {item.originalPrice <= 0 && (
 
-                          <div className="mt-1.5 mb-1 text-[10px] font-black text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1.5 rounded-sm text-center">
+                          <div className="mt-1.5 mb-1 text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-1.5 rounded-sm text-center">
 
-                            ⚠️ لم يتم وضع التسعير من المدير بعد!
+                            سعر الصنف صفر — قيمته مدرجة ضمن صنف آخر
 
                           </div>
 
@@ -4433,7 +4421,7 @@ export default function POSDashboard() {
 
                 {/* Checkout Actions */}
                 {currentUser?.role === 'ADMIN' && <button type="button"
-                  disabled={!cart.length || submitting || cart.some(item => item.originalPrice <= 0)}
+                  disabled={!cart.length || submitting}
                   onClick={() => setShowQuotationPricing(true)}
                   className="w-full rounded-sm border border-emerald-500/30 bg-emerald-600/15 py-2 text-sm font-bold text-emerald-300 disabled:opacity-40">
                   تسعير وأرباح عرض السعر
@@ -4443,7 +4431,7 @@ export default function POSDashboard() {
 
                   <button
 
-                    disabled={cart.length === 0 || submitting || cart.some(item => item.originalPrice <= 0)}
+                    disabled={cart.length === 0 || submitting}
 
                     onClick={() => handleCheckout(true)}
 
@@ -4459,7 +4447,7 @@ export default function POSDashboard() {
 
                   <button
 
-                    disabled={cart.length === 0 || submitting || cart.some(item => item.originalPrice <= 0)}
+                    disabled={cart.length === 0 || submitting}
 
                     onClick={() => handleCheckout(false)}
 
