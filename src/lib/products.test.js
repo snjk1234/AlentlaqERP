@@ -32,15 +32,17 @@ function loadCreateProduct(existing) {
   return { create: data => handlers.get('create-product')(null, data), created };
 }
 
-test('changing only the size registers a new product while matching specs stay rejected', async () => {
-  const existing = [{ code: 'P-1', size: '20', color: 'Blue', gauge: null, weight: null, supplierId: null }];
+test('changing only the size or type registers a new product while matching specs stay rejected', async () => {
+  const existing = [{ code: 'P-1', type: 'T', size: '20', color: 'Blue', gauge: null, weight: null, supplierId: null }];
   const { create, created } = loadCreateProduct(existing);
   const saved = await create({ code: 'P-1', name: 'Prod', type: 'T', size: '25', color: 'Blue', price: 10 });
   assert.equal(saved.size, '25');
-  assert.equal(created.length, 1);
+  const other = await create({ code: 'P-1', name: 'Prod', type: 'T2', size: '20', color: 'Blue', price: 10 });
+  assert.equal(other.type, 'T2');
+  assert.equal(created.length, 2);
   await assert.rejects(
     create({ code: 'P-1', name: 'Prod', type: 'T', size: '20', color: 'Blue', price: 10 }),
     /بنفس المواصفات/
   );
-  assert.equal(created.length, 1);
+  assert.equal(created.length, 2);
 });

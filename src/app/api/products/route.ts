@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'كود الصنف والاسم مطلوبين' }, { status: 400 });
     }
 
-    // Check for uniqueness based on (code, size, color, gauge, weight, supplierId)
+    // Check for uniqueness based on (code, type, size, color, gauge, weight, supplierId)
     const existingProducts = await prisma.product.findMany({
       where: { code: body.code }
     });
@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     if (existingProducts.length > 0) {
       const isDuplicate = existingProducts.some(p => 
         (p.supplierId || null) === (body.supplierId || null) &&
+        (p.type || null) === (body.type || null) &&
         (p.size || null) === (body.size || null) &&
         (p.color || null) === (body.color || null) &&
         (p.gauge || null) === (body.gauge || null) &&
@@ -97,6 +98,7 @@ export async function PUT(request: Request) {
       if (existingProducts.length > 0) {
         const isDuplicate = existingProducts.some(p => 
           (p.supplierId || null) === (body.supplierId || null) &&
+          (p.type || null) === (body.type || null) &&
           (p.size || null) === (body.size || null) &&
           (p.color || null) === (body.color || null) &&
           (p.gauge || null) === (body.gauge || null) &&
