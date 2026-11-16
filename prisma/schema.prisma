@@ -49,8 +49,9 @@ model Product {
   purchaseItems PurchaseOrderItem[]
   customPrices  CustomerPrice[]
   ceilingQuotas CustomerCeilingQuota[]
+  supplierPrices SupplierPrice[]
   stocktakeItems StocktakeItem[]
-  supplier      Supplier?           @relation(fields: [supplierId], references: [id])
+  supplier Supplier?           @relation(fields: [supplierId], references: [id])
 }
 
 model Category {
@@ -250,6 +251,20 @@ model Bank {
   orderReturns    OrderReturn[]
 }
 
+model SupplierPrice {
+  id        String   @id @default(cuid())
+  supplierId String
+  productId String
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  supplier  Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([supplierId, productId])
+}
+
 model CustomerCeilingQuota {
   id               String   @id @default(cuid())
   customerId       String
@@ -267,7 +282,6 @@ model CustomerCeilingQuota {
 
   @@unique([customerId, productId])
 }
-
 
 model Payment {
   id            String   @id @default(cuid())
@@ -300,6 +314,7 @@ model Supplier {
   purchaseOrders PurchaseOrder[]
   products       Product[]
   discounts      AccountDiscount[]
+  supplierPrices SupplierPrice[]
 }
 
 model AccountDiscount {

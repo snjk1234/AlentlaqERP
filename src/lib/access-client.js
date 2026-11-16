@@ -52,7 +52,8 @@ const models = {
       orderReturnItems: { model: 'orderReturnItem', many: true, foreignKey: 'productId' },
       purchaseItems: { model: 'purchaseOrderItem', many: true, foreignKey: 'productId', onDelete: 'cascade' },
       customPrices: { model: 'customerPrice', many: true, foreignKey: 'productId', onDelete: 'cascade' },
-      ceilingQuotas: { model: 'customerCeilingQuota', many: true, foreignKey: 'productId', onDelete: 'cascade' }
+      ceilingQuotas: { model: 'customerCeilingQuota', many: true, foreignKey: 'productId', onDelete: 'cascade' },
+      supplierPrices: { model: 'supplierPrice', many: true, foreignKey: 'productId', onDelete: 'cascade' }
     }
   },
   category: {
@@ -233,12 +234,29 @@ const models = {
       { field: 'customerId', model: 'customer', onDelete: 'cascade' },
       { field: 'productId', model: 'product', onDelete: 'cascade' }
     ],
-    relations: {
-      customer: { model: 'customer', foreignKey: 'customerId' },
-      product: { model: 'product', foreignKey: 'productId' }
-    }
+  relations: {
+    customer: { model: 'customer', foreignKey: 'customerId' },
+    product: { model: 'product', foreignKey: 'productId' }
+  }
+},
+supplierPrice: {
+  table: 'SupplierPrice',
+  fields: {
+    id, supplierId: text({ size: 50, nullable: false }), productId: text({ size: 50, nullable: false }),
+    price: number({ nullable: false }), createdAt: timestamp, updatedAt: timestamp
   },
-  payment: {
+  defaults: {},
+  unique: [['supplierId', 'productId']],
+  foreignKeys: [
+    { field: 'supplierId', model: 'supplier', onDelete: 'cascade' },
+    { field: 'productId', model: 'product', onDelete: 'cascade' }
+  ],
+  relations: {
+    supplier: { model: 'supplier', foreignKey: 'supplierId' },
+    product: { model: 'product', foreignKey: 'productId' }
+  }
+},
+payment: {
     table: 'Payment',
     fields: {
       id, customerId: text({ size: 50, nullable: false }), bankId: text({ size: 50, nullable: false }),
@@ -269,7 +287,8 @@ const models = {
       expenses: { model: 'expensePayment', many: true, foreignKey: 'supplierId' },
       discounts: { model: 'accountDiscount', many: true, foreignKey: 'supplierId' },
       purchaseOrders: { model: 'purchaseOrder', many: true, foreignKey: 'supplierId' },
-      products: { model: 'product', many: true, foreignKey: 'supplierId' }
+      products: { model: 'product', many: true, foreignKey: 'supplierId' },
+      supplierPrices: { model: 'supplierPrice', many: true, foreignKey: 'supplierId', onDelete: 'cascade' }
     }
   },
   purchaseOrder: {

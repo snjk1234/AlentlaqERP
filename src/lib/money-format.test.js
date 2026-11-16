@@ -115,7 +115,7 @@ test('all monetary page inputs use MoneyInput and no monetary JSX retains ungrou
     ts.forEachChild(node, visit);
   };
   visit(tree);
-  assert.equal(fields.length, 13);
+  assert.equal(fields.length, 14);
   assert.ok(source.includes('normalizeMoneyInput(e.target.value)'));
   assert.ok(source.includes('normalizeMoneyInput(e.currentTarget.value)'));
 });

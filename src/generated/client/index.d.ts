@@ -43,6 +43,7 @@ export type ProductPayload<ExtArgs extends $Extensions.Args = $Extensions.Defaul
     purchaseItems: PurchaseOrderItemPayload<ExtArgs>[]
     customPrices: CustomerPricePayload<ExtArgs>[]
     ceilingQuotas: CustomerCeilingQuotaPayload<ExtArgs>[]
+    supplierPrices: SupplierPricePayload<ExtArgs>[]
     stocktakeItems: StocktakeItemPayload<ExtArgs>[]
     supplier: SupplierPayload<ExtArgs> | null
   }
@@ -409,6 +410,28 @@ export type BankPayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultAr
  * 
  */
 export type Bank = runtime.Types.DefaultSelection<BankPayload>
+export type SupplierPricePayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+  name: "SupplierPrice"
+  objects: {
+    supplier: SupplierPayload<ExtArgs>
+    product: ProductPayload<ExtArgs>
+  }
+  scalars: $Extensions.GetResult<{
+    id: string
+    supplierId: string
+    productId: string
+    price: number
+    createdAt: Date
+    updatedAt: Date
+  }, ExtArgs["result"]["supplierPrice"]>
+  composites: {}
+}
+
+/**
+ * Model SupplierPrice
+ * 
+ */
+export type SupplierPrice = runtime.Types.DefaultSelection<SupplierPricePayload>
 export type CustomerCeilingQuotaPayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
   name: "CustomerCeilingQuota"
   objects: {
@@ -469,6 +492,7 @@ export type SupplierPayload<ExtArgs extends $Extensions.Args = $Extensions.Defau
     purchaseOrders: PurchaseOrderPayload<ExtArgs>[]
     products: ProductPayload<ExtArgs>[]
     discounts: AccountDiscountPayload<ExtArgs>[]
+    supplierPrices: SupplierPricePayload<ExtArgs>[]
   }
   scalars: $Extensions.GetResult<{
     id: string
@@ -514,7 +538,7 @@ export type AccountDiscountPayload<ExtArgs extends $Extensions.Args = $Extension
 
 /**
  * Model AccountDiscount
- *
+ * 
  */
 export type AccountDiscount = runtime.Types.DefaultSelection<AccountDiscountPayload>
 export type PurchaseOrderPayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
@@ -910,6 +934,16 @@ export class PrismaClient<
     * ```
     */
   get bank(): Prisma.BankDelegate<ExtArgs>;
+
+  /**
+   * `prisma.supplierPrice`: Exposes CRUD operations for the **SupplierPrice** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SupplierPrices
+    * const supplierPrices = await prisma.supplierPrice.findMany()
+    * ```
+    */
+  get supplierPrice(): Prisma.SupplierPriceDelegate<ExtArgs>;
 
   /**
    * `prisma.customerCeilingQuota`: Exposes CRUD operations for the **CustomerCeilingQuota** model.
@@ -1498,6 +1532,7 @@ export namespace Prisma {
     OrderReturn: 'OrderReturn',
     OrderReturnItem: 'OrderReturnItem',
     Bank: 'Bank',
+    SupplierPrice: 'SupplierPrice',
     CustomerCeilingQuota: 'CustomerCeilingQuota',
     Payment: 'Payment',
     Supplier: 'Supplier',
@@ -1523,7 +1558,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
     meta: {
-      modelProps: 'user' | 'product' | 'category' | 'bankTransfer' | 'productOption' | 'stocktakeSetting' | 'stocktake' | 'stocktakeItem' | 'order' | 'customer' | 'customerPrice' | 'orderItem' | 'orderReturn' | 'orderReturnItem' | 'bank' | 'customerCeilingQuota' | 'payment' | 'supplier' | 'accountDiscount' | 'purchaseOrder' | 'purchaseOrderItem' | 'expensePayment' | 'expenseCategory' | 'generalExpense'
+      modelProps: 'user' | 'product' | 'category' | 'bankTransfer' | 'productOption' | 'stocktakeSetting' | 'stocktake' | 'stocktakeItem' | 'order' | 'customer' | 'customerPrice' | 'orderItem' | 'orderReturn' | 'orderReturnItem' | 'bank' | 'supplierPrice' | 'customerCeilingQuota' | 'payment' | 'supplier' | 'accountDiscount' | 'purchaseOrder' | 'purchaseOrderItem' | 'expensePayment' | 'expenseCategory' | 'generalExpense'
       txIsolationLevel: Prisma.TransactionIsolationLevel
     },
     model: {
@@ -2457,6 +2492,68 @@ export namespace Prisma {
           }
         }
       }
+      SupplierPrice: {
+        payload: SupplierPricePayload<ExtArgs>
+        fields: Prisma.SupplierPriceFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SupplierPriceFindUniqueArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<SupplierPricePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SupplierPriceFindUniqueOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<SupplierPricePayload>
+          }
+          findFirst: {
+            args: Prisma.SupplierPriceFindFirstArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<SupplierPricePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SupplierPriceFindFirstOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<SupplierPricePayload>
+          }
+          findMany: {
+            args: Prisma.SupplierPriceFindManyArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<SupplierPricePayload>[]
+          }
+          create: {
+            args: Prisma.SupplierPriceCreateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<SupplierPricePayload>
+          }
+          delete: {
+            args: Prisma.SupplierPriceDeleteArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<SupplierPricePayload>
+          }
+          update: {
+            args: Prisma.SupplierPriceUpdateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<SupplierPricePayload>
+          }
+          deleteMany: {
+            args: Prisma.SupplierPriceDeleteManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SupplierPriceUpdateManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          upsert: {
+            args: Prisma.SupplierPriceUpsertArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<SupplierPricePayload>
+          }
+          aggregate: {
+            args: Prisma.SupplierPriceAggregateArgs<ExtArgs>,
+            result: $Utils.Optional<AggregateSupplierPrice>
+          }
+          groupBy: {
+            args: Prisma.SupplierPriceGroupByArgs<ExtArgs>,
+            result: $Utils.Optional<SupplierPriceGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SupplierPriceCountArgs<ExtArgs>,
+            result: $Utils.Optional<SupplierPriceCountAggregateOutputType> | number
+          }
+        }
+      }
       CustomerCeilingQuota: {
         payload: CustomerCeilingQuotaPayload<ExtArgs>
         fields: Prisma.CustomerCeilingQuotaFieldRefs
@@ -3211,6 +3308,7 @@ export namespace Prisma {
     purchaseItems: number
     customPrices: number
     ceilingQuotas: number
+    supplierPrices: number
     stocktakeItems: number
   }
 
@@ -3220,6 +3318,7 @@ export namespace Prisma {
     purchaseItems?: boolean | ProductCountOutputTypeCountPurchaseItemsArgs
     customPrices?: boolean | ProductCountOutputTypeCountCustomPricesArgs
     ceilingQuotas?: boolean | ProductCountOutputTypeCountCeilingQuotasArgs
+    supplierPrices?: boolean | ProductCountOutputTypeCountSupplierPricesArgs
     stocktakeItems?: boolean | ProductCountOutputTypeCountStocktakeItemsArgs
   }
 
@@ -3273,6 +3372,14 @@ export namespace Prisma {
    */
   export type ProductCountOutputTypeCountCeilingQuotasArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
     where?: CustomerCeilingQuotaWhereInput
+  }
+
+
+  /**
+   * ProductCountOutputType without action
+   */
+  export type ProductCountOutputTypeCountSupplierPricesArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: SupplierPriceWhereInput
   }
 
 
@@ -3595,6 +3702,7 @@ export namespace Prisma {
     purchaseOrders: number
     products: number
     discounts: number
+    supplierPrices: number
   }
 
   export type SupplierCountOutputTypeSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
@@ -3602,6 +3710,7 @@ export namespace Prisma {
     purchaseOrders?: boolean | SupplierCountOutputTypeCountPurchaseOrdersArgs
     products?: boolean | SupplierCountOutputTypeCountProductsArgs
     discounts?: boolean | SupplierCountOutputTypeCountDiscountsArgs
+    supplierPrices?: boolean | SupplierCountOutputTypeCountSupplierPricesArgs
   }
 
   // Custom InputTypes
@@ -3646,6 +3755,14 @@ export namespace Prisma {
    */
   export type SupplierCountOutputTypeCountDiscountsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
     where?: AccountDiscountWhereInput
+  }
+
+
+  /**
+   * SupplierCountOutputType without action
+   */
+  export type SupplierCountOutputTypeCountSupplierPricesArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: SupplierPriceWhereInput
   }
 
 
@@ -5050,6 +5167,7 @@ export namespace Prisma {
     purchaseItems?: boolean | Product$purchaseItemsArgs<ExtArgs>
     customPrices?: boolean | Product$customPricesArgs<ExtArgs>
     ceilingQuotas?: boolean | Product$ceilingQuotasArgs<ExtArgs>
+    supplierPrices?: boolean | Product$supplierPricesArgs<ExtArgs>
     stocktakeItems?: boolean | Product$stocktakeItemsArgs<ExtArgs>
     supplier?: boolean | Product$supplierArgs<ExtArgs>
     _count?: boolean | ProductCountOutputTypeArgs<ExtArgs>
@@ -5086,6 +5204,7 @@ export namespace Prisma {
     purchaseItems?: boolean | Product$purchaseItemsArgs<ExtArgs>
     customPrices?: boolean | Product$customPricesArgs<ExtArgs>
     ceilingQuotas?: boolean | Product$ceilingQuotasArgs<ExtArgs>
+    supplierPrices?: boolean | Product$supplierPricesArgs<ExtArgs>
     stocktakeItems?: boolean | Product$stocktakeItemsArgs<ExtArgs>
     supplier?: boolean | Product$supplierArgs<ExtArgs>
     _count?: boolean | ProductCountOutputTypeArgs<ExtArgs>
@@ -5457,6 +5576,8 @@ export namespace Prisma {
     customPrices<T extends Product$customPricesArgs<ExtArgs> = {}>(args?: Subset<T, Product$customPricesArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<CustomerPricePayload<ExtArgs>, T, 'findMany'>| Null>;
 
     ceilingQuotas<T extends Product$ceilingQuotasArgs<ExtArgs> = {}>(args?: Subset<T, Product$ceilingQuotasArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<CustomerCeilingQuotaPayload<ExtArgs>, T, 'findMany'>| Null>;
+
+    supplierPrices<T extends Product$supplierPricesArgs<ExtArgs> = {}>(args?: Subset<T, Product$supplierPricesArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<SupplierPricePayload<ExtArgs>, T, 'findMany'>| Null>;
 
     stocktakeItems<T extends Product$stocktakeItemsArgs<ExtArgs> = {}>(args?: Subset<T, Product$stocktakeItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<StocktakeItemPayload<ExtArgs>, T, 'findMany'>| Null>;
 
@@ -5914,6 +6035,27 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: CustomerCeilingQuotaScalarFieldEnum | CustomerCeilingQuotaScalarFieldEnum[]
+  }
+
+
+  /**
+   * Product.supplierPrices
+   */
+  export type Product$supplierPricesArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SupplierPrice
+     */
+    select?: SupplierPriceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: SupplierPriceInclude<ExtArgs> | null
+    where?: SupplierPriceWhereInput
+    orderBy?: SupplierPriceOrderByWithRelationInput | SupplierPriceOrderByWithRelationInput[]
+    cursor?: SupplierPriceWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SupplierPriceScalarFieldEnum | SupplierPriceScalarFieldEnum[]
   }
 
 
@@ -18857,6 +18999,943 @@ export namespace Prisma {
 
 
   /**
+   * Model SupplierPrice
+   */
+
+
+  export type AggregateSupplierPrice = {
+    _count: SupplierPriceCountAggregateOutputType | null
+    _avg: SupplierPriceAvgAggregateOutputType | null
+    _sum: SupplierPriceSumAggregateOutputType | null
+    _min: SupplierPriceMinAggregateOutputType | null
+    _max: SupplierPriceMaxAggregateOutputType | null
+  }
+
+  export type SupplierPriceAvgAggregateOutputType = {
+    price: number | null
+  }
+
+  export type SupplierPriceSumAggregateOutputType = {
+    price: number | null
+  }
+
+  export type SupplierPriceMinAggregateOutputType = {
+    id: string | null
+    supplierId: string | null
+    productId: string | null
+    price: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type SupplierPriceMaxAggregateOutputType = {
+    id: string | null
+    supplierId: string | null
+    productId: string | null
+    price: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type SupplierPriceCountAggregateOutputType = {
+    id: number
+    supplierId: number
+    productId: number
+    price: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type SupplierPriceAvgAggregateInputType = {
+    price?: true
+  }
+
+  export type SupplierPriceSumAggregateInputType = {
+    price?: true
+  }
+
+  export type SupplierPriceMinAggregateInputType = {
+    id?: true
+    supplierId?: true
+    productId?: true
+    price?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type SupplierPriceMaxAggregateInputType = {
+    id?: true
+    supplierId?: true
+    productId?: true
+    price?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type SupplierPriceCountAggregateInputType = {
+    id?: true
+    supplierId?: true
+    productId?: true
+    price?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type SupplierPriceAggregateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SupplierPrice to aggregate.
+     */
+    where?: SupplierPriceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SupplierPrices to fetch.
+     */
+    orderBy?: SupplierPriceOrderByWithRelationInput | SupplierPriceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SupplierPriceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SupplierPrices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SupplierPrices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SupplierPrices
+    **/
+    _count?: true | SupplierPriceCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: SupplierPriceAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: SupplierPriceSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SupplierPriceMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SupplierPriceMaxAggregateInputType
+  }
+
+  export type GetSupplierPriceAggregateType<T extends SupplierPriceAggregateArgs> = {
+        [P in keyof T & keyof AggregateSupplierPrice]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSupplierPrice[P]>
+      : GetScalarType<T[P], AggregateSupplierPrice[P]>
+  }
+
+
+
+
+  export type SupplierPriceGroupByArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: SupplierPriceWhereInput
+    orderBy?: SupplierPriceOrderByWithAggregationInput | SupplierPriceOrderByWithAggregationInput[]
+    by: SupplierPriceScalarFieldEnum[] | SupplierPriceScalarFieldEnum
+    having?: SupplierPriceScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SupplierPriceCountAggregateInputType | true
+    _avg?: SupplierPriceAvgAggregateInputType
+    _sum?: SupplierPriceSumAggregateInputType
+    _min?: SupplierPriceMinAggregateInputType
+    _max?: SupplierPriceMaxAggregateInputType
+  }
+
+
+  export type SupplierPriceGroupByOutputType = {
+    id: string
+    supplierId: string
+    productId: string
+    price: number
+    createdAt: Date
+    updatedAt: Date
+    _count: SupplierPriceCountAggregateOutputType | null
+    _avg: SupplierPriceAvgAggregateOutputType | null
+    _sum: SupplierPriceSumAggregateOutputType | null
+    _min: SupplierPriceMinAggregateOutputType | null
+    _max: SupplierPriceMaxAggregateOutputType | null
+  }
+
+  type GetSupplierPriceGroupByPayload<T extends SupplierPriceGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SupplierPriceGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SupplierPriceGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SupplierPriceGroupByOutputType[P]>
+            : GetScalarType<T[P], SupplierPriceGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SupplierPriceSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    supplierId?: boolean
+    productId?: boolean
+    price?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    supplier?: boolean | SupplierArgs<ExtArgs>
+    product?: boolean | ProductArgs<ExtArgs>
+  }, ExtArgs["result"]["supplierPrice"]>
+
+  export type SupplierPriceSelectScalar = {
+    id?: boolean
+    supplierId?: boolean
+    productId?: boolean
+    price?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type SupplierPriceInclude<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    supplier?: boolean | SupplierArgs<ExtArgs>
+    product?: boolean | ProductArgs<ExtArgs>
+  }
+
+
+  type SupplierPriceGetPayload<S extends boolean | null | undefined | SupplierPriceArgs> = $Types.GetResult<SupplierPricePayload, S>
+
+  type SupplierPriceCountArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = 
+    Omit<SupplierPriceFindManyArgs, 'select' | 'include'> & {
+      select?: SupplierPriceCountAggregateInputType | true
+    }
+
+  export interface SupplierPriceDelegate<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SupplierPrice'], meta: { name: 'SupplierPrice' } }
+    /**
+     * Find zero or one SupplierPrice that matches the filter.
+     * @param {SupplierPriceFindUniqueArgs} args - Arguments to find a SupplierPrice
+     * @example
+     * // Get one SupplierPrice
+     * const supplierPrice = await prisma.supplierPrice.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUnique<T extends SupplierPriceFindUniqueArgs<ExtArgs>>(
+      args: SelectSubset<T, SupplierPriceFindUniqueArgs<ExtArgs>>
+    ): Prisma__SupplierPriceClient<$Types.GetResult<SupplierPricePayload<ExtArgs>, T, 'findUnique'> | null, null, ExtArgs>
+
+    /**
+     * Find one SupplierPrice that matches the filter or throw an error  with `error.code='P2025'` 
+     *     if no matches were found.
+     * @param {SupplierPriceFindUniqueOrThrowArgs} args - Arguments to find a SupplierPrice
+     * @example
+     * // Get one SupplierPrice
+     * const supplierPrice = await prisma.supplierPrice.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUniqueOrThrow<T extends SupplierPriceFindUniqueOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, SupplierPriceFindUniqueOrThrowArgs<ExtArgs>>
+    ): Prisma__SupplierPriceClient<$Types.GetResult<SupplierPricePayload<ExtArgs>, T, 'findUniqueOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find the first SupplierPrice that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SupplierPriceFindFirstArgs} args - Arguments to find a SupplierPrice
+     * @example
+     * // Get one SupplierPrice
+     * const supplierPrice = await prisma.supplierPrice.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirst<T extends SupplierPriceFindFirstArgs<ExtArgs>>(
+      args?: SelectSubset<T, SupplierPriceFindFirstArgs<ExtArgs>>
+    ): Prisma__SupplierPriceClient<$Types.GetResult<SupplierPricePayload<ExtArgs>, T, 'findFirst'> | null, null, ExtArgs>
+
+    /**
+     * Find the first SupplierPrice that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SupplierPriceFindFirstOrThrowArgs} args - Arguments to find a SupplierPrice
+     * @example
+     * // Get one SupplierPrice
+     * const supplierPrice = await prisma.supplierPrice.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirstOrThrow<T extends SupplierPriceFindFirstOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, SupplierPriceFindFirstOrThrowArgs<ExtArgs>>
+    ): Prisma__SupplierPriceClient<$Types.GetResult<SupplierPricePayload<ExtArgs>, T, 'findFirstOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find zero or more SupplierPrices that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SupplierPriceFindManyArgs=} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SupplierPrices
+     * const supplierPrices = await prisma.supplierPrice.findMany()
+     * 
+     * // Get first 10 SupplierPrices
+     * const supplierPrices = await prisma.supplierPrice.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const supplierPriceWithIdOnly = await prisma.supplierPrice.findMany({ select: { id: true } })
+     * 
+    **/
+    findMany<T extends SupplierPriceFindManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, SupplierPriceFindManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<$Types.GetResult<SupplierPricePayload<ExtArgs>, T, 'findMany'>>
+
+    /**
+     * Create a SupplierPrice.
+     * @param {SupplierPriceCreateArgs} args - Arguments to create a SupplierPrice.
+     * @example
+     * // Create one SupplierPrice
+     * const SupplierPrice = await prisma.supplierPrice.create({
+     *   data: {
+     *     // ... data to create a SupplierPrice
+     *   }
+     * })
+     * 
+    **/
+    create<T extends SupplierPriceCreateArgs<ExtArgs>>(
+      args: SelectSubset<T, SupplierPriceCreateArgs<ExtArgs>>
+    ): Prisma__SupplierPriceClient<$Types.GetResult<SupplierPricePayload<ExtArgs>, T, 'create'>, never, ExtArgs>
+
+    /**
+     * Delete a SupplierPrice.
+     * @param {SupplierPriceDeleteArgs} args - Arguments to delete one SupplierPrice.
+     * @example
+     * // Delete one SupplierPrice
+     * const SupplierPrice = await prisma.supplierPrice.delete({
+     *   where: {
+     *     // ... filter to delete one SupplierPrice
+     *   }
+     * })
+     * 
+    **/
+    delete<T extends SupplierPriceDeleteArgs<ExtArgs>>(
+      args: SelectSubset<T, SupplierPriceDeleteArgs<ExtArgs>>
+    ): Prisma__SupplierPriceClient<$Types.GetResult<SupplierPricePayload<ExtArgs>, T, 'delete'>, never, ExtArgs>
+
+    /**
+     * Update one SupplierPrice.
+     * @param {SupplierPriceUpdateArgs} args - Arguments to update one SupplierPrice.
+     * @example
+     * // Update one SupplierPrice
+     * const supplierPrice = await prisma.supplierPrice.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    update<T extends SupplierPriceUpdateArgs<ExtArgs>>(
+      args: SelectSubset<T, SupplierPriceUpdateArgs<ExtArgs>>
+    ): Prisma__SupplierPriceClient<$Types.GetResult<SupplierPricePayload<ExtArgs>, T, 'update'>, never, ExtArgs>
+
+    /**
+     * Delete zero or more SupplierPrices.
+     * @param {SupplierPriceDeleteManyArgs} args - Arguments to filter SupplierPrices to delete.
+     * @example
+     * // Delete a few SupplierPrices
+     * const { count } = await prisma.supplierPrice.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+    **/
+    deleteMany<T extends SupplierPriceDeleteManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, SupplierPriceDeleteManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SupplierPrices.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SupplierPriceUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SupplierPrices
+     * const supplierPrice = await prisma.supplierPrice.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    updateMany<T extends SupplierPriceUpdateManyArgs<ExtArgs>>(
+      args: SelectSubset<T, SupplierPriceUpdateManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one SupplierPrice.
+     * @param {SupplierPriceUpsertArgs} args - Arguments to update or create a SupplierPrice.
+     * @example
+     * // Update or create a SupplierPrice
+     * const supplierPrice = await prisma.supplierPrice.upsert({
+     *   create: {
+     *     // ... data to create a SupplierPrice
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SupplierPrice we want to update
+     *   }
+     * })
+    **/
+    upsert<T extends SupplierPriceUpsertArgs<ExtArgs>>(
+      args: SelectSubset<T, SupplierPriceUpsertArgs<ExtArgs>>
+    ): Prisma__SupplierPriceClient<$Types.GetResult<SupplierPricePayload<ExtArgs>, T, 'upsert'>, never, ExtArgs>
+
+    /**
+     * Count the number of SupplierPrices.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SupplierPriceCountArgs} args - Arguments to filter SupplierPrices to count.
+     * @example
+     * // Count the number of SupplierPrices
+     * const count = await prisma.supplierPrice.count({
+     *   where: {
+     *     // ... the filter for the SupplierPrices we want to count
+     *   }
+     * })
+    **/
+    count<T extends SupplierPriceCountArgs>(
+      args?: Subset<T, SupplierPriceCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SupplierPriceCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SupplierPrice.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SupplierPriceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SupplierPriceAggregateArgs>(args: Subset<T, SupplierPriceAggregateArgs>): Prisma.PrismaPromise<GetSupplierPriceAggregateType<T>>
+
+    /**
+     * Group by SupplierPrice.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SupplierPriceGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SupplierPriceGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SupplierPriceGroupByArgs['orderBy'] }
+        : { orderBy?: SupplierPriceGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SupplierPriceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSupplierPriceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SupplierPrice model
+   */
+  readonly fields: SupplierPriceFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SupplierPrice.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export class Prisma__SupplierPriceClient<T, Null = never, ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> implements Prisma.PrismaPromise<T> {
+    private readonly _dmmf;
+    private readonly _queryType;
+    private readonly _rootField;
+    private readonly _clientMethod;
+    private readonly _args;
+    private readonly _dataPath;
+    private readonly _errorFormat;
+    private readonly _measurePerformance?;
+    private _isList;
+    private _callsite;
+    private _requestPromise?;
+    readonly [Symbol.toStringTag]: 'PrismaPromise';
+    constructor(_dmmf: runtime.DMMFClass, _queryType: 'query' | 'mutation', _rootField: string, _clientMethod: string, _args: any, _dataPath: string[], _errorFormat: ErrorFormat, _measurePerformance?: boolean | undefined, _isList?: boolean);
+
+    supplier<T extends SupplierArgs<ExtArgs> = {}>(args?: Subset<T, SupplierArgs<ExtArgs>>): Prisma__SupplierClient<$Types.GetResult<SupplierPayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
+
+    product<T extends ProductArgs<ExtArgs> = {}>(args?: Subset<T, ProductArgs<ExtArgs>>): Prisma__ProductClient<$Types.GetResult<ProductPayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
+
+    private get _document();
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult>;
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+  }
+
+
+
+  /**
+   * Fields of the SupplierPrice model
+   */ 
+  interface SupplierPriceFieldRefs {
+    readonly id: FieldRef<"SupplierPrice", 'String'>
+    readonly supplierId: FieldRef<"SupplierPrice", 'String'>
+    readonly productId: FieldRef<"SupplierPrice", 'String'>
+    readonly price: FieldRef<"SupplierPrice", 'Float'>
+    readonly createdAt: FieldRef<"SupplierPrice", 'DateTime'>
+    readonly updatedAt: FieldRef<"SupplierPrice", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+
+  /**
+   * SupplierPrice findUnique
+   */
+  export type SupplierPriceFindUniqueArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SupplierPrice
+     */
+    select?: SupplierPriceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: SupplierPriceInclude<ExtArgs> | null
+    /**
+     * Filter, which SupplierPrice to fetch.
+     */
+    where: SupplierPriceWhereUniqueInput
+  }
+
+
+  /**
+   * SupplierPrice findUniqueOrThrow
+   */
+  export type SupplierPriceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SupplierPrice
+     */
+    select?: SupplierPriceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: SupplierPriceInclude<ExtArgs> | null
+    /**
+     * Filter, which SupplierPrice to fetch.
+     */
+    where: SupplierPriceWhereUniqueInput
+  }
+
+
+  /**
+   * SupplierPrice findFirst
+   */
+  export type SupplierPriceFindFirstArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SupplierPrice
+     */
+    select?: SupplierPriceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: SupplierPriceInclude<ExtArgs> | null
+    /**
+     * Filter, which SupplierPrice to fetch.
+     */
+    where?: SupplierPriceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SupplierPrices to fetch.
+     */
+    orderBy?: SupplierPriceOrderByWithRelationInput | SupplierPriceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SupplierPrices.
+     */
+    cursor?: SupplierPriceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SupplierPrices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SupplierPrices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SupplierPrices.
+     */
+    distinct?: SupplierPriceScalarFieldEnum | SupplierPriceScalarFieldEnum[]
+  }
+
+
+  /**
+   * SupplierPrice findFirstOrThrow
+   */
+  export type SupplierPriceFindFirstOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SupplierPrice
+     */
+    select?: SupplierPriceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: SupplierPriceInclude<ExtArgs> | null
+    /**
+     * Filter, which SupplierPrice to fetch.
+     */
+    where?: SupplierPriceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SupplierPrices to fetch.
+     */
+    orderBy?: SupplierPriceOrderByWithRelationInput | SupplierPriceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SupplierPrices.
+     */
+    cursor?: SupplierPriceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SupplierPrices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SupplierPrices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SupplierPrices.
+     */
+    distinct?: SupplierPriceScalarFieldEnum | SupplierPriceScalarFieldEnum[]
+  }
+
+
+  /**
+   * SupplierPrice findMany
+   */
+  export type SupplierPriceFindManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SupplierPrice
+     */
+    select?: SupplierPriceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: SupplierPriceInclude<ExtArgs> | null
+    /**
+     * Filter, which SupplierPrices to fetch.
+     */
+    where?: SupplierPriceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SupplierPrices to fetch.
+     */
+    orderBy?: SupplierPriceOrderByWithRelationInput | SupplierPriceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SupplierPrices.
+     */
+    cursor?: SupplierPriceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SupplierPrices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SupplierPrices.
+     */
+    skip?: number
+    distinct?: SupplierPriceScalarFieldEnum | SupplierPriceScalarFieldEnum[]
+  }
+
+
+  /**
+   * SupplierPrice create
+   */
+  export type SupplierPriceCreateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SupplierPrice
+     */
+    select?: SupplierPriceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: SupplierPriceInclude<ExtArgs> | null
+    /**
+     * The data needed to create a SupplierPrice.
+     */
+    data: XOR<SupplierPriceCreateInput, SupplierPriceUncheckedCreateInput>
+  }
+
+
+  /**
+   * SupplierPrice update
+   */
+  export type SupplierPriceUpdateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SupplierPrice
+     */
+    select?: SupplierPriceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: SupplierPriceInclude<ExtArgs> | null
+    /**
+     * The data needed to update a SupplierPrice.
+     */
+    data: XOR<SupplierPriceUpdateInput, SupplierPriceUncheckedUpdateInput>
+    /**
+     * Choose, which SupplierPrice to update.
+     */
+    where: SupplierPriceWhereUniqueInput
+  }
+
+
+  /**
+   * SupplierPrice updateMany
+   */
+  export type SupplierPriceUpdateManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SupplierPrices.
+     */
+    data: XOR<SupplierPriceUpdateManyMutationInput, SupplierPriceUncheckedUpdateManyInput>
+    /**
+     * Filter which SupplierPrices to update
+     */
+    where?: SupplierPriceWhereInput
+  }
+
+
+  /**
+   * SupplierPrice upsert
+   */
+  export type SupplierPriceUpsertArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SupplierPrice
+     */
+    select?: SupplierPriceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: SupplierPriceInclude<ExtArgs> | null
+    /**
+     * The filter to search for the SupplierPrice to update in case it exists.
+     */
+    where: SupplierPriceWhereUniqueInput
+    /**
+     * In case the SupplierPrice found by the `where` argument doesn't exist, create a new SupplierPrice with this data.
+     */
+    create: XOR<SupplierPriceCreateInput, SupplierPriceUncheckedCreateInput>
+    /**
+     * In case the SupplierPrice was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SupplierPriceUpdateInput, SupplierPriceUncheckedUpdateInput>
+  }
+
+
+  /**
+   * SupplierPrice delete
+   */
+  export type SupplierPriceDeleteArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SupplierPrice
+     */
+    select?: SupplierPriceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: SupplierPriceInclude<ExtArgs> | null
+    /**
+     * Filter which SupplierPrice to delete.
+     */
+    where: SupplierPriceWhereUniqueInput
+  }
+
+
+  /**
+   * SupplierPrice deleteMany
+   */
+  export type SupplierPriceDeleteManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SupplierPrices to delete
+     */
+    where?: SupplierPriceWhereInput
+  }
+
+
+  /**
+   * SupplierPrice without action
+   */
+  export type SupplierPriceArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SupplierPrice
+     */
+    select?: SupplierPriceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: SupplierPriceInclude<ExtArgs> | null
+  }
+
+
+
+  /**
    * Model CustomerCeilingQuota
    */
 
@@ -21084,6 +22163,7 @@ export namespace Prisma {
     purchaseOrders?: boolean | Supplier$purchaseOrdersArgs<ExtArgs>
     products?: boolean | Supplier$productsArgs<ExtArgs>
     discounts?: boolean | Supplier$discountsArgs<ExtArgs>
+    supplierPrices?: boolean | Supplier$supplierPricesArgs<ExtArgs>
     _count?: boolean | SupplierCountOutputTypeArgs<ExtArgs>
   }, ExtArgs["result"]["supplier"]>
 
@@ -21105,6 +22185,7 @@ export namespace Prisma {
     purchaseOrders?: boolean | Supplier$purchaseOrdersArgs<ExtArgs>
     products?: boolean | Supplier$productsArgs<ExtArgs>
     discounts?: boolean | Supplier$discountsArgs<ExtArgs>
+    supplierPrices?: boolean | Supplier$supplierPricesArgs<ExtArgs>
     _count?: boolean | SupplierCountOutputTypeArgs<ExtArgs>
   }
 
@@ -21473,6 +22554,8 @@ export namespace Prisma {
 
     discounts<T extends Supplier$discountsArgs<ExtArgs> = {}>(args?: Subset<T, Supplier$discountsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<AccountDiscountPayload<ExtArgs>, T, 'findMany'>| Null>;
 
+    supplierPrices<T extends Supplier$supplierPricesArgs<ExtArgs> = {}>(args?: Subset<T, Supplier$supplierPricesArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<SupplierPricePayload<ExtArgs>, T, 'findMany'>| Null>;
+
     private get _document();
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -21500,7 +22583,7 @@ export namespace Prisma {
 
   /**
    * Fields of the Supplier model
-   */
+   */ 
   interface SupplierFieldRefs {
     readonly id: FieldRef<"Supplier", 'String'>
     readonly name: FieldRef<"Supplier", 'String'>
@@ -21513,7 +22596,7 @@ export namespace Prisma {
     readonly createdAt: FieldRef<"Supplier", 'DateTime'>
     readonly updatedAt: FieldRef<"Supplier", 'DateTime'>
   }
-
+    
 
   // Custom InputTypes
 
@@ -21573,31 +22656,31 @@ export namespace Prisma {
     where?: SupplierWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Suppliers to fetch.
      */
     orderBy?: SupplierOrderByWithRelationInput | SupplierOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for Suppliers.
      */
     cursor?: SupplierWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Suppliers from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Suppliers.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of Suppliers.
      */
     distinct?: SupplierScalarFieldEnum | SupplierScalarFieldEnum[]
@@ -21622,31 +22705,31 @@ export namespace Prisma {
     where?: SupplierWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Suppliers to fetch.
      */
     orderBy?: SupplierOrderByWithRelationInput | SupplierOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for Suppliers.
      */
     cursor?: SupplierWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Suppliers from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Suppliers.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of Suppliers.
      */
     distinct?: SupplierScalarFieldEnum | SupplierScalarFieldEnum[]
@@ -21671,25 +22754,25 @@ export namespace Prisma {
     where?: SupplierWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Suppliers to fetch.
      */
     orderBy?: SupplierOrderByWithRelationInput | SupplierOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for listing Suppliers.
      */
     cursor?: SupplierWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Suppliers from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Suppliers.
      */
     skip?: number
@@ -21896,6 +22979,27 @@ export namespace Prisma {
 
 
   /**
+   * Supplier.supplierPrices
+   */
+  export type Supplier$supplierPricesArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SupplierPrice
+     */
+    select?: SupplierPriceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: SupplierPriceInclude<ExtArgs> | null
+    where?: SupplierPriceWhereInput
+    orderBy?: SupplierPriceOrderByWithRelationInput | SupplierPriceOrderByWithRelationInput[]
+    cursor?: SupplierPriceWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SupplierPriceScalarFieldEnum | SupplierPriceScalarFieldEnum[]
+  }
+
+
+  /**
    * Supplier without action
    */
   export type SupplierArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
@@ -22034,55 +23138,55 @@ export namespace Prisma {
     where?: AccountDiscountWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of AccountDiscounts to fetch.
      */
     orderBy?: AccountDiscountOrderByWithRelationInput | AccountDiscountOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the start position
      */
     cursor?: AccountDiscountWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` AccountDiscounts from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` AccountDiscounts.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Count returned AccountDiscounts
     **/
     _count?: true | AccountDiscountCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to average
     **/
     _avg?: AccountDiscountAvgAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to sum
     **/
     _sum?: AccountDiscountSumAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: AccountDiscountMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the maximum value
     **/
     _max?: AccountDiscountMaxAggregateInputType
@@ -22185,7 +23289,7 @@ export namespace Prisma {
 
   type AccountDiscountGetPayload<S extends boolean | null | undefined | AccountDiscountArgs> = $Types.GetResult<AccountDiscountPayload, S>
 
-  type AccountDiscountCountArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> =
+  type AccountDiscountCountArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = 
     Omit<AccountDiscountFindManyArgs, 'select' | 'include'> & {
       select?: AccountDiscountCountAggregateInputType | true
     }
@@ -22208,7 +23312,7 @@ export namespace Prisma {
     ): Prisma__AccountDiscountClient<$Types.GetResult<AccountDiscountPayload<ExtArgs>, T, 'findUnique'> | null, null, ExtArgs>
 
     /**
-     * Find one AccountDiscount that matches the filter or throw an error  with `error.code='P2025'`
+     * Find one AccountDiscount that matches the filter or throw an error  with `error.code='P2025'` 
      *     if no matches were found.
      * @param {AccountDiscountFindUniqueOrThrowArgs} args - Arguments to find a AccountDiscount
      * @example
@@ -22266,13 +23370,13 @@ export namespace Prisma {
      * @example
      * // Get all AccountDiscounts
      * const accountDiscounts = await prisma.accountDiscount.findMany()
-     *
+     * 
      * // Get first 10 AccountDiscounts
      * const accountDiscounts = await prisma.accountDiscount.findMany({ take: 10 })
-     *
+     * 
      * // Only select the `id`
      * const accountDiscountWithIdOnly = await prisma.accountDiscount.findMany({ select: { id: true } })
-     *
+     * 
     **/
     findMany<T extends AccountDiscountFindManyArgs<ExtArgs>>(
       args?: SelectSubset<T, AccountDiscountFindManyArgs<ExtArgs>>
@@ -22288,7 +23392,7 @@ export namespace Prisma {
      *     // ... data to create a AccountDiscount
      *   }
      * })
-     *
+     * 
     **/
     create<T extends AccountDiscountCreateArgs<ExtArgs>>(
       args: SelectSubset<T, AccountDiscountCreateArgs<ExtArgs>>
@@ -22304,7 +23408,7 @@ export namespace Prisma {
      *     // ... filter to delete one AccountDiscount
      *   }
      * })
-     *
+     * 
     **/
     delete<T extends AccountDiscountDeleteArgs<ExtArgs>>(
       args: SelectSubset<T, AccountDiscountDeleteArgs<ExtArgs>>
@@ -22323,7 +23427,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
     **/
     update<T extends AccountDiscountUpdateArgs<ExtArgs>>(
       args: SelectSubset<T, AccountDiscountUpdateArgs<ExtArgs>>
@@ -22339,7 +23443,7 @@ export namespace Prisma {
      *     // ... provide filter here
      *   }
      * })
-     *
+     * 
     **/
     deleteMany<T extends AccountDiscountDeleteManyArgs<ExtArgs>>(
       args?: SelectSubset<T, AccountDiscountDeleteManyArgs<ExtArgs>>
@@ -22360,7 +23464,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
     **/
     updateMany<T extends AccountDiscountUpdateManyArgs<ExtArgs>>(
       args: SelectSubset<T, AccountDiscountUpdateManyArgs<ExtArgs>>
@@ -22452,7 +23556,7 @@ export namespace Prisma {
      *     _all: true
      *   },
      * })
-     *
+     * 
     **/
     groupBy<
       T extends AccountDiscountGroupByArgs,
@@ -28016,6 +29120,18 @@ export namespace Prisma {
   export type BankScalarFieldEnum = (typeof BankScalarFieldEnum)[keyof typeof BankScalarFieldEnum]
 
 
+  export const SupplierPriceScalarFieldEnum: {
+    id: 'id',
+    supplierId: 'supplierId',
+    productId: 'productId',
+    price: 'price',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type SupplierPriceScalarFieldEnum = (typeof SupplierPriceScalarFieldEnum)[keyof typeof SupplierPriceScalarFieldEnum]
+
+
   export const CustomerCeilingQuotaScalarFieldEnum: {
     id: 'id',
     customerId: 'customerId',
@@ -28312,6 +29428,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemListRelationFilter
     customPrices?: CustomerPriceListRelationFilter
     ceilingQuotas?: CustomerCeilingQuotaListRelationFilter
+    supplierPrices?: SupplierPriceListRelationFilter
     stocktakeItems?: StocktakeItemListRelationFilter
     supplier?: XOR<SupplierNullableRelationFilter, SupplierWhereInput> | null
   }
@@ -28344,6 +29461,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemOrderByRelationAggregateInput
     customPrices?: CustomerPriceOrderByRelationAggregateInput
     ceilingQuotas?: CustomerCeilingQuotaOrderByRelationAggregateInput
+    supplierPrices?: SupplierPriceOrderByRelationAggregateInput
     stocktakeItems?: StocktakeItemOrderByRelationAggregateInput
     supplier?: SupplierOrderByWithRelationInput
   }
@@ -28379,6 +29497,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemListRelationFilter
     customPrices?: CustomerPriceListRelationFilter
     ceilingQuotas?: CustomerCeilingQuotaListRelationFilter
+    supplierPrices?: SupplierPriceListRelationFilter
     stocktakeItems?: StocktakeItemListRelationFilter
     supplier?: XOR<SupplierNullableRelationFilter, SupplierWhereInput> | null
   }, "id">
@@ -29522,6 +30641,72 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"Bank"> | Date | string
   }
 
+  export type SupplierPriceWhereInput = {
+    AND?: SupplierPriceWhereInput | SupplierPriceWhereInput[]
+    OR?: SupplierPriceWhereInput[]
+    NOT?: SupplierPriceWhereInput | SupplierPriceWhereInput[]
+    id?: StringFilter<"SupplierPrice"> | string
+    supplierId?: StringFilter<"SupplierPrice"> | string
+    productId?: StringFilter<"SupplierPrice"> | string
+    price?: FloatFilter<"SupplierPrice"> | number
+    createdAt?: DateTimeFilter<"SupplierPrice"> | Date | string
+    updatedAt?: DateTimeFilter<"SupplierPrice"> | Date | string
+    supplier?: XOR<SupplierRelationFilter, SupplierWhereInput>
+    product?: XOR<ProductRelationFilter, ProductWhereInput>
+  }
+
+  export type SupplierPriceOrderByWithRelationInput = {
+    id?: SortOrder
+    supplierId?: SortOrder
+    productId?: SortOrder
+    price?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    supplier?: SupplierOrderByWithRelationInput
+    product?: ProductOrderByWithRelationInput
+  }
+
+  export type SupplierPriceWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    supplierId_productId?: SupplierPriceSupplierIdProductIdCompoundUniqueInput
+    AND?: SupplierPriceWhereInput | SupplierPriceWhereInput[]
+    OR?: SupplierPriceWhereInput[]
+    NOT?: SupplierPriceWhereInput | SupplierPriceWhereInput[]
+    supplierId?: StringFilter<"SupplierPrice"> | string
+    productId?: StringFilter<"SupplierPrice"> | string
+    price?: FloatFilter<"SupplierPrice"> | number
+    createdAt?: DateTimeFilter<"SupplierPrice"> | Date | string
+    updatedAt?: DateTimeFilter<"SupplierPrice"> | Date | string
+    supplier?: XOR<SupplierRelationFilter, SupplierWhereInput>
+    product?: XOR<ProductRelationFilter, ProductWhereInput>
+  }, "id" | "supplierId_productId">
+
+  export type SupplierPriceOrderByWithAggregationInput = {
+    id?: SortOrder
+    supplierId?: SortOrder
+    productId?: SortOrder
+    price?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: SupplierPriceCountOrderByAggregateInput
+    _avg?: SupplierPriceAvgOrderByAggregateInput
+    _max?: SupplierPriceMaxOrderByAggregateInput
+    _min?: SupplierPriceMinOrderByAggregateInput
+    _sum?: SupplierPriceSumOrderByAggregateInput
+  }
+
+  export type SupplierPriceScalarWhereWithAggregatesInput = {
+    AND?: SupplierPriceScalarWhereWithAggregatesInput | SupplierPriceScalarWhereWithAggregatesInput[]
+    OR?: SupplierPriceScalarWhereWithAggregatesInput[]
+    NOT?: SupplierPriceScalarWhereWithAggregatesInput | SupplierPriceScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SupplierPrice"> | string
+    supplierId?: StringWithAggregatesFilter<"SupplierPrice"> | string
+    productId?: StringWithAggregatesFilter<"SupplierPrice"> | string
+    price?: FloatWithAggregatesFilter<"SupplierPrice"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"SupplierPrice"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"SupplierPrice"> | Date | string
+  }
+
   export type CustomerCeilingQuotaWhereInput = {
     AND?: CustomerCeilingQuotaWhereInput | CustomerCeilingQuotaWhereInput[]
     OR?: CustomerCeilingQuotaWhereInput[]
@@ -29716,6 +30901,7 @@ export namespace Prisma {
     purchaseOrders?: PurchaseOrderListRelationFilter
     products?: ProductListRelationFilter
     discounts?: AccountDiscountListRelationFilter
+    supplierPrices?: SupplierPriceListRelationFilter
   }
 
   export type SupplierOrderByWithRelationInput = {
@@ -29733,6 +30919,7 @@ export namespace Prisma {
     purchaseOrders?: PurchaseOrderOrderByRelationAggregateInput
     products?: ProductOrderByRelationAggregateInput
     discounts?: AccountDiscountOrderByRelationAggregateInput
+    supplierPrices?: SupplierPriceOrderByRelationAggregateInput
   }
 
   export type SupplierWhereUniqueInput = Prisma.AtLeast<{
@@ -29753,6 +30940,7 @@ export namespace Prisma {
     purchaseOrders?: PurchaseOrderListRelationFilter
     products?: ProductListRelationFilter
     discounts?: AccountDiscountListRelationFilter
+    supplierPrices?: SupplierPriceListRelationFilter
   }, "id" | "name">
 
   export type SupplierOrderByWithAggregationInput = {
@@ -30354,6 +31542,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     customPrices?: CustomerPriceCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
@@ -30386,6 +31575,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUncheckedCreateNestedManyWithoutProductInput
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
   }
 
@@ -30416,6 +31606,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     customPrices?: CustomerPriceUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
@@ -30448,6 +31639,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUncheckedUpdateManyWithoutProductNestedInput
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
@@ -31517,6 +32709,58 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type SupplierPriceCreateInput = {
+    id?: string
+    price: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    supplier: SupplierCreateNestedOneWithoutSupplierPricesInput
+    product: ProductCreateNestedOneWithoutSupplierPricesInput
+  }
+
+  export type SupplierPriceUncheckedCreateInput = {
+    id?: string
+    supplierId: string
+    productId: string
+    price: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SupplierPriceUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    supplier?: SupplierUpdateOneRequiredWithoutSupplierPricesNestedInput
+    product?: ProductUpdateOneRequiredWithoutSupplierPricesNestedInput
+  }
+
+  export type SupplierPriceUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    supplierId?: StringFieldUpdateOperationsInput | string
+    productId?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SupplierPriceUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SupplierPriceUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    supplierId?: StringFieldUpdateOperationsInput | string
+    productId?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type CustomerCeilingQuotaCreateInput = {
     id?: string
     buildingsCount: number
@@ -31690,6 +32934,7 @@ export namespace Prisma {
     purchaseOrders?: PurchaseOrderCreateNestedManyWithoutSupplierInput
     products?: ProductCreateNestedManyWithoutSupplierInput
     discounts?: AccountDiscountCreateNestedManyWithoutSupplierInput
+    supplierPrices?: SupplierPriceCreateNestedManyWithoutSupplierInput
   }
 
   export type SupplierUncheckedCreateInput = {
@@ -31707,6 +32952,7 @@ export namespace Prisma {
     purchaseOrders?: PurchaseOrderUncheckedCreateNestedManyWithoutSupplierInput
     products?: ProductUncheckedCreateNestedManyWithoutSupplierInput
     discounts?: AccountDiscountUncheckedCreateNestedManyWithoutSupplierInput
+    supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutSupplierInput
   }
 
   export type SupplierUpdateInput = {
@@ -31724,6 +32970,7 @@ export namespace Prisma {
     purchaseOrders?: PurchaseOrderUpdateManyWithoutSupplierNestedInput
     products?: ProductUpdateManyWithoutSupplierNestedInput
     discounts?: AccountDiscountUpdateManyWithoutSupplierNestedInput
+    supplierPrices?: SupplierPriceUpdateManyWithoutSupplierNestedInput
   }
 
   export type SupplierUncheckedUpdateInput = {
@@ -31741,6 +32988,7 @@ export namespace Prisma {
     purchaseOrders?: PurchaseOrderUncheckedUpdateManyWithoutSupplierNestedInput
     products?: ProductUncheckedUpdateManyWithoutSupplierNestedInput
     discounts?: AccountDiscountUncheckedUpdateManyWithoutSupplierNestedInput
+    supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutSupplierNestedInput
   }
 
   export type SupplierUpdateManyMutationInput = {
@@ -32377,6 +33625,12 @@ export namespace Prisma {
     none?: CustomerCeilingQuotaWhereInput
   }
 
+  export type SupplierPriceListRelationFilter = {
+    every?: SupplierPriceWhereInput
+    some?: SupplierPriceWhereInput
+    none?: SupplierPriceWhereInput
+  }
+
   export type StocktakeItemListRelationFilter = {
     every?: StocktakeItemWhereInput
     some?: StocktakeItemWhereInput
@@ -32410,6 +33664,10 @@ export namespace Prisma {
   }
 
   export type CustomerCeilingQuotaOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type SupplierPriceOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -33365,6 +34623,51 @@ export namespace Prisma {
     balance?: SortOrder
   }
 
+  export type SupplierRelationFilter = {
+    is?: SupplierWhereInput
+    isNot?: SupplierWhereInput
+  }
+
+  export type SupplierPriceSupplierIdProductIdCompoundUniqueInput = {
+    supplierId: string
+    productId: string
+  }
+
+  export type SupplierPriceCountOrderByAggregateInput = {
+    id?: SortOrder
+    supplierId?: SortOrder
+    productId?: SortOrder
+    price?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SupplierPriceAvgOrderByAggregateInput = {
+    price?: SortOrder
+  }
+
+  export type SupplierPriceMaxOrderByAggregateInput = {
+    id?: SortOrder
+    supplierId?: SortOrder
+    productId?: SortOrder
+    price?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SupplierPriceMinOrderByAggregateInput = {
+    id?: SortOrder
+    supplierId?: SortOrder
+    productId?: SortOrder
+    price?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SupplierPriceSumOrderByAggregateInput = {
+    price?: SortOrder
+  }
+
   export type CustomerCeilingQuotaCustomerIdProductIdCompoundUniqueInput = {
     customerId: string
     productId: string
@@ -33597,11 +34900,6 @@ export namespace Prisma {
 
   export type AccountDiscountSumOrderByAggregateInput = {
     amount?: SortOrder
-  }
-
-  export type SupplierRelationFilter = {
-    is?: SupplierWhereInput
-    isNot?: SupplierWhereInput
   }
 
   export type PurchaseOrderCountOrderByAggregateInput = {
@@ -33941,6 +35239,12 @@ export namespace Prisma {
     connect?: CustomerCeilingQuotaWhereUniqueInput | CustomerCeilingQuotaWhereUniqueInput[]
   }
 
+  export type SupplierPriceCreateNestedManyWithoutProductInput = {
+    create?: XOR<SupplierPriceCreateWithoutProductInput, SupplierPriceUncheckedCreateWithoutProductInput> | SupplierPriceCreateWithoutProductInput[] | SupplierPriceUncheckedCreateWithoutProductInput[]
+    connectOrCreate?: SupplierPriceCreateOrConnectWithoutProductInput | SupplierPriceCreateOrConnectWithoutProductInput[]
+    connect?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+  }
+
   export type StocktakeItemCreateNestedManyWithoutProductInput = {
     create?: XOR<StocktakeItemCreateWithoutProductInput, StocktakeItemUncheckedCreateWithoutProductInput> | StocktakeItemCreateWithoutProductInput[] | StocktakeItemUncheckedCreateWithoutProductInput[]
     connectOrCreate?: StocktakeItemCreateOrConnectWithoutProductInput | StocktakeItemCreateOrConnectWithoutProductInput[]
@@ -33981,6 +35285,12 @@ export namespace Prisma {
     create?: XOR<CustomerCeilingQuotaCreateWithoutProductInput, CustomerCeilingQuotaUncheckedCreateWithoutProductInput> | CustomerCeilingQuotaCreateWithoutProductInput[] | CustomerCeilingQuotaUncheckedCreateWithoutProductInput[]
     connectOrCreate?: CustomerCeilingQuotaCreateOrConnectWithoutProductInput | CustomerCeilingQuotaCreateOrConnectWithoutProductInput[]
     connect?: CustomerCeilingQuotaWhereUniqueInput | CustomerCeilingQuotaWhereUniqueInput[]
+  }
+
+  export type SupplierPriceUncheckedCreateNestedManyWithoutProductInput = {
+    create?: XOR<SupplierPriceCreateWithoutProductInput, SupplierPriceUncheckedCreateWithoutProductInput> | SupplierPriceCreateWithoutProductInput[] | SupplierPriceUncheckedCreateWithoutProductInput[]
+    connectOrCreate?: SupplierPriceCreateOrConnectWithoutProductInput | SupplierPriceCreateOrConnectWithoutProductInput[]
+    connect?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
   }
 
   export type StocktakeItemUncheckedCreateNestedManyWithoutProductInput = {
@@ -34082,6 +35392,19 @@ export namespace Prisma {
     deleteMany?: CustomerCeilingQuotaScalarWhereInput | CustomerCeilingQuotaScalarWhereInput[]
   }
 
+  export type SupplierPriceUpdateManyWithoutProductNestedInput = {
+    create?: XOR<SupplierPriceCreateWithoutProductInput, SupplierPriceUncheckedCreateWithoutProductInput> | SupplierPriceCreateWithoutProductInput[] | SupplierPriceUncheckedCreateWithoutProductInput[]
+    connectOrCreate?: SupplierPriceCreateOrConnectWithoutProductInput | SupplierPriceCreateOrConnectWithoutProductInput[]
+    upsert?: SupplierPriceUpsertWithWhereUniqueWithoutProductInput | SupplierPriceUpsertWithWhereUniqueWithoutProductInput[]
+    set?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    disconnect?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    delete?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    connect?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    update?: SupplierPriceUpdateWithWhereUniqueWithoutProductInput | SupplierPriceUpdateWithWhereUniqueWithoutProductInput[]
+    updateMany?: SupplierPriceUpdateManyWithWhereWithoutProductInput | SupplierPriceUpdateManyWithWhereWithoutProductInput[]
+    deleteMany?: SupplierPriceScalarWhereInput | SupplierPriceScalarWhereInput[]
+  }
+
   export type StocktakeItemUpdateManyWithoutProductNestedInput = {
     create?: XOR<StocktakeItemCreateWithoutProductInput, StocktakeItemUncheckedCreateWithoutProductInput> | StocktakeItemCreateWithoutProductInput[] | StocktakeItemUncheckedCreateWithoutProductInput[]
     connectOrCreate?: StocktakeItemCreateOrConnectWithoutProductInput | StocktakeItemCreateOrConnectWithoutProductInput[]
@@ -34168,6 +35491,19 @@ export namespace Prisma {
     update?: CustomerCeilingQuotaUpdateWithWhereUniqueWithoutProductInput | CustomerCeilingQuotaUpdateWithWhereUniqueWithoutProductInput[]
     updateMany?: CustomerCeilingQuotaUpdateManyWithWhereWithoutProductInput | CustomerCeilingQuotaUpdateManyWithWhereWithoutProductInput[]
     deleteMany?: CustomerCeilingQuotaScalarWhereInput | CustomerCeilingQuotaScalarWhereInput[]
+  }
+
+  export type SupplierPriceUncheckedUpdateManyWithoutProductNestedInput = {
+    create?: XOR<SupplierPriceCreateWithoutProductInput, SupplierPriceUncheckedCreateWithoutProductInput> | SupplierPriceCreateWithoutProductInput[] | SupplierPriceUncheckedCreateWithoutProductInput[]
+    connectOrCreate?: SupplierPriceCreateOrConnectWithoutProductInput | SupplierPriceCreateOrConnectWithoutProductInput[]
+    upsert?: SupplierPriceUpsertWithWhereUniqueWithoutProductInput | SupplierPriceUpsertWithWhereUniqueWithoutProductInput[]
+    set?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    disconnect?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    delete?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    connect?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    update?: SupplierPriceUpdateWithWhereUniqueWithoutProductInput | SupplierPriceUpdateWithWhereUniqueWithoutProductInput[]
+    updateMany?: SupplierPriceUpdateManyWithWhereWithoutProductInput | SupplierPriceUpdateManyWithWhereWithoutProductInput[]
+    deleteMany?: SupplierPriceScalarWhereInput | SupplierPriceScalarWhereInput[]
   }
 
   export type StocktakeItemUncheckedUpdateManyWithoutProductNestedInput = {
@@ -34987,6 +36323,34 @@ export namespace Prisma {
     deleteMany?: OrderReturnScalarWhereInput | OrderReturnScalarWhereInput[]
   }
 
+  export type SupplierCreateNestedOneWithoutSupplierPricesInput = {
+    create?: XOR<SupplierCreateWithoutSupplierPricesInput, SupplierUncheckedCreateWithoutSupplierPricesInput>
+    connectOrCreate?: SupplierCreateOrConnectWithoutSupplierPricesInput
+    connect?: SupplierWhereUniqueInput
+  }
+
+  export type ProductCreateNestedOneWithoutSupplierPricesInput = {
+    create?: XOR<ProductCreateWithoutSupplierPricesInput, ProductUncheckedCreateWithoutSupplierPricesInput>
+    connectOrCreate?: ProductCreateOrConnectWithoutSupplierPricesInput
+    connect?: ProductWhereUniqueInput
+  }
+
+  export type SupplierUpdateOneRequiredWithoutSupplierPricesNestedInput = {
+    create?: XOR<SupplierCreateWithoutSupplierPricesInput, SupplierUncheckedCreateWithoutSupplierPricesInput>
+    connectOrCreate?: SupplierCreateOrConnectWithoutSupplierPricesInput
+    upsert?: SupplierUpsertWithoutSupplierPricesInput
+    connect?: SupplierWhereUniqueInput
+    update?: XOR<XOR<SupplierUpdateToOneWithWhereWithoutSupplierPricesInput, SupplierUpdateWithoutSupplierPricesInput>, SupplierUncheckedUpdateWithoutSupplierPricesInput>
+  }
+
+  export type ProductUpdateOneRequiredWithoutSupplierPricesNestedInput = {
+    create?: XOR<ProductCreateWithoutSupplierPricesInput, ProductUncheckedCreateWithoutSupplierPricesInput>
+    connectOrCreate?: ProductCreateOrConnectWithoutSupplierPricesInput
+    upsert?: ProductUpsertWithoutSupplierPricesInput
+    connect?: ProductWhereUniqueInput
+    update?: XOR<XOR<ProductUpdateToOneWithWhereWithoutSupplierPricesInput, ProductUpdateWithoutSupplierPricesInput>, ProductUncheckedUpdateWithoutSupplierPricesInput>
+  }
+
   export type CustomerCreateNestedOneWithoutCeilingQuotasInput = {
     create?: XOR<CustomerCreateWithoutCeilingQuotasInput, CustomerUncheckedCreateWithoutCeilingQuotasInput>
     connectOrCreate?: CustomerCreateOrConnectWithoutCeilingQuotasInput
@@ -35067,6 +36431,12 @@ export namespace Prisma {
     connect?: AccountDiscountWhereUniqueInput | AccountDiscountWhereUniqueInput[]
   }
 
+  export type SupplierPriceCreateNestedManyWithoutSupplierInput = {
+    create?: XOR<SupplierPriceCreateWithoutSupplierInput, SupplierPriceUncheckedCreateWithoutSupplierInput> | SupplierPriceCreateWithoutSupplierInput[] | SupplierPriceUncheckedCreateWithoutSupplierInput[]
+    connectOrCreate?: SupplierPriceCreateOrConnectWithoutSupplierInput | SupplierPriceCreateOrConnectWithoutSupplierInput[]
+    connect?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+  }
+
   export type ExpensePaymentUncheckedCreateNestedManyWithoutSupplierInput = {
     create?: XOR<ExpensePaymentCreateWithoutSupplierInput, ExpensePaymentUncheckedCreateWithoutSupplierInput> | ExpensePaymentCreateWithoutSupplierInput[] | ExpensePaymentUncheckedCreateWithoutSupplierInput[]
     connectOrCreate?: ExpensePaymentCreateOrConnectWithoutSupplierInput | ExpensePaymentCreateOrConnectWithoutSupplierInput[]
@@ -35089,6 +36459,12 @@ export namespace Prisma {
     create?: XOR<AccountDiscountCreateWithoutSupplierInput, AccountDiscountUncheckedCreateWithoutSupplierInput> | AccountDiscountCreateWithoutSupplierInput[] | AccountDiscountUncheckedCreateWithoutSupplierInput[]
     connectOrCreate?: AccountDiscountCreateOrConnectWithoutSupplierInput | AccountDiscountCreateOrConnectWithoutSupplierInput[]
     connect?: AccountDiscountWhereUniqueInput | AccountDiscountWhereUniqueInput[]
+  }
+
+  export type SupplierPriceUncheckedCreateNestedManyWithoutSupplierInput = {
+    create?: XOR<SupplierPriceCreateWithoutSupplierInput, SupplierPriceUncheckedCreateWithoutSupplierInput> | SupplierPriceCreateWithoutSupplierInput[] | SupplierPriceUncheckedCreateWithoutSupplierInput[]
+    connectOrCreate?: SupplierPriceCreateOrConnectWithoutSupplierInput | SupplierPriceCreateOrConnectWithoutSupplierInput[]
+    connect?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
   }
 
   export type ExpensePaymentUpdateManyWithoutSupplierNestedInput = {
@@ -35143,6 +36519,19 @@ export namespace Prisma {
     deleteMany?: AccountDiscountScalarWhereInput | AccountDiscountScalarWhereInput[]
   }
 
+  export type SupplierPriceUpdateManyWithoutSupplierNestedInput = {
+    create?: XOR<SupplierPriceCreateWithoutSupplierInput, SupplierPriceUncheckedCreateWithoutSupplierInput> | SupplierPriceCreateWithoutSupplierInput[] | SupplierPriceUncheckedCreateWithoutSupplierInput[]
+    connectOrCreate?: SupplierPriceCreateOrConnectWithoutSupplierInput | SupplierPriceCreateOrConnectWithoutSupplierInput[]
+    upsert?: SupplierPriceUpsertWithWhereUniqueWithoutSupplierInput | SupplierPriceUpsertWithWhereUniqueWithoutSupplierInput[]
+    set?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    disconnect?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    delete?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    connect?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    update?: SupplierPriceUpdateWithWhereUniqueWithoutSupplierInput | SupplierPriceUpdateWithWhereUniqueWithoutSupplierInput[]
+    updateMany?: SupplierPriceUpdateManyWithWhereWithoutSupplierInput | SupplierPriceUpdateManyWithWhereWithoutSupplierInput[]
+    deleteMany?: SupplierPriceScalarWhereInput | SupplierPriceScalarWhereInput[]
+  }
+
   export type ExpensePaymentUncheckedUpdateManyWithoutSupplierNestedInput = {
     create?: XOR<ExpensePaymentCreateWithoutSupplierInput, ExpensePaymentUncheckedCreateWithoutSupplierInput> | ExpensePaymentCreateWithoutSupplierInput[] | ExpensePaymentUncheckedCreateWithoutSupplierInput[]
     connectOrCreate?: ExpensePaymentCreateOrConnectWithoutSupplierInput | ExpensePaymentCreateOrConnectWithoutSupplierInput[]
@@ -35193,6 +36582,19 @@ export namespace Prisma {
     update?: AccountDiscountUpdateWithWhereUniqueWithoutSupplierInput | AccountDiscountUpdateWithWhereUniqueWithoutSupplierInput[]
     updateMany?: AccountDiscountUpdateManyWithWhereWithoutSupplierInput | AccountDiscountUpdateManyWithWhereWithoutSupplierInput[]
     deleteMany?: AccountDiscountScalarWhereInput | AccountDiscountScalarWhereInput[]
+  }
+
+  export type SupplierPriceUncheckedUpdateManyWithoutSupplierNestedInput = {
+    create?: XOR<SupplierPriceCreateWithoutSupplierInput, SupplierPriceUncheckedCreateWithoutSupplierInput> | SupplierPriceCreateWithoutSupplierInput[] | SupplierPriceUncheckedCreateWithoutSupplierInput[]
+    connectOrCreate?: SupplierPriceCreateOrConnectWithoutSupplierInput | SupplierPriceCreateOrConnectWithoutSupplierInput[]
+    upsert?: SupplierPriceUpsertWithWhereUniqueWithoutSupplierInput | SupplierPriceUpsertWithWhereUniqueWithoutSupplierInput[]
+    set?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    disconnect?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    delete?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    connect?: SupplierPriceWhereUniqueInput | SupplierPriceWhereUniqueInput[]
+    update?: SupplierPriceUpdateWithWhereUniqueWithoutSupplierInput | SupplierPriceUpdateWithWhereUniqueWithoutSupplierInput[]
+    updateMany?: SupplierPriceUpdateManyWithWhereWithoutSupplierInput | SupplierPriceUpdateManyWithWhereWithoutSupplierInput[]
+    deleteMany?: SupplierPriceScalarWhereInput | SupplierPriceScalarWhereInput[]
   }
 
   export type CustomerCreateNestedOneWithoutDiscountsInput = {
@@ -35917,6 +37319,27 @@ export namespace Prisma {
     create: XOR<CustomerCeilingQuotaCreateWithoutProductInput, CustomerCeilingQuotaUncheckedCreateWithoutProductInput>
   }
 
+  export type SupplierPriceCreateWithoutProductInput = {
+    id?: string
+    price: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    supplier: SupplierCreateNestedOneWithoutSupplierPricesInput
+  }
+
+  export type SupplierPriceUncheckedCreateWithoutProductInput = {
+    id?: string
+    supplierId: string
+    price: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SupplierPriceCreateOrConnectWithoutProductInput = {
+    where: SupplierPriceWhereUniqueInput
+    create: XOR<SupplierPriceCreateWithoutProductInput, SupplierPriceUncheckedCreateWithoutProductInput>
+  }
+
   export type StocktakeItemCreateWithoutProductInput = {
     id?: string
     position: number
@@ -35956,6 +37379,7 @@ export namespace Prisma {
     expenses?: ExpensePaymentCreateNestedManyWithoutSupplierInput
     purchaseOrders?: PurchaseOrderCreateNestedManyWithoutSupplierInput
     discounts?: AccountDiscountCreateNestedManyWithoutSupplierInput
+    supplierPrices?: SupplierPriceCreateNestedManyWithoutSupplierInput
   }
 
   export type SupplierUncheckedCreateWithoutProductsInput = {
@@ -35972,6 +37396,7 @@ export namespace Prisma {
     expenses?: ExpensePaymentUncheckedCreateNestedManyWithoutSupplierInput
     purchaseOrders?: PurchaseOrderUncheckedCreateNestedManyWithoutSupplierInput
     discounts?: AccountDiscountUncheckedCreateNestedManyWithoutSupplierInput
+    supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutSupplierInput
   }
 
   export type SupplierCreateOrConnectWithoutProductsInput = {
@@ -36128,6 +37553,34 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"CustomerCeilingQuota"> | Date | string
   }
 
+  export type SupplierPriceUpsertWithWhereUniqueWithoutProductInput = {
+    where: SupplierPriceWhereUniqueInput
+    update: XOR<SupplierPriceUpdateWithoutProductInput, SupplierPriceUncheckedUpdateWithoutProductInput>
+    create: XOR<SupplierPriceCreateWithoutProductInput, SupplierPriceUncheckedCreateWithoutProductInput>
+  }
+
+  export type SupplierPriceUpdateWithWhereUniqueWithoutProductInput = {
+    where: SupplierPriceWhereUniqueInput
+    data: XOR<SupplierPriceUpdateWithoutProductInput, SupplierPriceUncheckedUpdateWithoutProductInput>
+  }
+
+  export type SupplierPriceUpdateManyWithWhereWithoutProductInput = {
+    where: SupplierPriceScalarWhereInput
+    data: XOR<SupplierPriceUpdateManyMutationInput, SupplierPriceUncheckedUpdateManyWithoutProductInput>
+  }
+
+  export type SupplierPriceScalarWhereInput = {
+    AND?: SupplierPriceScalarWhereInput | SupplierPriceScalarWhereInput[]
+    OR?: SupplierPriceScalarWhereInput[]
+    NOT?: SupplierPriceScalarWhereInput | SupplierPriceScalarWhereInput[]
+    id?: StringFilter<"SupplierPrice"> | string
+    supplierId?: StringFilter<"SupplierPrice"> | string
+    productId?: StringFilter<"SupplierPrice"> | string
+    price?: FloatFilter<"SupplierPrice"> | number
+    createdAt?: DateTimeFilter<"SupplierPrice"> | Date | string
+    updatedAt?: DateTimeFilter<"SupplierPrice"> | Date | string
+  }
+
   export type StocktakeItemUpsertWithWhereUniqueWithoutProductInput = {
     where: StocktakeItemWhereUniqueInput
     update: XOR<StocktakeItemUpdateWithoutProductInput, StocktakeItemUncheckedUpdateWithoutProductInput>
@@ -36183,6 +37636,7 @@ export namespace Prisma {
     expenses?: ExpensePaymentUpdateManyWithoutSupplierNestedInput
     purchaseOrders?: PurchaseOrderUpdateManyWithoutSupplierNestedInput
     discounts?: AccountDiscountUpdateManyWithoutSupplierNestedInput
+    supplierPrices?: SupplierPriceUpdateManyWithoutSupplierNestedInput
   }
 
   export type SupplierUncheckedUpdateWithoutProductsInput = {
@@ -36199,6 +37653,7 @@ export namespace Prisma {
     expenses?: ExpensePaymentUncheckedUpdateManyWithoutSupplierNestedInput
     purchaseOrders?: PurchaseOrderUncheckedUpdateManyWithoutSupplierNestedInput
     discounts?: AccountDiscountUncheckedUpdateManyWithoutSupplierNestedInput
+    supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutSupplierNestedInput
   }
 
   export type StocktakeItemCreateWithoutStocktakeInput = {
@@ -36300,6 +37755,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     customPrices?: CustomerPriceCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
 
@@ -36331,6 +37787,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUncheckedCreateNestedManyWithoutProductInput
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutStocktakeItemsInput = {
@@ -36413,6 +37870,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     customPrices?: CustomerPriceUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
 
@@ -36444,6 +37902,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUncheckedUpdateManyWithoutProductNestedInput
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type CustomerCreateWithoutOrdersInput = {
@@ -37097,6 +38556,7 @@ export namespace Prisma {
     orderReturnItems?: OrderReturnItemCreateNestedManyWithoutProductInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
@@ -37128,6 +38588,7 @@ export namespace Prisma {
     orderReturnItems?: OrderReturnItemUncheckedCreateNestedManyWithoutProductInput
     purchaseItems?: PurchaseOrderItemUncheckedCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
   }
 
@@ -37224,6 +38685,7 @@ export namespace Prisma {
     orderReturnItems?: OrderReturnItemUpdateManyWithoutProductNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
@@ -37255,6 +38717,7 @@ export namespace Prisma {
     orderReturnItems?: OrderReturnItemUncheckedUpdateManyWithoutProductNestedInput
     purchaseItems?: PurchaseOrderItemUncheckedUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
@@ -37329,6 +38792,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     customPrices?: CustomerPriceCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
@@ -37360,6 +38824,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUncheckedCreateNestedManyWithoutProductInput
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
   }
 
@@ -37481,6 +38946,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     customPrices?: CustomerPriceUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
@@ -37512,6 +38978,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUncheckedUpdateManyWithoutProductNestedInput
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
@@ -37980,6 +39447,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     customPrices?: CustomerPriceCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
@@ -38011,6 +39479,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUncheckedCreateNestedManyWithoutProductInput
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
   }
 
@@ -38134,6 +39603,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     customPrices?: CustomerPriceUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
@@ -38165,6 +39635,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUncheckedUpdateManyWithoutProductNestedInput
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
@@ -38392,6 +39863,230 @@ export namespace Prisma {
     data: XOR<OrderReturnUpdateManyMutationInput, OrderReturnUncheckedUpdateManyWithoutBankInput>
   }
 
+  export type SupplierCreateWithoutSupplierPricesInput = {
+    id?: string
+    name: string
+    phone?: string | null
+    address?: string | null
+    cr?: string | null
+    trn?: string | null
+    balance?: number
+    openingBalance?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    expenses?: ExpensePaymentCreateNestedManyWithoutSupplierInput
+    purchaseOrders?: PurchaseOrderCreateNestedManyWithoutSupplierInput
+    products?: ProductCreateNestedManyWithoutSupplierInput
+    discounts?: AccountDiscountCreateNestedManyWithoutSupplierInput
+  }
+
+  export type SupplierUncheckedCreateWithoutSupplierPricesInput = {
+    id?: string
+    name: string
+    phone?: string | null
+    address?: string | null
+    cr?: string | null
+    trn?: string | null
+    balance?: number
+    openingBalance?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    expenses?: ExpensePaymentUncheckedCreateNestedManyWithoutSupplierInput
+    purchaseOrders?: PurchaseOrderUncheckedCreateNestedManyWithoutSupplierInput
+    products?: ProductUncheckedCreateNestedManyWithoutSupplierInput
+    discounts?: AccountDiscountUncheckedCreateNestedManyWithoutSupplierInput
+  }
+
+  export type SupplierCreateOrConnectWithoutSupplierPricesInput = {
+    where: SupplierWhereUniqueInput
+    create: XOR<SupplierCreateWithoutSupplierPricesInput, SupplierUncheckedCreateWithoutSupplierPricesInput>
+  }
+
+  export type ProductCreateWithoutSupplierPricesInput = {
+    id?: string
+    code: string
+    barcode?: string | null
+    name: string
+    type: string
+    gauge?: string | null
+    size: string
+    color?: string | null
+    length?: string | null
+    weight?: string | null
+    pricePerKilo?: number | null
+    costPrice?: number
+    markup?: number
+    price: number
+    taxRate?: number
+    stockQty?: number
+    minStockQty?: number
+    maxStockQty?: number
+    imageUrl?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    orderItems?: OrderItemCreateNestedManyWithoutProductInput
+    orderReturnItems?: OrderReturnItemCreateNestedManyWithoutProductInput
+    purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
+    customPrices?: CustomerPriceCreateNestedManyWithoutProductInput
+    ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
+    stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
+    supplier?: SupplierCreateNestedOneWithoutProductsInput
+  }
+
+  export type ProductUncheckedCreateWithoutSupplierPricesInput = {
+    id?: string
+    code: string
+    barcode?: string | null
+    name: string
+    type: string
+    gauge?: string | null
+    size: string
+    color?: string | null
+    length?: string | null
+    weight?: string | null
+    pricePerKilo?: number | null
+    costPrice?: number
+    markup?: number
+    price: number
+    taxRate?: number
+    stockQty?: number
+    minStockQty?: number
+    maxStockQty?: number
+    supplierId?: string | null
+    imageUrl?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    orderItems?: OrderItemUncheckedCreateNestedManyWithoutProductInput
+    orderReturnItems?: OrderReturnItemUncheckedCreateNestedManyWithoutProductInput
+    purchaseItems?: PurchaseOrderItemUncheckedCreateNestedManyWithoutProductInput
+    customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutProductInput
+    ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
+    stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
+  }
+
+  export type ProductCreateOrConnectWithoutSupplierPricesInput = {
+    where: ProductWhereUniqueInput
+    create: XOR<ProductCreateWithoutSupplierPricesInput, ProductUncheckedCreateWithoutSupplierPricesInput>
+  }
+
+  export type SupplierUpsertWithoutSupplierPricesInput = {
+    update: XOR<SupplierUpdateWithoutSupplierPricesInput, SupplierUncheckedUpdateWithoutSupplierPricesInput>
+    create: XOR<SupplierCreateWithoutSupplierPricesInput, SupplierUncheckedCreateWithoutSupplierPricesInput>
+    where?: SupplierWhereInput
+  }
+
+  export type SupplierUpdateToOneWithWhereWithoutSupplierPricesInput = {
+    where?: SupplierWhereInput
+    data: XOR<SupplierUpdateWithoutSupplierPricesInput, SupplierUncheckedUpdateWithoutSupplierPricesInput>
+  }
+
+  export type SupplierUpdateWithoutSupplierPricesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    cr?: NullableStringFieldUpdateOperationsInput | string | null
+    trn?: NullableStringFieldUpdateOperationsInput | string | null
+    balance?: FloatFieldUpdateOperationsInput | number
+    openingBalance?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expenses?: ExpensePaymentUpdateManyWithoutSupplierNestedInput
+    purchaseOrders?: PurchaseOrderUpdateManyWithoutSupplierNestedInput
+    products?: ProductUpdateManyWithoutSupplierNestedInput
+    discounts?: AccountDiscountUpdateManyWithoutSupplierNestedInput
+  }
+
+  export type SupplierUncheckedUpdateWithoutSupplierPricesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    cr?: NullableStringFieldUpdateOperationsInput | string | null
+    trn?: NullableStringFieldUpdateOperationsInput | string | null
+    balance?: FloatFieldUpdateOperationsInput | number
+    openingBalance?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expenses?: ExpensePaymentUncheckedUpdateManyWithoutSupplierNestedInput
+    purchaseOrders?: PurchaseOrderUncheckedUpdateManyWithoutSupplierNestedInput
+    products?: ProductUncheckedUpdateManyWithoutSupplierNestedInput
+    discounts?: AccountDiscountUncheckedUpdateManyWithoutSupplierNestedInput
+  }
+
+  export type ProductUpsertWithoutSupplierPricesInput = {
+    update: XOR<ProductUpdateWithoutSupplierPricesInput, ProductUncheckedUpdateWithoutSupplierPricesInput>
+    create: XOR<ProductCreateWithoutSupplierPricesInput, ProductUncheckedCreateWithoutSupplierPricesInput>
+    where?: ProductWhereInput
+  }
+
+  export type ProductUpdateToOneWithWhereWithoutSupplierPricesInput = {
+    where?: ProductWhereInput
+    data: XOR<ProductUpdateWithoutSupplierPricesInput, ProductUncheckedUpdateWithoutSupplierPricesInput>
+  }
+
+  export type ProductUpdateWithoutSupplierPricesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    barcode?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    gauge?: NullableStringFieldUpdateOperationsInput | string | null
+    size?: StringFieldUpdateOperationsInput | string
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    length?: NullableStringFieldUpdateOperationsInput | string | null
+    weight?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePerKilo?: NullableFloatFieldUpdateOperationsInput | number | null
+    costPrice?: FloatFieldUpdateOperationsInput | number
+    markup?: FloatFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    stockQty?: IntFieldUpdateOperationsInput | number
+    minStockQty?: IntFieldUpdateOperationsInput | number
+    maxStockQty?: IntFieldUpdateOperationsInput | number
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    orderItems?: OrderItemUpdateManyWithoutProductNestedInput
+    orderReturnItems?: OrderReturnItemUpdateManyWithoutProductNestedInput
+    purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
+    customPrices?: CustomerPriceUpdateManyWithoutProductNestedInput
+    ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
+    stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
+    supplier?: SupplierUpdateOneWithoutProductsNestedInput
+  }
+
+  export type ProductUncheckedUpdateWithoutSupplierPricesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    barcode?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    gauge?: NullableStringFieldUpdateOperationsInput | string | null
+    size?: StringFieldUpdateOperationsInput | string
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    length?: NullableStringFieldUpdateOperationsInput | string | null
+    weight?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePerKilo?: NullableFloatFieldUpdateOperationsInput | number | null
+    costPrice?: FloatFieldUpdateOperationsInput | number
+    markup?: FloatFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    stockQty?: IntFieldUpdateOperationsInput | number
+    minStockQty?: IntFieldUpdateOperationsInput | number
+    maxStockQty?: IntFieldUpdateOperationsInput | number
+    supplierId?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    orderItems?: OrderItemUncheckedUpdateManyWithoutProductNestedInput
+    orderReturnItems?: OrderReturnItemUncheckedUpdateManyWithoutProductNestedInput
+    purchaseItems?: PurchaseOrderItemUncheckedUpdateManyWithoutProductNestedInput
+    customPrices?: CustomerPriceUncheckedUpdateManyWithoutProductNestedInput
+    ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
+    stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
+  }
+
   export type CustomerCreateWithoutCeilingQuotasInput = {
     id?: string
     name: string
@@ -38463,6 +40158,7 @@ export namespace Prisma {
     orderReturnItems?: OrderReturnItemCreateNestedManyWithoutProductInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     customPrices?: CustomerPriceCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
@@ -38494,6 +40190,7 @@ export namespace Prisma {
     orderReturnItems?: OrderReturnItemUncheckedCreateNestedManyWithoutProductInput
     purchaseItems?: PurchaseOrderItemUncheckedCreateNestedManyWithoutProductInput
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
   }
 
@@ -38590,6 +40287,7 @@ export namespace Prisma {
     orderReturnItems?: OrderReturnItemUpdateManyWithoutProductNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     customPrices?: CustomerPriceUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
@@ -38621,6 +40319,7 @@ export namespace Prisma {
     orderReturnItems?: OrderReturnItemUncheckedUpdateManyWithoutProductNestedInput
     purchaseItems?: PurchaseOrderItemUncheckedUpdateManyWithoutProductNestedInput
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
@@ -38873,6 +40572,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     customPrices?: CustomerPriceCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
   }
 
@@ -38903,6 +40603,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUncheckedCreateNestedManyWithoutProductInput
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
   }
 
@@ -38940,6 +40641,27 @@ export namespace Prisma {
   export type AccountDiscountCreateOrConnectWithoutSupplierInput = {
     where: AccountDiscountWhereUniqueInput
     create: XOR<AccountDiscountCreateWithoutSupplierInput, AccountDiscountUncheckedCreateWithoutSupplierInput>
+  }
+
+  export type SupplierPriceCreateWithoutSupplierInput = {
+    id?: string
+    price: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    product: ProductCreateNestedOneWithoutSupplierPricesInput
+  }
+
+  export type SupplierPriceUncheckedCreateWithoutSupplierInput = {
+    id?: string
+    productId: string
+    price: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SupplierPriceCreateOrConnectWithoutSupplierInput = {
+    where: SupplierPriceWhereUniqueInput
+    create: XOR<SupplierPriceCreateWithoutSupplierInput, SupplierPriceUncheckedCreateWithoutSupplierInput>
   }
 
   export type ExpensePaymentUpsertWithWhereUniqueWithoutSupplierInput = {
@@ -39051,6 +40773,22 @@ export namespace Prisma {
     data: XOR<AccountDiscountUpdateManyMutationInput, AccountDiscountUncheckedUpdateManyWithoutSupplierInput>
   }
 
+  export type SupplierPriceUpsertWithWhereUniqueWithoutSupplierInput = {
+    where: SupplierPriceWhereUniqueInput
+    update: XOR<SupplierPriceUpdateWithoutSupplierInput, SupplierPriceUncheckedUpdateWithoutSupplierInput>
+    create: XOR<SupplierPriceCreateWithoutSupplierInput, SupplierPriceUncheckedCreateWithoutSupplierInput>
+  }
+
+  export type SupplierPriceUpdateWithWhereUniqueWithoutSupplierInput = {
+    where: SupplierPriceWhereUniqueInput
+    data: XOR<SupplierPriceUpdateWithoutSupplierInput, SupplierPriceUncheckedUpdateWithoutSupplierInput>
+  }
+
+  export type SupplierPriceUpdateManyWithWhereWithoutSupplierInput = {
+    where: SupplierPriceScalarWhereInput
+    data: XOR<SupplierPriceUpdateManyMutationInput, SupplierPriceUncheckedUpdateManyWithoutSupplierInput>
+  }
+
   export type CustomerCreateWithoutDiscountsInput = {
     id?: string
     name: string
@@ -39110,6 +40848,7 @@ export namespace Prisma {
     expenses?: ExpensePaymentCreateNestedManyWithoutSupplierInput
     purchaseOrders?: PurchaseOrderCreateNestedManyWithoutSupplierInput
     products?: ProductCreateNestedManyWithoutSupplierInput
+    supplierPrices?: SupplierPriceCreateNestedManyWithoutSupplierInput
   }
 
   export type SupplierUncheckedCreateWithoutDiscountsInput = {
@@ -39126,6 +40865,7 @@ export namespace Prisma {
     expenses?: ExpensePaymentUncheckedCreateNestedManyWithoutSupplierInput
     purchaseOrders?: PurchaseOrderUncheckedCreateNestedManyWithoutSupplierInput
     products?: ProductUncheckedCreateNestedManyWithoutSupplierInput
+    supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutSupplierInput
   }
 
   export type SupplierCreateOrConnectWithoutDiscountsInput = {
@@ -39209,6 +40949,7 @@ export namespace Prisma {
     expenses?: ExpensePaymentUpdateManyWithoutSupplierNestedInput
     purchaseOrders?: PurchaseOrderUpdateManyWithoutSupplierNestedInput
     products?: ProductUpdateManyWithoutSupplierNestedInput
+    supplierPrices?: SupplierPriceUpdateManyWithoutSupplierNestedInput
   }
 
   export type SupplierUncheckedUpdateWithoutDiscountsInput = {
@@ -39225,6 +40966,7 @@ export namespace Prisma {
     expenses?: ExpensePaymentUncheckedUpdateManyWithoutSupplierNestedInput
     purchaseOrders?: PurchaseOrderUncheckedUpdateManyWithoutSupplierNestedInput
     products?: ProductUncheckedUpdateManyWithoutSupplierNestedInput
+    supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutSupplierNestedInput
   }
 
   export type SupplierCreateWithoutPurchaseOrdersInput = {
@@ -39241,6 +40983,7 @@ export namespace Prisma {
     expenses?: ExpensePaymentCreateNestedManyWithoutSupplierInput
     products?: ProductCreateNestedManyWithoutSupplierInput
     discounts?: AccountDiscountCreateNestedManyWithoutSupplierInput
+    supplierPrices?: SupplierPriceCreateNestedManyWithoutSupplierInput
   }
 
   export type SupplierUncheckedCreateWithoutPurchaseOrdersInput = {
@@ -39257,6 +41000,7 @@ export namespace Prisma {
     expenses?: ExpensePaymentUncheckedCreateNestedManyWithoutSupplierInput
     products?: ProductUncheckedCreateNestedManyWithoutSupplierInput
     discounts?: AccountDiscountUncheckedCreateNestedManyWithoutSupplierInput
+    supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutSupplierInput
   }
 
   export type SupplierCreateOrConnectWithoutPurchaseOrdersInput = {
@@ -39312,6 +41056,7 @@ export namespace Prisma {
     expenses?: ExpensePaymentUpdateManyWithoutSupplierNestedInput
     products?: ProductUpdateManyWithoutSupplierNestedInput
     discounts?: AccountDiscountUpdateManyWithoutSupplierNestedInput
+    supplierPrices?: SupplierPriceUpdateManyWithoutSupplierNestedInput
   }
 
   export type SupplierUncheckedUpdateWithoutPurchaseOrdersInput = {
@@ -39328,6 +41073,7 @@ export namespace Prisma {
     expenses?: ExpensePaymentUncheckedUpdateManyWithoutSupplierNestedInput
     products?: ProductUncheckedUpdateManyWithoutSupplierNestedInput
     discounts?: AccountDiscountUncheckedUpdateManyWithoutSupplierNestedInput
+    supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutSupplierNestedInput
   }
 
   export type PurchaseOrderItemUpsertWithWhereUniqueWithoutPurchaseOrderInput = {
@@ -39372,6 +41118,7 @@ export namespace Prisma {
     orderReturnItems?: OrderReturnItemCreateNestedManyWithoutProductInput
     customPrices?: CustomerPriceCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
@@ -39403,6 +41150,7 @@ export namespace Prisma {
     orderReturnItems?: OrderReturnItemUncheckedCreateNestedManyWithoutProductInput
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
   }
 
@@ -39481,6 +41229,7 @@ export namespace Prisma {
     orderReturnItems?: OrderReturnItemUpdateManyWithoutProductNestedInput
     customPrices?: CustomerPriceUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
@@ -39512,6 +41261,7 @@ export namespace Prisma {
     orderReturnItems?: OrderReturnItemUncheckedUpdateManyWithoutProductNestedInput
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
@@ -39597,6 +41347,7 @@ export namespace Prisma {
     purchaseOrders?: PurchaseOrderCreateNestedManyWithoutSupplierInput
     products?: ProductCreateNestedManyWithoutSupplierInput
     discounts?: AccountDiscountCreateNestedManyWithoutSupplierInput
+    supplierPrices?: SupplierPriceCreateNestedManyWithoutSupplierInput
   }
 
   export type SupplierUncheckedCreateWithoutExpensesInput = {
@@ -39613,6 +41364,7 @@ export namespace Prisma {
     purchaseOrders?: PurchaseOrderUncheckedCreateNestedManyWithoutSupplierInput
     products?: ProductUncheckedCreateNestedManyWithoutSupplierInput
     discounts?: AccountDiscountUncheckedCreateNestedManyWithoutSupplierInput
+    supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutSupplierInput
   }
 
   export type SupplierCreateOrConnectWithoutExpensesInput = {
@@ -39680,6 +41432,7 @@ export namespace Prisma {
     purchaseOrders?: PurchaseOrderUpdateManyWithoutSupplierNestedInput
     products?: ProductUpdateManyWithoutSupplierNestedInput
     discounts?: AccountDiscountUpdateManyWithoutSupplierNestedInput
+    supplierPrices?: SupplierPriceUpdateManyWithoutSupplierNestedInput
   }
 
   export type SupplierUncheckedUpdateWithoutExpensesInput = {
@@ -39696,6 +41449,7 @@ export namespace Prisma {
     purchaseOrders?: PurchaseOrderUncheckedUpdateManyWithoutSupplierNestedInput
     products?: ProductUncheckedUpdateManyWithoutSupplierNestedInput
     discounts?: AccountDiscountUncheckedUpdateManyWithoutSupplierNestedInput
+    supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutSupplierNestedInput
   }
 
   export type GeneralExpenseCreateWithoutCategoryInput = {
@@ -40104,6 +41858,30 @@ export namespace Prisma {
     quantityPerFloor?: IntFieldUpdateOperationsInput | number
     totalQuantity?: IntFieldUpdateOperationsInput | number
     deliveredQuantity?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SupplierPriceUpdateWithoutProductInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    supplier?: SupplierUpdateOneRequiredWithoutSupplierPricesNestedInput
+  }
+
+  export type SupplierPriceUncheckedUpdateWithoutProductInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    supplierId?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SupplierPriceUncheckedUpdateManyWithoutProductInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    supplierId?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -40821,6 +42599,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     customPrices?: CustomerPriceUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
   }
 
@@ -40851,6 +42630,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseOrderItemUncheckedUpdateManyWithoutProductNestedInput
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
@@ -40913,6 +42693,30 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SupplierPriceUpdateWithoutSupplierInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    product?: ProductUpdateOneRequiredWithoutSupplierPricesNestedInput
+  }
+
+  export type SupplierPriceUncheckedUpdateWithoutSupplierInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    productId?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SupplierPriceUncheckedUpdateManyWithoutSupplierInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    productId?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

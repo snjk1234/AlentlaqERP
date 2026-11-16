@@ -299,6 +299,15 @@ exports.Prisma.BankScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.SupplierPriceScalarFieldEnum = {
+  id: 'id',
+  supplierId: 'supplierId',
+  productId: 'productId',
+  price: 'price',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.CustomerCeilingQuotaScalarFieldEnum = {
   id: 'id',
   customerId: 'customerId',
@@ -437,6 +446,7 @@ exports.Prisma.ModelName = {
   OrderReturn: 'OrderReturn',
   OrderReturnItem: 'OrderReturnItem',
   Bank: 'Bank',
+  SupplierPrice: 'SupplierPrice',
   CustomerCeilingQuota: 'CustomerCeilingQuota',
   Payment: 'Payment',
   Supplier: 'Supplier',

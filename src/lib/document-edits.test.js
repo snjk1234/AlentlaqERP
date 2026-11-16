@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { test } = require('node:test');
 const ts = require('typescript');
-const { editDocument, purchaseTaxRate, editQuotation } = require('./document-edits');
+const { editDocument, purchaseTaxRate, editQuotation, editInvoiceItems } = require('./document-edits');
 const { createUserSessionToken, verifyUserSessionToken } = require('./user-session-token');
 
 const root = path.resolve(__dirname, '..', '..');
@@ -55,9 +55,17 @@ function store() {
     order: [{ id: 'quotation', invoiceNumber: 'QT-00001', isQuotation: true, status: 'PENDING',
       customerId: 'customer', customerName: 'Customer', receiverName: 'Receiver', siteReceiptNumber: 'SITE',
       invoiceType: 'فاتورة ضريبية', createdAt: version, updatedAt: version,
-      totalAmount: 100, taxAmount: 14, netAmount: 114 }],
+      totalAmount: 100, taxAmount: 14, netAmount: 114 },
+    { id: 'invoice', invoiceNumber: 'INV-00001', isQuotation: false, status: 'COMPLETED',
+      customerId: 'customer', customerName: 'Customer', receiverName: 'Receiver', siteReceiptNumber: 'SITE',
+      invoiceType: 'فاتورة ضريبية', createdAt: version, updatedAt: version, qrCode: 'OLD-QR',
+      totalAmount: 200, taxAmount: 28, netAmount: 228 }],
     orderItem: [{ id: 'quote-line', orderId: 'quotation', productId: 'a', quantity: 1,
-      unitPrice: 100, taxAmount: 14, total: 114, position: 0 }],
+      unitPrice: 100, taxAmount: 14, total: 114, position: 0 },
+    { id: 'invoice-line', orderId: 'invoice', productId: 'a', quantity: 2,
+      unitPrice: 100, taxAmount: 28, total: 228, position: 0 }],
+    orderReturn: [],
+    customerCeilingQuota: [],
     purchaseOrder: [{ id: 'purchase', supplierId: 's1', billNumber: 'PUR-1', invoiceType: 'فاتورة ضريبية',
       totalAmount: 1000, taxAmount: 140, netAmount: 1140, date: version, createdAt: version, updatedAt: version }],
     purchaseOrderItem: [{ id: 'line1', purchaseOrderId: 'purchase', productId: 'a', quantity: 10, unitCost: 100, taxAmount: 140, total: 1140 }],
@@ -87,7 +95,12 @@ function store() {
   for (const model of Object.keys(state)) {
     tx[model] = {
       findUnique: async ({ where, include }) => withRelations(model,
-        state[model].find(row => Object.entries(where).every(([key, value]) => row[key] === value)), include),
+        state[model].find(row => Object.entries(where).every(([key, value]) =>
+          value && typeof value === 'object'
+            ? Object.entries(value).every(([nested, expected]) => row[nested] === expected)
+            : row[key] === value)), include),
+      findMany: async ({ where } = {}) => copy(state[model].filter(row =>
+        Object.entries(where || {}).every(([key, value]) => row[key] === value))),
       update: async ({ where, data, include }) => {
         calls.push(`${model}.update`);
         if (failOn === `${model}.update`) throw new Error('Injected database failure');
@@ -673,4 +686,51 @@ test('editing metadata preserves original timestamp unless the document day is c
   assert.equal(changed.id, edit.id);
   assert.equal(changed.updatedAt, version);
   assert.equal(changed.originalDate, undefined);
+});
+
+const invoiceItemsInput = { id: 'invoice', userId: 'admin', updatedAt: version, items: [
+  { productId: 'a', quantity: 5, unitPrice: 110 }, { productId: 'b', quantity: 2, unitPrice: 50 }
+] };
+
+test('invoice item edits replace lines, adjust stock by net differences and refresh totals and QR', async () => {
+  const context = store();
+  const original = copy(context.state.order[1]);
+  const result = await editInvoiceItems(context.database, { ...invoiceItemsInput, customerId: 'forged', invoiceNumber: 'NEW' });
+  assert.deepEqual(result.items.map(item => [item.productId, item.quantity, item.position]), [['a', 5, 0], ['b', 2, 1]]);
+  assert.equal(result.totalAmount, 650);
+  assert.equal(result.taxAmount, 77);
+  assert.equal(result.netAmount, 727);
+  assert.ok(typeof result.qrCode === 'string' && result.qrCode.length > 20 && result.qrCode !== 'OLD-QR');
+  for (const key of ['invoiceNumber', 'customerId', 'customerName', 'receiverName', 'siteReceiptNumber', 'createdAt', 'invoiceType', 'isQuotation', 'status']) {
+    assert.equal(result[key], original[key], key);
+  }
+  assert.equal(context.state.product[0].stockQty, 5);
+  assert.equal(context.state.product[1].stockQty, 18);
+});
+
+test('invoice item edits reject non-admins, quotations, returned or stale invoices and shortages without writes', async () => {
+  for (const change of ['cashier', 'quotation', 'returns', 'stale', 'shortage']) {
+    const context = store();
+    const input = copy(invoiceItemsInput);
+    if (change === 'cashier') input.userId = 'cashier';
+    if (change === 'quotation') input.id = 'quotation';
+    if (change === 'returns') context.state.orderReturn.push({ id: 'ret', orderId: 'invoice' });
+    if (change === 'stale') input.updatedAt = '2026-01-01';
+    if (change === 'shortage') input.items = [{ productId: 'a', quantity: 11, unitPrice: 100 }];
+    await assert.rejects(editInvoiceItems(context.database, input), { statusCode: change === 'cashier' ? 403 : 409 });
+    assert.equal(context.calls.length, 0);
+    assert.equal(context.state.product[0].stockQty, 8);
+  }
+});
+
+test('invoice item edits keep non-tax invoices tax-free, allow zero prices and update ceiling deliveries', async () => {
+  const context = store();
+  context.state.order[1].invoiceType = 'فاتورة';
+  context.state.customerCeilingQuota.push({ id: 'quota', customerId: 'customer', productId: 'a', deliveredQuantity: 2 });
+  const result = await editInvoiceItems(context.database, { ...invoiceItemsInput, items: [
+    { productId: 'a', quantity: 4, unitPrice: 0 }, { productId: 'b', quantity: 1, unitPrice: 30 }
+  ] });
+  assert.equal(result.taxAmount, 0);
+  assert.equal(result.netAmount, 30);
+  assert.equal(context.state.customerCeilingQuota[0].deliveredQuantity, 4);
 });

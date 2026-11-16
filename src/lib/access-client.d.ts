@@ -13,6 +13,7 @@ type AccessModelName =
   | 'bank'
   | 'bankTransfer'
   | 'customerCeilingQuota'
+  | 'supplierPrice'
   | 'payment'
   | 'supplier'
   | 'purchaseOrder'

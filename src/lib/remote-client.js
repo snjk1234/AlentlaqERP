@@ -17,7 +17,8 @@ const models = [
   'purchaseOrderItem',
   'expensePayment',
   'expenseCategory',
-  'generalExpense'
+  'generalExpense',
+  'supplierPrice'
 ];
 
 function createRemoteClient(getConfig, transactionId = null) {
@@ -107,6 +108,10 @@ function createRemoteClient(getConfig, transactionId = null) {
   client.editInvoiceDetails = (data, sessionToken) => {
     if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وتأكد من تحديث الخادم.');
     return request('/api/invoice-details', data, sessionToken, false, 'PUT');
+  };
+  client.editInvoiceItems = (data, sessionToken) => {
+    if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وتأكد من تحديث الخادم.');
+    return request('/api/invoice-items', data, sessionToken, false, 'PUT');
   };
   client.login = async credentials => {
     const user = await request('/api/users/login', credentials, undefined, false);

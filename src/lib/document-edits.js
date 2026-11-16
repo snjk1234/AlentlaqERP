@@ -217,6 +217,121 @@ async function editQuotation(database, input) {
   }, { timeout: 20000, maxWait: 20000 });
 }
 
+const ZATCA_SELLER_NAME = 'شركة الإنطلاق لتصنيع وتوريد الخراطيم والمواسير والأسلاك';
+const ZATCA_TRN = '310122345600003';
+
+function zatcaQrCode(timestamp, totalAmount, vatAmount) {
+  const tlv = (tag, value) => {
+    const data = Buffer.from(value, 'utf-8');
+    return Buffer.concat([Buffer.from([tag]), Buffer.from([data.length]), data]);
+  };
+  return Buffer.concat([
+    tlv(1, ZATCA_SELLER_NAME), tlv(2, ZATCA_TRN), tlv(3, timestamp), tlv(4, totalAmount), tlv(5, vatAmount)
+  ]).toString('base64');
+}
+
+async function editInvoiceItems(database, input) {
+  if (!input || typeof input !== 'object') throw editError('بيانات الفاتورة غير صالحة.');
+  const id = requiredId(input.id);
+  const userId = requiredId(input.userId);
+  const version = new Date(input.updatedAt);
+  if (!input.updatedAt || !Number.isFinite(version.getTime())) throw editError('نسخة الفاتورة غير صالحة. حدّث القائمة.');
+  if (!Array.isArray(input.items) || !input.items.length) throw editError('أضف صنفًا واحدًا على الأقل.');
+  return database.$transaction(async tx => {
+    const user = await tx.user.findUnique({ where: { id: userId } });
+    if (user?.role !== 'ADMIN') throw editError('تعديل أصناف الفاتورة متاح للمدير فقط.', 403);
+    const existing = await tx.order.findUnique({ where: { id }, include: { items: true } });
+    if (!existing) throw editError('الفاتورة غير موجودة.', 404);
+    if (existing.isQuotation || existing.status !== 'COMPLETED') {
+      throw editError('يمكن تعديل أصناف فاتورة مبيعات صادرة فقط. لعروض الأسعار استخدم تعديل عرض السعر.', 409);
+    }
+    if (new Date(existing.updatedAt).getTime() !== version.getTime()) {
+      throw editError('تم تعديل الفاتورة من مستخدم آخر. أغلق النموذج وحدّث القائمة.', 409);
+    }
+    const returns = await tx.orderReturn.findMany({ where: { orderId: id } });
+    if (returns.length) throw editError('لا يمكن تعديل أصناف فاتورة عليها مرتجعات. احذف المرتجعات أو أنشئ فاتورة جديدة.', 409);
+
+    const seen = new Set();
+    const items = [];
+    let totalAmount = 0;
+    let taxAmount = 0;
+    for (const [position, item] of input.items.entries()) {
+      if (!item || typeof item !== 'object') throw editError('بيانات الصنف غير صالحة.');
+      const productId = requiredId(item.productId);
+      if (seen.has(productId)) throw editError('لا يمكن تكرار الصنف في الفاتورة.');
+      seen.add(productId);
+      const quantity = inputNumber(item.quantity);
+      const unitPrice = inputNumber(item.unitPrice);
+      if (!Number.isInteger(quantity) || quantity <= 0 || quantity > 2147483647 || unitPrice < 0) {
+        throw editError('الكمية يجب أن تكون عددًا صحيحًا موجبًا والسعر غير سالب.');
+      }
+      const product = await requireRecord(tx, 'product', productId, 'الصنف');
+      const previous = existing.items.find(line => line.productId === productId);
+      const oldSubtotal = previous ? previous.quantity * previous.unitPrice : 0;
+      const taxRate = ['فاتورة', 'فاتورة مبسطة'].includes(existing.invoiceType) ? 0
+        : oldSubtotal > 0 ? previous.taxAmount / oldSubtotal : Number(product.taxRate);
+      if (!Number.isFinite(taxRate) || taxRate < 0) throw editError('نسبة ضريبة الصنف غير صالحة.');
+      const subtotal = Number((quantity * unitPrice).toFixed(2));
+      const tax = Number((subtotal * taxRate).toFixed(2));
+      const total = Number((subtotal + tax).toFixed(2));
+      if (![subtotal, tax, total].every(Number.isFinite)) throw editError('قيمة الصنف تتجاوز الحد المسموح.');
+      totalAmount += subtotal;
+      taxAmount += tax;
+      items.push({ orderId: id, productId, position, quantity, unitPrice, taxAmount: tax, total });
+    }
+    totalAmount = Number(totalAmount.toFixed(2));
+    taxAmount = Number(taxAmount.toFixed(2));
+    const netAmount = Number((totalAmount + taxAmount).toFixed(2));
+    if (![totalAmount, taxAmount, netAmount].every(Number.isFinite)) throw editError('إجمالي الفاتورة يتجاوز الحد المسموح.');
+
+    // Stock differences: restore old quantities, consume the new ones.
+    const stockDiffs = new Map();
+    for (const line of existing.items) {
+      stockDiffs.set(line.productId, (stockDiffs.get(line.productId) || 0) + Number(line.quantity));
+    }
+    for (const item of items) {
+      stockDiffs.set(item.productId, (stockDiffs.get(item.productId) || 0) - item.quantity);
+    }
+    for (const [productId, difference] of stockDiffs) {
+      const product = await requireRecord(tx, 'product', productId, 'الصنف');
+      if (difference < 0 && Number(product.stockQty) + difference < 0) {
+        throw editError(`المخزون المتاح من الصنف ${product.name || productId} لا يكفي لزيادة الكمية.`, 409);
+      }
+    }
+    for (const [productId, difference] of stockDiffs) {
+      if (difference !== 0) {
+        await tx.product.update({ where: { id: productId }, data: { stockQty: { increment: difference } } });
+      }
+    }
+
+    // Ceiling quota deliveries follow the quantity change for the invoice customer.
+    if (existing.customerId) {
+      for (const [productId, difference] of stockDiffs) {
+        const delta = -difference;
+        if (delta === 0) continue;
+        const quota = await tx.customerCeilingQuota.findUnique({
+          where: { customerId_productId: { customerId: existing.customerId, productId } }
+        });
+        if (!quota) continue;
+        const delivered = Number(quota.deliveredQuantity);
+        const next = delivered + delta;
+        if (!Number.isInteger(delivered) || !Number.isSafeInteger(next) || next < 0 || next > 2147483647) {
+          throw editError('أرصدة تسليمات أسقف العميل لا تسمح بهذا التعديل. راجع تسليمات العميل أولًا.', 409);
+        }
+        await tx.customerCeilingQuota.update({ where: { id: quota.id }, data: { deliveredQuantity: next } });
+      }
+    }
+
+    for (const line of existing.items) await tx.orderItem.delete({ where: { id: line.id } });
+    for (const item of items) await tx.orderItem.create({ data: item });
+    const qrCode = zatcaQrCode(new Date(existing.createdAt).toISOString(), netAmount.toFixed(2), taxAmount.toFixed(2));
+    return tx.order.update({
+      where: { id }, data: { totalAmount, taxAmount, netAmount, qrCode },
+      include: { customer: true, items: { include: { product: true } }, orderReturns: { include: { bank: true, items: { include: { product: true } } } } }
+    });
+  }, { timeout: 20000, maxWait: 20000 });
+}
+
 async function getQuotationCosts(database, userId, input) {
   if (!input || !Array.isArray(input.productIds) || !input.productIds.length || input.productIds.length > 5000
     || input.productIds.some(id => typeof id !== 'string' || !id.trim() || id.length > 50)) {
@@ -304,4 +419,4 @@ async function editInvoiceDetails(database, input) {
   }, { timeout: 20000, maxWait: 20000 });
 }
 
-module.exports = { editDocument, purchaseTaxRate, editQuotation, getQuotationCosts, editInvoiceDetails, normalizeWarehouseReceiptNumber };
+module.exports = { editDocument, purchaseTaxRate, editQuotation, editInvoiceItems, getQuotationCosts, editInvoiceDetails, normalizeWarehouseReceiptNumber };

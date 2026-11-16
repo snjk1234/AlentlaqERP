@@ -10,6 +10,7 @@ export async function GET() {
       orderBy: { name: 'asc' },
       include: {
         discounts: true,
+        supplierPrices: true,
         purchaseOrders: {
           include: { items: { include: { product: true } } }
         },

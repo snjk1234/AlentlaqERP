@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { createRemoteClient } = require('../src/lib/remote-client');
 const { saveCustomerPrices } = require('../src/lib/customer-prices');
+const { saveSupplierPrices } = require('../src/lib/supplier-prices');
 const { correctPayment } = require('../src/lib/payment-corrections');
 const { editDocument, editQuotation, normalizeWarehouseReceiptNumber } = require('../src/lib/document-edits');
 
@@ -629,6 +630,7 @@ ipcMain.handle('get-suppliers', async () => {
       orderBy: { name: 'asc' },
       include: {
         discounts: true,
+        supplierPrices: true,
         purchaseOrders: {
           include: { items: { include: { product: true } } }
         },
@@ -809,6 +811,17 @@ ipcMain.handle('update-invoice-details', async (event, data) => {
     return await prisma.editInvoiceDetails(data, user.sessionToken);
   } catch (error) {
     console.error('Invoice detail correction failed:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('update-invoice-items', async (event, data) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    if (user?.role !== 'ADMIN') throw new Error('تعديل أصناف الفاتورة متاح للمدير فقط.');
+    return await prisma.editInvoiceItems(data, user.sessionToken);
+  } catch (error) {
+    console.error('Invoice items edit failed:', error);
     throw error;
   }
 });
@@ -1131,6 +1144,15 @@ ipcMain.handle('delete-customer-ceiling', async (event, quotaId) => {
   } catch (error) {
     console.error('delete-customer-ceiling error:', error);
     throw error;
+  }
+});
+
+ipcMain.handle('save-supplier-prices', async (event, data) => {
+  try {
+    return await saveSupplierPrices(prisma, data?.supplierId, data?.prices);
+  } catch (err) {
+    console.error('Error saving supplier prices:', err);
+    throw err;
   }
 });
 

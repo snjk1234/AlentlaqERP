@@ -17,6 +17,7 @@ import StocktakePanel from '@/components/StocktakePanel';
 import ProductOptionField, { initialProductOptions, requestExpenseCategories, requestProductOptions, type ProductOptionLists } from '@/components/ProductOptionField';
 import QuotationEdit, { type EditableQuotation } from '@/components/QuotationEdit';
 import InvoiceDetailsEdit, { type EditableInvoiceDetails } from '@/components/InvoiceDetailsEdit';
+import InvoiceItemsEdit, { type EditableInvoiceItems } from '@/components/InvoiceItemsEdit';
 import QuotationPricingDraft from '@/components/QuotationPricingDraft';
 import { confirmQuotationProfit, type PricingLine } from '@/lib/quotation-pricing';
 import BankTransfersPanel, { type BankTransfer, type TransferSnapshot } from '@/components/BankTransfersPanel';
@@ -584,6 +585,7 @@ export default function POSDashboard() {
   const [printStocktake, setPrintStocktake] = useState<PrintStocktake | null>(null);
   const [editingQuotation, setEditingQuotation] = useState<EditableQuotation | null>(null);
   const [editingInvoiceDetails, setEditingInvoiceDetails] = useState<EditableInvoiceDetails | null>(null);
+  const [editingInvoiceItems, setEditingInvoiceItems] = useState<EditableInvoiceItems | null>(null);
   const [showQuotationPricing, setShowQuotationPricing] = useState(false);
 
 
@@ -676,6 +678,11 @@ export default function POSDashboard() {
   const [selectedCustomerForCeilings, setSelectedCustomerForCeilings] = useState<any>(null);
   const [customerCeilings, setCustomerCeilings] = useState<any[]>([]);
   const [ceilingForm, setCeilingForm] = useState({ productId: '', buildingsCount: '', floorsCount: '6', quantityPerFloor: '' });
+
+  const [showSupplierPricesModal, setShowSupplierPricesModal] = useState(false);
+  const [selectedSupplierForPrices, setSelectedSupplierForPrices] = useState<any>(null);
+  const [supplierPrices, setSupplierPrices] = useState<any[]>([]);
+  const [supplierPriceForm, setSupplierPriceForm] = useState({ productId: '', price: '' });
 
   const [passwordPrompt, setPasswordPrompt] = useState<{ isOpen: boolean, itemId: string, callback?: () => void }>({ isOpen: false, itemId: '' });
 
@@ -1414,6 +1421,48 @@ export default function POSDashboard() {
       fetch(`/api/customers/${customerId}/ceilings?_t=` + Date.now())
         .then(res => res.json())
         .then(setCustomerCeilings).catch(console.error);
+    }
+  };
+
+  const [supplierPricesMap, setSupplierPricesMap] = useState<Record<string, number>>({});
+  const [savingSupplierPrices, setSavingSupplierPrices] = useState(false);
+
+  const handleSaveSupplierPrices = async () => {
+    if (!selectedSupplierForPrices || savingSupplierPrices) return;
+    const prices = Object.entries(supplierPricesMap)
+      .map(([productId, price]) => ({ productId, price: Number(price) }));
+    if (prices.some(entry => !Number.isFinite(entry.price) || entry.price < 0)) {
+      alert('يجب إدخال أسعار صالحة لا تقل عن صفر لكل صنف');
+      return;
+    }
+    setSavingSupplierPrices(true);
+    try {
+      const desktop = window as Window & {
+        electronAPI?: { saveSupplierPrices: (data: { supplierId: string; prices: { productId: string; price: number }[] }) => Promise<{ productId: string; price: number }[]> };
+      };
+      let savedPrices: { productId: string; price: number }[];
+      if (desktop.electronAPI) {
+        savedPrices = await desktop.electronAPI.saveSupplierPrices({ supplierId: selectedSupplierForPrices.id, prices });
+      } else {
+        const response = await fetch(`/api/suppliers/${selectedSupplierForPrices.id}/prices`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prices })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'حدث خطأ أثناء حفظ الأسعار');
+        if (!Array.isArray(result.prices)) throw new Error('استجابة حفظ الأسعار غير صحيحة، يرجى تحديث الخادم');
+        savedPrices = result.prices;
+      }
+      setSavingSupplierPrices(false);
+      setShowSupplierPricesModal(false);
+      setSuppliers(prev => prev.map(s => s.id !== selectedSupplierForPrices.id
+        ? s : { ...s, supplierPrices: savedPrices }));
+      alert('تم حفظ أسعار المورد بنجاح');
+    } catch (error) {
+      console.error('Error saving supplier prices:', error);
+      setSavingSupplierPrices(false);
+      alert(error instanceof Error ? error.message : 'حدث خطأ أثناء حفظ أسعار المورد');
     }
   };
 
@@ -3451,7 +3500,7 @@ export default function POSDashboard() {
 
               <BanknoteIcon className="h-5 w-5" />
 
-              <span>سداد / دفعات</span>
+              <span>استلام دفعات</span>
 
             </button>
 
@@ -3521,7 +3570,7 @@ export default function POSDashboard() {
 
               <ReceiptIcon className="h-5 w-5" />
 
-              <span>سندات الصرف (مصروف)</span>
+              <span>سداد دفعات </span>
 
             </button>
 
@@ -3630,7 +3679,7 @@ export default function POSDashboard() {
 
         <div className="py-2 text-[9px] text-indigo-400/50 text-center font-mono shrink-0 bg-slate-950">
 
-          <span>الإصدار 2.2.0</span>
+          <span>الإصدار 2.3.0</span>
 
         </div>
 
@@ -5783,26 +5832,43 @@ export default function POSDashboard() {
                               </div>
 
                             )}
+                            <div className="grid grid-cols-2 gap-1 mt-1">
+                              <button
+                                onClick={() => {
 
-                            <button
+                                  setSelectedHistorySupplier(suppliers.find(supplier => supplier.id === sup.id));
+                                  setStmtFrom(totalsFrom);
+                                  setStmtTo(totalsTo);
 
-                              onClick={() => {
+                                  setShowSupplierHistoryModal(true);
 
-                                setSelectedHistorySupplier(suppliers.find(supplier => supplier.id === sup.id));
-                                setStmtFrom(totalsFrom);
-                                setStmtTo(totalsTo);
+                                }}
+                                className="bg-white/5 text-slate-300 p-1.5 rounded-sm hover:bg-white/10 hover:text-white transition-colors cursor-pointer text-[10px] font-bold shadow-sm shadow-black/20 flex items-center justify-center"
 
-                                setShowSupplierHistoryModal(true);
+                              >
 
-                              }}
+                                كشف حساب المورد / تفاصيل
 
-                              className="col-span-2 bg-white/5 text-slate-300 p-2 rounded-sm hover:bg-white/10 hover:text-white transition-colors cursor-pointer text-xs font-bold mt-1 shadow-md shadow-black/20"
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedSupplierForPrices(sup);
+                                  const map: Record<string, number> = {};
+                                  products
+                                    .filter(p => p.supplierId === sup.id)
+                                    .forEach((p: any) => {
 
-                            >
-
-                              كشف حساب المورد / تفاصيل
-
-                            </button>
+                                      const existing = sup.supplierPrices?.find((sp: any) => sp.productId === p.id);
+                                      if (existing && typeof existing.price === 'number' && !isNaN(existing.price)) map[p.id] = existing.price;
+                                    });
+                                  setSupplierPricesMap(map);
+                                  setShowSupplierPricesModal(true);
+                                }}
+                                className="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 p-1.5 rounded-sm transition-colors cursor-pointer text-[10px] font-bold flex items-center justify-center gap-1 shadow-sm shadow-black/20"
+                              >
+                                <PercentIcon className="w-3 h-3 shrink-0" /> <span className="truncate">أسعار مخصصة</span>
+                              </button>
+                            </div>
 
                           </div>
 
@@ -6965,6 +7031,9 @@ export default function POSDashboard() {
                             {currentUser?.role === 'ADMIN' && <button type="button"
                               className="rounded bg-indigo-600/20 px-2 py-1 text-xs font-bold text-indigo-300"
                               onClick={event => { event.stopPropagation(); setEditingInvoiceDetails(inv); }}>تعديل بيانات الفاتورة</button>}
+                            {currentUser?.role === 'ADMIN' && !inv.orderReturns?.length && <button type="button"
+                              className="rounded bg-purple-600/20 px-2 py-1 text-xs font-bold text-purple-300"
+                              onClick={event => { event.stopPropagation(); setEditingInvoiceItems(inv); }}>تعديل الأصناف</button>}
                             <button
                               type="button"
                               disabled={!hasReturnableItems(inv)}
@@ -7036,6 +7105,26 @@ export default function POSDashboard() {
             setShowModal(true);
             fetchInvoices();
             fetchCustomers();
+          }} />
+      )}
+      {editingInvoiceItems && currentUser?.role === 'ADMIN' && (
+        <InvoiceItemsEdit invoice={editingInvoiceItems} products={products} user={currentUser}
+          onClose={() => setEditingInvoiceItems(null)}
+          onSaved={async saved => {
+            setEditingInvoiceItems(null);
+            setInvoice(saved);
+            setShowModal(true);
+            fetchInvoices();
+            fetchCustomers();
+            fetchProducts(true);
+            setQrCodeUrl('');
+            if (saved.qrCode) {
+              try { setQrCodeUrl(await QRCode.toDataURL(saved.qrCode, { width: 160, margin: 1 })); }
+              catch (error) {
+                console.error('Failed to render invoice QR after items edit:', error);
+                alert('تم حفظ تعديل الأصناف، لكن تعذر عرض رمز QR. أعد فتح الفاتورة.');
+              }
+            }
           }} />
       )}
       {editingInvoiceDetails && currentUser?.role === 'ADMIN' && (
@@ -10153,6 +10242,107 @@ export default function POSDashboard() {
                   </tbody>
                 </table>
               </div>
+            </div>
+            
+          </div>
+        </div>
+      )}
+
+      {showSupplierPricesModal && selectedSupplierForPrices && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-white/10 rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center p-4 border-b border-white/10">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <PercentIcon className="text-indigo-500" />
+                أسعار مخصصة للمورد: {selectedSupplierForPrices.name}
+              </h3>
+              <button onClick={() => setShowSupplierPricesModal(false)} className="text-slate-400 hover:text-white bg-white/5 p-2 rounded transition-colors cursor-pointer">
+                <XIcon size={18} />
+              </button>
+            </div>
+            
+            <div className="p-4 flex-1 overflow-y-auto">
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                await handleSaveSupplierPrices();
+              }} className="bg-white/5 p-4 rounded-lg mb-6 border border-white/10">
+                <h4 className="text-white font-bold mb-4">تحديد أسعار مخصصة للأصناف المسجلة لهذا المورد</h4>
+                <p className="text-xs text-slate-400 mb-4">اختر الأصناف وحدد سعر التوريد المتفق عليه لكل صنف. اترك الخانة فارغة لاستخدام سعر التكلفة الافتراضي.</p>
+                
+                <div className="space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                  {products.filter(p => p.supplierId === selectedSupplierForPrices.id).length === 0 ? (
+                    <div className="text-center py-8 text-slate-500">
+                      <p>لا توجد أصناف مسجلة لهذا المورد</p>
+                    </div>
+                  ) : (
+                    products
+                      .filter(p => p.supplierId === selectedSupplierForPrices.id)
+                      .map((p: any) => {
+                        const hasCustom = supplierPricesMap[p.id] !== undefined;
+                        return (
+                          <div key={p.id} className="flex items-center justify-between p-2 bg-white/5 rounded border border-white/5 hover:border-white/10 transition-colors">
+                            <div className="flex-1 text-right">
+                              <div className="text-sm font-bold text-white">{p.name}</div>
+                              <div className="text-xs text-slate-400">{[p.code, p.type, p.size, p.color].filter(Boolean).join(' - ')}</div>
+                            </div>
+                            <div className="w-32">
+                              <MoneyInput
+                                min="0"
+                                step="0.01"
+                                aria-label={`سعر التوريد المخصص: ${p.name}`}
+                                value={supplierPricesMap[p.id] === undefined ? '' : supplierPricesMap[p.id]}
+                                onValueChange={(value) => {
+                                  const val = parseFloat(value);
+                                  if (!isNaN(val)) {
+                                    setSupplierPricesMap(prev => ({ ...prev, [p.id]: val }));
+                                  } else if (value === '') {
+                                    setSupplierPricesMap(prev => {
+                                      const { [p.id]: _, ...rest } = prev;
+                                      return rest;
+                                    });
+                                  }
+                                }}
+                                className="w-full bg-black/50 border border-white/10 rounded p-2 text-white font-mono text-center focus:border-indigo-500"
+                                placeholder="السعر"
+                              />
+                            </div>
+                            {!hasCustom && (
+                              <button
+                                onClick={() => {
+                                  setSupplierPricesMap(prev => {
+                                    const { [p.id]: _, ...rest } = prev;
+                                    return rest;
+                                  });
+                                }}
+                                className="text-xs text-slate-500 hover:text-white px-2 py-1"
+                              >
+                                استخدام السعر الافتراضي
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })
+                  )}
+                </div>
+                
+                <div className="mt-4 flex justify-between items-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowSupplierPricesModal(false)}
+                    disabled={savingSupplierPrices}
+                    className="px-4 py-2 rounded bg-white/5 text-slate-300 hover:bg-white/10 disabled:opacity-50 transition-colors"
+                  >
+                    إغلاق
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingSupplierPrices || Object.keys(supplierPricesMap).length === 0}
+                    className="px-6 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white font-bold disabled:opacity-50 transition-colors shadow-lg"
+                  >
+                    {savingSupplierPrices ? 'جاري الحفظ...' : 'حفظ الأسعار'}
+                  </button>
+                </div>
+              </form>
             </div>
             
           </div>

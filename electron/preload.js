@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   createOrder: (orderData) => ipcRenderer.invoke('create-order', orderData),
   updateQuotation: (data) => ipcRenderer.invoke('update-quotation', data),
   updateInvoiceDetails: (data) => ipcRenderer.invoke('update-invoice-details', data),
+  updateInvoiceItems: (data) => ipcRenderer.invoke('update-invoice-items', data),
   quotationCosts: (data) => ipcRenderer.invoke('quotation-costs', data),
   createOrderReturn: (returnData) => ipcRenderer.invoke('create-order-return', returnData),
   createAccountDiscount: (data) => ipcRenderer.invoke('create-account-discount', data),
@@ -62,5 +63,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getCustomerCeilings: (customerId) => ipcRenderer.invoke('get-customer-ceilings', customerId),
   createCustomerCeiling: (data) => ipcRenderer.invoke('create-customer-ceiling', data),
   deleteCustomerCeiling: (quotaId) => ipcRenderer.invoke('delete-customer-ceiling', quotaId),
+  saveSupplierPrices: (data) => ipcRenderer.invoke('save-supplier-prices', data),
   deleteOrder: (orderId) => ipcRenderer.invoke('delete-order', orderId),
 });
