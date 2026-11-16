@@ -32,6 +32,7 @@ function store() {
   const client = {
     product: {
       findMany: async () => [{ id: 'product', price: 13, taxRate: 0.14 }],
+      findUnique: async () => ({ id: 'product', name: 'Product', price: 13, taxRate: 0.14, stockQty: state.stock }),
       update: async ({ data }) => { state.stock -= data.stockQty.decrement; }
     },
     user: { findFirst: async () => ({ id: 'default-user' }) },
@@ -105,6 +106,26 @@ test('quotation update failure rolls back the invoice and stock changes', async 
   }), /Quotation unavailable/);
   assert.equal(state.orders.length, 0);
   assert.equal(state.stock, 100);
+  assert.equal(state.delivered, 0);
+});
+
+test('quotations save even without stock while invoices reject shortages inside the transaction', async () => {
+  const { client, state } = store();
+  state.stock = 1;
+  const issue = loadOrderHandler(client);
+  const quotation = await issue({
+    userId: 'cashier', customerId: 'customer', invoiceType: 'فاتورة ضريبية', isQuotation: true,
+    items: [{ productId: 'product', quantity: 5, unitPrice: 10 }]
+  });
+  assert.equal(quotation.status, 'PENDING');
+  assert.equal(state.orders.length, 1);
+  assert.equal(state.stock, 1);
+  await assert.rejects(issue({
+    userId: 'cashier', customerId: 'customer', invoiceType: 'فاتورة ضريبية',
+    items: [{ productId: 'product', quantity: 5, unitPrice: 10 }]
+  }), /لا يكفي/);
+  assert.equal(state.orders.length, 1);
+  assert.equal(state.stock, 1);
   assert.equal(state.delivered, 0);
 });
 

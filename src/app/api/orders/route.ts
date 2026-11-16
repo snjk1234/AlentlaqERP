@@ -122,6 +122,13 @@ export async function POST(request: Request) {
       // Deduct stock for final invoices (not for quotations)
       if (!isQuotation) {
         for (const item of items) {
+          // Re-read stock inside the transaction to block concurrent overselling.
+          const product = await tx.product.findUnique({ where: { id: item.productId } });
+          if (!product || Number(product.stockQty) < Number(item.quantity)) {
+            throw new Error(`المخزون المتاح من الصنف ${product?.name || item.productId} لا يكفي (المتاح ${Number(product?.stockQty) || 0}). يمكن حفظ عرض سعر أو تعديل الكمية.`);
+          }
+        }
+        for (const item of items) {
           await tx.product.update({
             where: { id: item.productId },
             data: {

@@ -1583,15 +1583,7 @@ export default function POSDashboard() {
 
   const addToCart = (product: any) => {
 
-    if (product.stockQty <= 0) {
-
-      alert("عذراً، هذا المنتج غير متوفر في المخزن حالياً!");
-
-      return;
-
-    }
-
-
+    // Out-of-stock products can still be quoted; invoices validate stock at checkout.
 
     const customer = selectedCustomerId === 'CASH'
 
@@ -1693,21 +1685,11 @@ export default function POSDashboard() {
 
   const updateQty = (id: string, delta: number) => {
 
-    const product = products.find((p: any) => p.id === id);
-
     setCart(prev => prev.map(item => {
 
       if (item.id === id) {
 
         const newQty = item.qty + delta;
-
-        if (delta > 0 && product && newQty > product.stockQty) {
-
-          alert("عذراً، لقد تجاوزت الكمية المتاحة في المخزن!");
-
-          return item;
-
-        }
 
         return newQty > 0 ? { ...item, qty: newQty } : item;
 
@@ -2083,6 +2065,28 @@ export default function POSDashboard() {
   const handleCheckout = async (isQuotation: boolean, quotationLines?: PricingLine[]) => {
 
     if (cart.length === 0 || submitting) return;
+
+
+
+    if (!isQuotation) {
+
+      const shortages = cart.map(item => {
+
+        const stock = Number(products.find((p: any) => p.id === item.id)?.stockQty ?? 0);
+
+        return item.qty > stock ? `${item.name}: المطلوب ${item.qty} والمتاح ${stock}` : null;
+
+      }).filter(Boolean);
+
+      if (shortages.length) {
+
+        alert(`لا يمكن إصدار الفاتورة لنقص المخزون:\n${shortages.join('\n')}\nيمكنك حفظ عرض سعر أو تعديل الكميات حسب المتاح.`);
+
+        return;
+
+      }
+
+    }
 
 
 
@@ -3967,8 +3971,6 @@ export default function POSDashboard() {
                           <ProductCardDetails product={item} actions={
                             <button
 
-                              disabled={isOutOfStock}
-
                               onClick={(e) => {
 
                                 e.stopPropagation();
@@ -4224,6 +4226,22 @@ export default function POSDashboard() {
                           </div>
 
                         )}
+
+                        {(() => {
+
+                          const stock = Number(products.find((p: any) => p.id === item.id)?.stockQty ?? 0);
+
+                          return item.qty > stock ? (
+
+                            <div className="mt-1.5 mb-1 text-[10px] font-bold text-red-300 bg-red-500/10 border border-red-500/20 px-2 py-1.5 rounded-sm text-center">
+
+                              ⚠ الكمية تتجاوز المخزون — المتاح: {stock}. يمكن حفظ عرض سعر فقط.
+
+                            </div>
+
+                          ) : null;
+
+                        })()}
 
 
 
@@ -7733,8 +7751,6 @@ export default function POSDashboard() {
             <div className="p-2 bg-slate-950 border-t border-slate-800 flex gap-1.5">
 
               <button
-
-                disabled={selectedProduct.stockQty <= 0}
 
                 onClick={() => {
 
