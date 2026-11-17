@@ -125,14 +125,20 @@ test('browser and Electron preserve item order, totals and stock for invoices, q
     [false, false, null], [false, true, null], [false, false, 'quotation'],
     [true, false, null], [true, true, null], [true, false, 'quotation']
   ]) {
-    const products = ['z', 'a', 'm'].map(id => ({ id, price: 10, taxRate: 0 }));
+    const products = ['z', 'a', 'm'].map(id => ({ id, price: 10, taxRate: 0, stockQty: 5 }));
     const deductions = [];
     const conversions = [];
     let created;
     const client = {
       product: {
         findMany: async () => [...products].reverse(),
-        update: async ({ where, data }) => deductions.push([where.id, data.stockQty.decrement])
+        findUnique: async ({ where }) => products.find(product => product.id === where.id) || null,
+        update: async ({ where, data }) => {
+          deductions.push([where.id, data.stockQty.decrement]);
+          const product = products.find(entry => entry.id === where.id);
+          product.stockQty -= data.stockQty.decrement;
+          return product;
+        }
       },
       order: {
         count: async () => 0,

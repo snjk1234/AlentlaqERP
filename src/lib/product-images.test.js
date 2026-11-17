@@ -103,11 +103,11 @@ test('image upload is ADMIN-only, validates files, reports reader failures and u
   }
 });
 
-test('both card surfaces have larger text and ADMIN-gated local image controls', () => {
+test('card and table views retain ADMIN-gated local image controls', () => {
   const source = read('src', 'app', 'page.tsx');
   assert.equal((source.match(/product-data-card glass-card/g) || []).length, 2);
   assert.equal((source.match(/<ProductCardDetails product=/g) || []).length, 2);
-  assert.equal((source.match(/accept="image\/jpeg,image\/png,image\/webp,image\/gif"/g) || []).length, 2);
+  assert.equal((source.match(/accept="image\/jpeg,image\/png,image\/webp,image\/gif"/g) || []).length, 4);
   const tree = ts.createSourceFile('page.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   let gated = 0;
   const visit = node => {
@@ -116,7 +116,7 @@ test('both card surfaces have larger text and ADMIN-gated local image controls',
     ts.forEachChild(node, visit);
   };
   visit(tree);
-  assert.equal(gated, 2);
+  assert.equal(gated, 4);
   const css = read('src', 'app', 'globals.css');
   assert.ok(css.includes('.product-data-card { font-size: 11px;'));
   assert.ok(css.includes('.product-data-card .product-card-name { font-size: 14px;'));

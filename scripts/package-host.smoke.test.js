@@ -86,7 +86,8 @@ test('extracted host ZIP runs independently and authenticates production reset',
     assert.equal((await post('/api/production-reset', { action: 'preview' })).status, 401);
     const cashier = await (await post('/api/users/login', { username: 'cashier', password: '123456' }, token)).json();
     assert.equal((await post('/api/production-reset', { action: 'preview' }, cashier.sessionToken)).status, 403);
-    assert.match(output, /AlEntlaq POS Server 2\.0\.0/);
+    const release = JSON.parse(fs.readFileSync(path.join(root, 'release.json'), 'utf8'));
+    assert.ok(output.includes(`AlEntlaq POS Server ${release.version}`));
     assert.equal(fs.existsSync(path.join(root, '.env.local')), false);
     assert.equal(fs.existsSync(path.join(root, '.env')), false);
   } finally {

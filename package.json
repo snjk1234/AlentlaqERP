@@ -27,6 +27,7 @@
       "src/lib/document-edits.js",
       "src/lib/bank-statement.js",
       "src/lib/customer-prices.js",
+      "src/lib/supplier-prices.js",
       "node_modules/**/*",
       "package.json"
     ],

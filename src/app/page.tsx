@@ -13,7 +13,11 @@ import ProductionResetPanel from '@/components/ProductionResetPanel';
 import CollapsiblePanel from '@/components/CollapsiblePanel';
 import DiscountsPanel, { type DiscountKind } from '@/components/DiscountsPanel';
 import MoneyInput from '@/components/MoneyInput';
+import SupplierPricesModal from '@/components/SupplierPricesModal';
 import StocktakePanel from '@/components/StocktakePanel';
+import ProductListingControls from '@/components/ProductListingControls';
+import ProductTable from '@/components/ProductTable';
+import { sortProducts, type ProductSortField } from '@/lib/product-listing';
 import ProductOptionField, { initialProductOptions, requestExpenseCategories, requestProductOptions, type ProductOptionLists } from '@/components/ProductOptionField';
 import QuotationEdit, { type EditableQuotation } from '@/components/QuotationEdit';
 import InvoiceDetailsEdit, { type EditableInvoiceDetails } from '@/components/InvoiceDetailsEdit';
@@ -711,6 +715,14 @@ export default function POSDashboard() {
   const [inventorySearchQuery, setInventorySearchQuery] = useState('');
 
   const [inventoryCategory, setInventoryCategory] = useState('ALL');
+  const [posProductLayout, setPosProductLayout] = useState<'cards' | 'table'>('cards');
+  const [inventoryProductLayout, setInventoryProductLayout] = useState<'cards' | 'table'>('cards');
+  const [posProductSortBy, setPosProductSortBy] = useState<ProductSortField>('code');
+  const [inventoryProductSortBy, setInventoryProductSortBy] = useState<ProductSortField>('code');
+  const [posProductSortDirection, setPosProductSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [inventoryProductSortDirection, setInventoryProductSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [posProductColumnOrder, setPosProductColumnOrder] = useState<string[]>([]);
+  const [inventoryProductColumnOrder, setInventoryProductColumnOrder] = useState<string[]>([]);
 
   const [customerSearch, setCustomerSearch] = useState('');
   const [totalsFrom, setTotalsFrom] = useState('');
@@ -1424,48 +1436,6 @@ export default function POSDashboard() {
     }
   };
 
-  const [supplierPricesMap, setSupplierPricesMap] = useState<Record<string, number>>({});
-  const [savingSupplierPrices, setSavingSupplierPrices] = useState(false);
-
-  const handleSaveSupplierPrices = async () => {
-    if (!selectedSupplierForPrices || savingSupplierPrices) return;
-    const prices = Object.entries(supplierPricesMap)
-      .map(([productId, price]) => ({ productId, price: Number(price) }));
-    if (prices.some(entry => !Number.isFinite(entry.price) || entry.price < 0)) {
-      alert('يجب إدخال أسعار صالحة لا تقل عن صفر لكل صنف');
-      return;
-    }
-    setSavingSupplierPrices(true);
-    try {
-      const desktop = window as Window & {
-        electronAPI?: { saveSupplierPrices: (data: { supplierId: string; prices: { productId: string; price: number }[] }) => Promise<{ productId: string; price: number }[]> };
-      };
-      let savedPrices: { productId: string; price: number }[];
-      if (desktop.electronAPI) {
-        savedPrices = await desktop.electronAPI.saveSupplierPrices({ supplierId: selectedSupplierForPrices.id, prices });
-      } else {
-        const response = await fetch(`/api/suppliers/${selectedSupplierForPrices.id}/prices`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prices })
-        });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'حدث خطأ أثناء حفظ الأسعار');
-        if (!Array.isArray(result.prices)) throw new Error('استجابة حفظ الأسعار غير صحيحة، يرجى تحديث الخادم');
-        savedPrices = result.prices;
-      }
-      setSavingSupplierPrices(false);
-      setShowSupplierPricesModal(false);
-      setSuppliers(prev => prev.map(s => s.id !== selectedSupplierForPrices.id
-        ? s : { ...s, supplierPrices: savedPrices }));
-      alert('تم حفظ أسعار المورد بنجاح');
-    } catch (error) {
-      console.error('Error saving supplier prices:', error);
-      setSavingSupplierPrices(false);
-      alert(error instanceof Error ? error.message : 'حدث خطأ أثناء حفظ أسعار المورد');
-    }
-  };
-
   const fetchExpenses = () => {
 
     if (typeof window !== 'undefined' && (window as any).electronAPI) {
@@ -1624,15 +1594,6 @@ export default function POSDashboard() {
       const existing = prev.find(item => item.id === product.id);
 
       if (existing) {
-
-        if (existing.qty >= product.stockQty) {
-
-          alert("عذراً، لقد تجاوزت الكمية المتاحة في المخزن!");
-
-          return prev;
-
-        }
-
         return prev.map(item =>
 
           item.id === product.id
@@ -1776,10 +1737,12 @@ export default function POSDashboard() {
   const total = subtotal + totalTax;
 
 
+  const availableProductSortField = (field: ProductSortField): ProductSortField =>
+    currentUser?.role === 'ADMIN' || (field !== 'costPrice' && field !== 'markup') ? field : 'code';
 
   // Filter products by type and search query
 
-  const filteredProducts = (Array.isArray(products) ? products : [])
+  const filteredProducts = sortProducts((Array.isArray(products) ? products : [])
 
     .filter(p => {
 
@@ -1790,13 +1753,12 @@ export default function POSDashboard() {
       const matchesSearch = (p.name || '').includes(searchQuery) || (p.code || '').includes(searchQuery);
 
       return matchesCategory && matchesSupplier && matchesSearch;
-
-    });
+    }), availableProductSortField(posProductSortBy), posProductSortDirection);
 
 
   // Filter products by type and search query for Inventory tab
 
-  const filteredInventoryProducts = (Array.isArray(products) ? products : [])
+  const filteredInventoryProducts = sortProducts((Array.isArray(products) ? products : [])
 
     .filter(p => {
 
@@ -1805,8 +1767,7 @@ export default function POSDashboard() {
       const matchesSearch = (p.name || '').includes(inventorySearchQuery) || (p.code || '').includes(inventorySearchQuery);
 
       return matchesCategory && matchesSearch;
-
-    });
+    }), availableProductSortField(inventoryProductSortBy), inventoryProductSortDirection);
 
 
 
@@ -3861,6 +3822,16 @@ export default function POSDashboard() {
 
 
 
+              <ProductListingControls
+                layout={posProductLayout}
+                onLayoutChange={setPosProductLayout}
+                sortBy={posProductSortBy}
+                onSortByChange={setPosProductSortBy}
+                sortDirection={posProductSortDirection}
+                onSortDirectionChange={setPosProductSortDirection}
+                isAdmin={currentUser?.role === 'ADMIN'}
+              />
+
               {/* Product Grid */}
 
               {loading ? (
@@ -3875,6 +3846,65 @@ export default function POSDashboard() {
 
               ) : (
 
+                posProductLayout === 'table' ? (
+                  <div className="flex-1 min-h-0 overflow-auto pb-6 custom-scrollbar pr-2">
+                    <ProductTable
+                      ariaLabel="منتجات نقطة البيع"
+                      products={filteredProducts}
+                      columnOrder={posProductColumnOrder}
+                      onColumnOrderChange={setPosProductColumnOrder}
+                      columns={[
+                        { key: 'code', label: 'الكود', render: item => item.code || '-' },
+                        { key: 'barcode', label: 'الباركود', render: item => item.barcode || '-' },
+                        { key: 'name', label: 'اسم الصنف', render: item => item.name || '-' },
+                        { key: 'type', label: 'النوع', render: item => item.type || '-' },
+                        { key: 'size', label: 'المقاس', render: item => item.size || '-' },
+                        { key: 'gauge', label: 'الدرجة', render: item => item.gauge || '-' },
+                        { key: 'color', label: 'اللون', render: item => item.color || '-' },
+                        { key: 'supplier', label: 'المورد', render: item => item.supplier?.name || '-' },
+                        { key: 'length', label: 'الطول', render: item => item.length || '-' },
+                        { key: 'weight', label: 'الوزن', render: item => item.weight || '-' },
+                        { key: 'pricePerKilo', label: 'سعر الكيلو', render: item => item.pricePerKilo == null ? '-' : formatTotal(item.pricePerKilo) },
+                        ...(currentUser?.role === 'ADMIN' ? [
+                          { key: 'costPrice', label: 'التكلفة', render: (item: { costPrice?: number | null }) => formatTotal(item.costPrice || 0) },
+                          { key: 'markup', label: 'نسبة الربح', render: (item: { markup?: number | null }) => `${(item.markup ?? 30).toFixed(0)}%` }
+                        ] : []),
+                        { key: 'price', label: 'سعر البيع', render: item => formatTotal(item.price || 0) },
+                        {
+                          key: 'stockQty', label: 'المخزون', render: item => {
+                            const quantity = item.stockQty ?? 0;
+                            const out = quantity <= 0;
+                            const low = !out && quantity <= (item.minStockQty ?? 0);
+                            return <span className={out ? 'text-red-400' : low ? 'text-amber-400' : 'text-emerald-400'}>
+                              {quantity}{out ? ' (نافذ)' : low ? ' (منخفض)' : ''}
+                            </span>;
+                          }
+                        },
+                        { key: 'minStockQty', label: 'حد التنبيه', render: item => item.minStockQty ?? 0 },
+                        { key: 'maxStockQty', label: 'الحد الأقصى', render: item => item.maxStockQty ?? 0 },
+                        {
+                          key: 'actions', label: 'الإجراء', render: item => (
+                            <div className="flex gap-1">
+                              <button type="button" onClick={() => { setSelectedProduct(item); setShowProductModal(true); }}
+                                className="px-2 py-1 rounded bg-white/5 text-slate-300 hover:bg-white/10">التفاصيل</button>
+                              <button type="button" onClick={() => addToCart(item)}
+                                className="px-2 py-1 rounded bg-red-500/10 text-red-400 hover:bg-entlaq-primary hover:text-white">إضافة</button>
+                              {currentUser?.role === 'ADMIN' && (
+                                <label className="px-2 py-1 rounded bg-white/5 text-slate-300 hover:bg-white/10 cursor-pointer"
+                                  title="تغيير صورة الصنف">
+                                  <CameraIcon size={14} />
+                                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden"
+                                    aria-label={`تحميل صورة ${item.name || ''}`} disabled={uploadingProductImage !== null}
+                                    onChange={event => handleImageUpload(event, item)} />
+                                </label>
+                              )}
+                            </div>
+                          )
+                        }
+                      ]}
+                    />
+                  </div>
+                ) : (
                 <div className="product-cards-grid grid pos-product-cards-grid gap-3 overflow-y-auto pb-10 custom-scrollbar pr-2 flex-1 min-h-0">
 
                   {filteredProducts.map((item) => {
@@ -3999,6 +4029,8 @@ export default function POSDashboard() {
                   })}
 
                 </div>
+
+                )
 
               )}
 
@@ -4387,17 +4419,6 @@ export default function POSDashboard() {
                             const val = parseInt(e.target.value);
 
                             if (!isNaN(val) && val >= 1) {
-
-                              const product = products.find(p => p.id === item.id);
-
-                              if (product && val > product.stockQty) {
-
-                                alert("عذراً، لقد تجاوزت الكمية المتاحة في المخزن!");
-
-                                return;
-
-                              }
-
                               setCart(prev => prev.map(c => c.id === item.id ? { ...c, qty: val } : c));
 
                             } else if (e.target.value === "") {
@@ -5378,9 +5399,17 @@ export default function POSDashboard() {
 
             </div>
 
+            <ProductListingControls
+              layout={inventoryProductLayout}
+              onLayoutChange={setInventoryProductLayout}
+              sortBy={inventoryProductSortBy}
+              onSortByChange={setInventoryProductSortBy}
+              sortDirection={inventoryProductSortDirection}
+              onSortDirectionChange={setInventoryProductSortDirection}
+              isAdmin={currentUser?.role === 'ADMIN'}
+            />
 
-
-            {/* Products Bento Cards Grid */}
+            {/* Products Grid or Table */}
 
             <div className="flex-1 overflow-y-auto pb-10 custom-scrollbar pr-2">
 
@@ -5402,6 +5431,86 @@ export default function POSDashboard() {
 
               ) : (
 
+                inventoryProductLayout === 'table' ? (
+                  <ProductTable
+                    ariaLabel="منتجات المخزون"
+                    products={filteredInventoryProducts}
+                    columnOrder={inventoryProductColumnOrder}
+                    onColumnOrderChange={setInventoryProductColumnOrder}
+                    columns={[
+                      { key: 'code', label: 'الكود', render: product => product.code || '-' },
+                      { key: 'barcode', label: 'الباركود', render: product => product.barcode || '-' },
+                      { key: 'name', label: 'اسم الصنف', render: product => product.name || '-' },
+                      { key: 'type', label: 'النوع', render: product => product.type || '-' },
+                      { key: 'size', label: 'المقاس', render: product => product.size || '-' },
+                      { key: 'gauge', label: 'الدرجة', render: product => product.gauge || '-' },
+                      { key: 'color', label: 'اللون', render: product => product.color || '-' },
+                      { key: 'supplier', label: 'المورد', render: product => product.supplier?.name || '-' },
+                      { key: 'length', label: 'الطول', render: product => product.length || '-' },
+                      { key: 'weight', label: 'الوزن', render: product => product.weight || '-' },
+                      { key: 'pricePerKilo', label: 'سعر الكيلو', render: product => product.pricePerKilo == null ? '-' : formatTotal(product.pricePerKilo) },
+                      ...(currentUser?.role === 'ADMIN' ? [
+                        { key: 'costPrice', label: 'التكلفة', render: (product: { costPrice?: number | null }) => formatTotal(product.costPrice || 0) },
+                        { key: 'markup', label: 'نسبة الربح', render: (product: { markup?: number | null }) => `${(product.markup ?? 30).toFixed(0)}%` }
+                      ] : []),
+                      { key: 'price', label: 'سعر البيع', render: product => formatTotal(product.price || 0) },
+                      {
+                        key: 'stockQty', label: 'المخزون', render: product => {
+                          const quantity = product.stockQty ?? 0;
+                          const out = quantity <= 0;
+                          const low = !out && quantity <= (product.minStockQty ?? 0);
+                          return <span className={out ? 'text-red-400' : low ? 'text-amber-400' : 'text-emerald-400'}>
+                            {quantity}{out ? ' (نافذ)' : low ? ' (منخفض)' : ''}
+                          </span>;
+                        }
+                      },
+                      { key: 'minStockQty', label: 'حد التنبيه', render: product => product.minStockQty ?? 0 },
+                      { key: 'maxStockQty', label: 'الحد الأقصى', render: product => product.maxStockQty ?? 0 },
+                      {
+                        key: 'actions', label: 'الإجراء', render: product => (
+                          <div className="flex items-center gap-1">
+                            <button type="button" onClick={() => {
+                                setProductForm({
+                                  id: product.id,
+                                  code: product.code || '',
+                                  barcode: product.barcode || '',
+                                  name: product.name || '',
+                                  type: product.type || '',
+                                  supplierId: product.supplierId || '',
+                                  size: product.size || '',
+                                  gauge: product.gauge || '',
+                                  color: product.color || '',
+                                  length: product.length || '',
+                                  weight: product.weight || '',
+                                  costPrice: String(product.costPrice ?? 0),
+                                  markup: String(product.markup ?? 30),
+                                  price: String(product.price ?? 0),
+                                  stockQty: String(product.stockQty ?? 0),
+                                  minStockQty: String(product.minStockQty ?? 10),
+                                  maxStockQty: String(product.maxStockQty ?? 1000),
+                                  pricePerKilo: String(product.pricePerKilo ?? 0)
+                                });
+                                setIsEditingProduct(true);
+                                setProductSaveNotice(null);
+                                setShowProductFormModal(true);
+                              }} className="px-2 py-1 rounded bg-white/5 text-slate-300 hover:bg-white/10">
+                              تعديل
+                            </button>
+                            {currentUser?.role === 'ADMIN' && (
+                              <label className="px-2 py-1 rounded bg-white/5 text-slate-300 hover:bg-white/10 cursor-pointer"
+                                title="تغيير صورة الصنف">
+                                <CameraIcon size={14} />
+                                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden"
+                                  aria-label={`تحميل صورة ${product.name || ''}`} disabled={uploadingProductImage !== null}
+                                  onChange={event => handleImageUpload(event, product)} />
+                              </label>
+                            )}
+                          </div>
+                        )
+                      }
+                    ]}
+                  />
+                ) : (
                 <div className="product-cards-grid grid gap-3">
 
                   {filteredInventoryProducts.map((p) => {
@@ -5532,6 +5641,8 @@ export default function POSDashboard() {
                   })}
 
                 </div>
+
+                )
 
               )}
 
@@ -5871,15 +5982,6 @@ export default function POSDashboard() {
                               <button
                                 onClick={() => {
                                   setSelectedSupplierForPrices(sup);
-                                  const map: Record<string, number> = {};
-                                  products
-                                    .filter(p => p.supplierId === sup.id)
-                                    .forEach((p: any) => {
-
-                                      const existing = sup.supplierPrices?.find((sp: any) => sp.productId === p.id);
-                                      if (existing && typeof existing.price === 'number' && !isNaN(existing.price)) map[p.id] = existing.price;
-                                    });
-                                  setSupplierPricesMap(map);
                                   setShowSupplierPricesModal(true);
                                 }}
                                 className="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 p-1.5 rounded-sm transition-colors cursor-pointer text-[10px] font-bold flex items-center justify-center gap-1 shadow-sm shadow-black/20"
@@ -6132,10 +6234,10 @@ export default function POSDashboard() {
               </button>
               {renderPeriodTablePrint(
                 'كشف المصروفات العامة',
-                ['رقم السند', 'التاريخ', 'التصنيف', 'البنك/الخزينة', 'المبلغ', 'المرجع'],
+                ['رقم السند', 'التاريخ', 'التصنيف', 'البنك/الخزينة', 'المبلغ', 'البيان', 'المرجع'],
                 filteredGeneralExpenses.map(e => [
                   e.expenseNumber, formatReportDate(e), e.category?.name || '-',
-                  e.bank?.name || '-', formatTotal(e.amount), e.reference || '-'
+                  e.bank?.name || '-', formatTotal(e.amount), e.notes || '-', e.reference || '-'
                 ])
               )}
               {(() => {
@@ -6156,6 +6258,7 @@ export default function POSDashboard() {
                     <th className="py-2.5 px-3 font-semibold">التصنيف</th>
                     <th className="py-2.5 px-3 font-semibold">البنك/الخزينة</th>
                     <th className="py-2.5 px-3 font-semibold">المبلغ</th>
+                    <th className="py-2.5 px-3 font-semibold">البيان</th>
                     <th className="py-2.5 px-3 font-semibold">المرجع</th>
                     {currentUser?.role === 'ADMIN' && <th className="py-2.5 px-3 font-semibold">تعديل</th>}
                   </tr>
@@ -6168,6 +6271,7 @@ export default function POSDashboard() {
                       <td className="py-2.5 px-3">{e.category?.name}</td>
                       <td className="py-2.5 px-3 text-slate-400">{e.bank?.name}</td>
                       <td className="py-2.5 px-3 font-bold text-red-400">{formatTotal(e.amount)}</td>
+                      <td className="py-2.5 px-3">{e.notes || '-'}</td>
                       <td className="py-2.5 px-3 text-slate-500">{e.reference || '-'}</td>
                       {currentUser?.role === 'ADMIN' && <td className="py-2.5 px-3">
                         <button type="button" aria-label={`تعديل المصروف ${e.expenseNumber}`}
@@ -6180,7 +6284,7 @@ export default function POSDashboard() {
                   ))}
                   {filteredGeneralExpenses.length === 0 && (
                     <tr>
-                      <td colSpan={currentUser?.role === 'ADMIN' ? 7 : 6} className="py-8 text-center text-slate-500">
+                      <td colSpan={currentUser?.role === 'ADMIN' ? 8 : 7} className="py-8 text-center text-slate-500">
                         لا توجد مصروفات عامة مسجلة
                       </td>
                     </tr>
@@ -10265,104 +10369,13 @@ export default function POSDashboard() {
       )}
 
       {showSupplierPricesModal && selectedSupplierForPrices && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-white/10 rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center p-4 border-b border-white/10">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <PercentIcon className="text-indigo-500" />
-                أسعار مخصصة للمورد: {selectedSupplierForPrices.name}
-              </h3>
-              <button onClick={() => setShowSupplierPricesModal(false)} className="text-slate-400 hover:text-white bg-white/5 p-2 rounded transition-colors cursor-pointer">
-                <XIcon size={18} />
-              </button>
-            </div>
-            
-            <div className="p-4 flex-1 overflow-y-auto">
-              <form onSubmit={async (e) => {
-                e.preventDefault();
-                await handleSaveSupplierPrices();
-              }} className="bg-white/5 p-4 rounded-lg mb-6 border border-white/10">
-                <h4 className="text-white font-bold mb-4">تحديد أسعار مخصصة للأصناف المسجلة لهذا المورد</h4>
-                <p className="text-xs text-slate-400 mb-4">اختر الأصناف وحدد سعر التوريد المتفق عليه لكل صنف. اترك الخانة فارغة لاستخدام سعر التكلفة الافتراضي.</p>
-                
-                <div className="space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                  {products.filter(p => p.supplierId === selectedSupplierForPrices.id).length === 0 ? (
-                    <div className="text-center py-8 text-slate-500">
-                      <p>لا توجد أصناف مسجلة لهذا المورد</p>
-                    </div>
-                  ) : (
-                    products
-                      .filter(p => p.supplierId === selectedSupplierForPrices.id)
-                      .map((p: any) => {
-                        const hasCustom = supplierPricesMap[p.id] !== undefined;
-                        return (
-                          <div key={p.id} className="flex items-center justify-between p-2 bg-white/5 rounded border border-white/5 hover:border-white/10 transition-colors">
-                            <div className="flex-1 text-right">
-                              <div className="text-sm font-bold text-white">{p.name}</div>
-                              <div className="text-xs text-slate-400">{[p.code, p.type, p.size, p.color].filter(Boolean).join(' - ')}</div>
-                            </div>
-                            <div className="w-32">
-                              <MoneyInput
-                                min="0"
-                                step="0.01"
-                                aria-label={`سعر التوريد المخصص: ${p.name}`}
-                                value={supplierPricesMap[p.id] === undefined ? '' : supplierPricesMap[p.id]}
-                                onValueChange={(value) => {
-                                  const val = parseFloat(value);
-                                  if (!isNaN(val)) {
-                                    setSupplierPricesMap(prev => ({ ...prev, [p.id]: val }));
-                                  } else if (value === '') {
-                                    setSupplierPricesMap(prev => {
-                                      const { [p.id]: _, ...rest } = prev;
-                                      return rest;
-                                    });
-                                  }
-                                }}
-                                className="w-full bg-black/50 border border-white/10 rounded p-2 text-white font-mono text-center focus:border-indigo-500"
-                                placeholder="السعر"
-                              />
-                            </div>
-                            {!hasCustom && (
-                              <button
-                                onClick={() => {
-                                  setSupplierPricesMap(prev => {
-                                    const { [p.id]: _, ...rest } = prev;
-                                    return rest;
-                                  });
-                                }}
-                                className="text-xs text-slate-500 hover:text-white px-2 py-1"
-                              >
-                                استخدام السعر الافتراضي
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })
-                  )}
-                </div>
-                
-                <div className="mt-4 flex justify-between items-center">
-                  <button
-                    type="button"
-                    onClick={() => setShowSupplierPricesModal(false)}
-                    disabled={savingSupplierPrices}
-                    className="px-4 py-2 rounded bg-white/5 text-slate-300 hover:bg-white/10 disabled:opacity-50 transition-colors"
-                  >
-                    إغلاق
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={savingSupplierPrices || Object.keys(supplierPricesMap).length === 0}
-                    className="px-6 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white font-bold disabled:opacity-50 transition-colors shadow-lg"
-                  >
-                    {savingSupplierPrices ? 'جاري الحفظ...' : 'حفظ الأسعار'}
-                  </button>
-                </div>
-              </form>
-            </div>
-            
-          </div>
-        </div>
+        <SupplierPricesModal
+          supplier={selectedSupplierForPrices}
+          products={products}
+          onClose={() => setShowSupplierPricesModal(false)}
+          onSaved={savedPrices => setSuppliers(prev => prev.map(supplier => supplier.id !== selectedSupplierForPrices.id
+            ? supplier : { ...supplier, supplierPrices: savedPrices }))}
+        />
       )}
 
     </div>
