@@ -381,8 +381,9 @@ test('checkout uses quotation-only proposed prices, rechecks current profit and 
     };
     const exports = {};
     vm.runInNewContext(compile(`const ${declaration}; exports.checkout = handleCheckout;`), {
-      exports, Error, cart, submitting: false, currentUser: { role: mode === 'cashier' ? 'CASHIER' : 'ADMIN' },
-      selectedCustomer: { id: 'customer', name: 'Customer' }, siteReceiptNumber: '', receiverName: '', invoiceType: 'فاتورة ضريبية', linkedQuotationId: null,
+      exports, Error, cart, products: [{ id: 'a', stockQty: 100 }, { id: 'b', stockQty: 100 }],
+      submitting: false, currentUser: { role: mode === 'cashier' ? 'CASHIER' : 'ADMIN' },
+      selectedCustomer: { id: 'customer', name: 'Customer' }, siteReceiptNumber: '', receiverName: '', purchaseOrderNumber: ' PO-123 ', invoiceType: 'فاتورة ضريبية', linkedQuotationId: null,
       setSubmitting() {}, setInvoice() {}, setQrCodeUrl() {}, setShowModal() {}, setShowQuotationPricing() {}, clearCart: () => { cleared = true; },
       fetchProducts() {}, fetchInvoices() {}, fetchCustomers() {}, alert: message => errors.push(message),
       confirmQuotationProfit: async (_, items) => { checks.push(items); return mode !== 'cancel'; },
@@ -397,6 +398,7 @@ test('checkout uses quotation-only proposed prices, rechecks current profit and 
       assert.equal(cleared, false);
     } else {
       assert.equal(calls.length, 1);
+      assert.equal(calls[0].purchaseOrderNumber, 'PO-123');
       assert.deepEqual(plain(calls[0].items.map(line => line.unitPrice)), mode === 'invoice' ? [120, 250] : [130, 260]);
       assert.equal(cleared, mode !== 'fail');
       if (mode === 'fail') assert.ok(errors.some(message => message.includes('Unable to save')));

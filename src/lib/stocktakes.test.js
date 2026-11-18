@@ -716,7 +716,8 @@ test('stocktake UI shows values, placeholders, role-appropriate controls and res
   for (const status of ['DRAFT', 'APPROVED']) {
     const html = render('STOREKEEPER', { ...draft, status }, { documents: [], products: [detailedProduct], passwordConfigured: true });
     for (const value of ['PVC', 'Heavy', '100m', '5kg', 'Test supplier', 'BAR-123']) assert.ok(html.includes(value), value);
-    for (const value of ['سعر الكيلو:', 'التكلفة الحالية:', 'سعر البيع:', 'نسبة الزيادة:', 'الضريبة:', 'حد المخزون الأدنى:', 'حد المخزون الأعلى:']) {
+    for (const value of ['الباركود:', 'النوع:', 'الدرجة:', 'المورد:', 'الطول:', 'الوزن:',
+      'سعر الكيلو:', 'التكلفة الحالية:', 'سعر البيع:', 'نسبة الزيادة:', 'الضريبة:', 'حد المخزون الأدنى:', 'حد المخزون الأعلى:']) {
       assert.ok(!html.includes(value), value);
     }
     assert.ok(html.includes('120.00'));

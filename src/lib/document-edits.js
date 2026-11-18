@@ -1,3 +1,6 @@
+/* eslint @typescript-eslint/no-require-imports: "off" */
+const { invoiceQrText } = require('./invoice-qr');
+
 function editError(message, statusCode = 400) {
   return Object.assign(new Error(message), { statusCode });
 }
@@ -217,19 +220,6 @@ async function editQuotation(database, input) {
   }, { timeout: 20000, maxWait: 20000 });
 }
 
-const ZATCA_SELLER_NAME = 'شركة الإنطلاق لتصنيع وتوريد الخراطيم والمواسير والأسلاك';
-const ZATCA_TRN = '310122345600003';
-
-function zatcaQrCode(timestamp, totalAmount, vatAmount) {
-  const tlv = (tag, value) => {
-    const data = Buffer.from(value, 'utf-8');
-    return Buffer.concat([Buffer.from([tag]), Buffer.from([data.length]), data]);
-  };
-  return Buffer.concat([
-    tlv(1, ZATCA_SELLER_NAME), tlv(2, ZATCA_TRN), tlv(3, timestamp), tlv(4, totalAmount), tlv(5, vatAmount)
-  ]).toString('base64');
-}
-
 async function editInvoiceItems(database, input) {
   if (!input || typeof input !== 'object') throw editError('بيانات الفاتورة غير صالحة.');
   const id = requiredId(input.id);
@@ -324,7 +314,12 @@ async function editInvoiceItems(database, input) {
 
     for (const line of existing.items) await tx.orderItem.delete({ where: { id: line.id } });
     for (const item of items) await tx.orderItem.create({ data: item });
-    const qrCode = zatcaQrCode(new Date(existing.createdAt).toISOString(), netAmount.toFixed(2), taxAmount.toFixed(2));
+    const qrCode = invoiceQrText({
+      invoiceNumber: existing.invoiceNumber,
+      issuedAt: new Date(existing.createdAt).toISOString(),
+      totalAmount: netAmount.toFixed(2),
+      taxAmount: taxAmount.toFixed(2)
+    });
     return tx.order.update({
       where: { id }, data: { totalAmount, taxAmount, netAmount, qrCode },
       include: { customer: true, items: { include: { product: true } }, orderReturns: { include: { bank: true, items: { include: { product: true } } } } }
@@ -368,6 +363,8 @@ async function editInvoiceDetails(database, input) {
   };
   const receiverName = text(input.receiverName, 'اسم المستلم');
   const siteReceiptNumber = text(input.siteReceiptNumber, 'رقم إذن الاستلام');
+  const purchaseOrderNumber = input.purchaseOrderNumber === undefined
+    ? undefined : text(input.purchaseOrderNumber, 'رقم أمر التوريد');
   if (input.customerId !== null && (typeof input.customerId !== 'string' || !input.customerId.trim() || input.customerId.length > 50)) {
     throw editError('اختر عميلًا مسجلًا أو عميلًا نقديًا.');
   }
@@ -385,12 +382,12 @@ async function editInvoiceDetails(database, input) {
     const customerName = customer ? customer.name : text(input.customerName, 'اسم العميل النقدي', true);
     if (customerId !== (existing.customerId || null)) {
       const returns = await tx.orderReturn.findMany({ where: { orderId: id } });
-      if (returns.length) throw editError('لا يمكن نقل الفاتورة إلى عميل آخر لوجود مرتجعات عليها. يمكنك تعديل المستلم وإذن الاستلام فقط.', 409);
+      if (returns.length) throw editError('لا يمكن نقل الفاتورة إلى عميل آخر لوجود مرتجعات عليها. يمكنك تعديل المستلم وأرقام الأذون وأمر التوريد فقط.', 409);
       if (existing.customerId) {
         const payments = await tx.payment.findMany({ where: { customerId: existing.customerId } });
-        if (payments.length) throw editError('لا يمكن نقل الفاتورة لأن للعميل الأصلي دفعات مسجلة، حتى لو كانت تخص فواتير أخرى. يمكنك تعديل المستلم وإذن الاستلام فقط.', 409);
+        if (payments.length) throw editError('لا يمكن نقل الفاتورة لأن للعميل الأصلي دفعات مسجلة، حتى لو كانت تخص فواتير أخرى. يمكنك تعديل المستلم وأرقام الأذون وأمر التوريد فقط.', 409);
         const discounts = await tx.accountDiscount.findMany({ where: { customerId: existing.customerId } });
-        if (discounts.length) throw editError('لا يمكن نقل الفاتورة لأن للعميل الأصلي سندات خصم مسجلة. يمكنك تعديل المستلم وإذن الاستلام فقط.', 409);
+        if (discounts.length) throw editError('لا يمكن نقل الفاتورة لأن للعميل الأصلي سندات خصم مسجلة. يمكنك تعديل المستلم وأرقام الأذون وأمر التوريد فقط.', 409);
       }
       const quantities = new Map();
       for (const item of existing.items) {
@@ -412,8 +409,10 @@ async function editInvoiceDetails(database, input) {
         }
       }
     }
+    const data = { customerId, customerName, receiverName, siteReceiptNumber };
+    if (purchaseOrderNumber !== undefined) data.purchaseOrderNumber = purchaseOrderNumber;
     return tx.order.update({
-      where: { id }, data: { customerId, customerName, receiverName, siteReceiptNumber },
+      where: { id }, data,
       include: { customer: true, items: { include: { product: true } }, orderReturns: { include: { bank: true, items: { include: { product: true } } } } }
     });
   }, { timeout: 20000, maxWait: 20000 });

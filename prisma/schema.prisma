@@ -143,6 +143,7 @@ model Order {
   qrCode            String?
   siteReceiptNumber String?
   receiverName      String?
+  purchaseOrderNumber String?
   invoiceType       String      @default("فاتورة ضريبية")
   status            String      @default("COMPLETED")
   userId            String

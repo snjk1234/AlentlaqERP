@@ -1,4 +1,4 @@
-# خادم الانطلاق — تشغيل يدوي — الإصدار 2.3.0
+# خادم الانطلاق — تشغيل يدوي — الإصدار 2.4.0
 
 ## ما هذه الحزمة؟
 
@@ -35,7 +35,7 @@
 2. ضع مجلد الإصدار مثلًا في:
 
    ```text
-   C:\AlEntlaqPOS\AlEntlaqPOS-Server-2.3.0-win-x64
+   C:\AlEntlaqPOS\AlEntlaqPOS-Server-2.4.0-win-x64
    ```
 
 3. أنشئ بجواره مجلدًا اسمه `ServerConfig`. يجب أن يصبح ترتيب المجلدات:
@@ -44,7 +44,7 @@
    C:\AlEntlaqPOS\
      ServerConfig\
        server.env
-     AlEntlaqPOS-Server-2.3.0-win-x64\
+     AlEntlaqPOS-Server-2.4.0-win-x64\
        start.cmd
        start-host.js
        server.js

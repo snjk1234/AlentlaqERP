@@ -235,6 +235,7 @@ export type OrderPayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultA
     qrCode: string | null
     siteReceiptNumber: string | null
     receiverName: string | null
+    purchaseOrderNumber: string | null
     invoiceType: string
     status: string
     userId: string
@@ -11720,6 +11721,7 @@ export namespace Prisma {
     qrCode: string | null
     siteReceiptNumber: string | null
     receiverName: string | null
+    purchaseOrderNumber: string | null
     invoiceType: string | null
     status: string | null
     userId: string | null
@@ -11739,6 +11741,7 @@ export namespace Prisma {
     qrCode: string | null
     siteReceiptNumber: string | null
     receiverName: string | null
+    purchaseOrderNumber: string | null
     invoiceType: string | null
     status: string | null
     userId: string | null
@@ -11758,6 +11761,7 @@ export namespace Prisma {
     qrCode: number
     siteReceiptNumber: number
     receiverName: number
+    purchaseOrderNumber: number
     invoiceType: number
     status: number
     userId: number
@@ -11791,6 +11795,7 @@ export namespace Prisma {
     qrCode?: true
     siteReceiptNumber?: true
     receiverName?: true
+    purchaseOrderNumber?: true
     invoiceType?: true
     status?: true
     userId?: true
@@ -11810,6 +11815,7 @@ export namespace Prisma {
     qrCode?: true
     siteReceiptNumber?: true
     receiverName?: true
+    purchaseOrderNumber?: true
     invoiceType?: true
     status?: true
     userId?: true
@@ -11829,6 +11835,7 @@ export namespace Prisma {
     qrCode?: true
     siteReceiptNumber?: true
     receiverName?: true
+    purchaseOrderNumber?: true
     invoiceType?: true
     status?: true
     userId?: true
@@ -11936,6 +11943,7 @@ export namespace Prisma {
     qrCode: string | null
     siteReceiptNumber: string | null
     receiverName: string | null
+    purchaseOrderNumber: string | null
     invoiceType: string
     status: string
     userId: string
@@ -11974,6 +11982,7 @@ export namespace Prisma {
     qrCode?: boolean
     siteReceiptNumber?: boolean
     receiverName?: boolean
+    purchaseOrderNumber?: boolean
     invoiceType?: boolean
     status?: boolean
     userId?: boolean
@@ -11998,6 +12007,7 @@ export namespace Prisma {
     qrCode?: boolean
     siteReceiptNumber?: boolean
     receiverName?: boolean
+    purchaseOrderNumber?: boolean
     invoiceType?: boolean
     status?: boolean
     userId?: boolean
@@ -12418,6 +12428,7 @@ export namespace Prisma {
     readonly qrCode: FieldRef<"Order", 'String'>
     readonly siteReceiptNumber: FieldRef<"Order", 'String'>
     readonly receiverName: FieldRef<"Order", 'String'>
+    readonly purchaseOrderNumber: FieldRef<"Order", 'String'>
     readonly invoiceType: FieldRef<"Order", 'String'>
     readonly status: FieldRef<"Order", 'String'>
     readonly userId: FieldRef<"Order", 'String'>
@@ -29020,6 +29031,7 @@ export namespace Prisma {
     qrCode: 'qrCode',
     siteReceiptNumber: 'siteReceiptNumber',
     receiverName: 'receiverName',
+    purchaseOrderNumber: 'purchaseOrderNumber',
     invoiceType: 'invoiceType',
     status: 'status',
     userId: 'userId',
@@ -30021,6 +30033,7 @@ export namespace Prisma {
     qrCode?: StringNullableFilter<"Order"> | string | null
     siteReceiptNumber?: StringNullableFilter<"Order"> | string | null
     receiverName?: StringNullableFilter<"Order"> | string | null
+    purchaseOrderNumber?: StringNullableFilter<"Order"> | string | null
     invoiceType?: StringFilter<"Order"> | string
     status?: StringFilter<"Order"> | string
     userId?: StringFilter<"Order"> | string
@@ -30044,6 +30057,7 @@ export namespace Prisma {
     qrCode?: SortOrderInput | SortOrder
     siteReceiptNumber?: SortOrderInput | SortOrder
     receiverName?: SortOrderInput | SortOrder
+    purchaseOrderNumber?: SortOrderInput | SortOrder
     invoiceType?: SortOrder
     status?: SortOrder
     userId?: SortOrder
@@ -30070,6 +30084,7 @@ export namespace Prisma {
     qrCode?: StringNullableFilter<"Order"> | string | null
     siteReceiptNumber?: StringNullableFilter<"Order"> | string | null
     receiverName?: StringNullableFilter<"Order"> | string | null
+    purchaseOrderNumber?: StringNullableFilter<"Order"> | string | null
     invoiceType?: StringFilter<"Order"> | string
     status?: StringFilter<"Order"> | string
     userId?: StringFilter<"Order"> | string
@@ -30093,6 +30108,7 @@ export namespace Prisma {
     qrCode?: SortOrderInput | SortOrder
     siteReceiptNumber?: SortOrderInput | SortOrder
     receiverName?: SortOrderInput | SortOrder
+    purchaseOrderNumber?: SortOrderInput | SortOrder
     invoiceType?: SortOrder
     status?: SortOrder
     userId?: SortOrder
@@ -30120,6 +30136,7 @@ export namespace Prisma {
     qrCode?: StringNullableWithAggregatesFilter<"Order"> | string | null
     siteReceiptNumber?: StringNullableWithAggregatesFilter<"Order"> | string | null
     receiverName?: StringNullableWithAggregatesFilter<"Order"> | string | null
+    purchaseOrderNumber?: StringNullableWithAggregatesFilter<"Order"> | string | null
     invoiceType?: StringWithAggregatesFilter<"Order"> | string
     status?: StringWithAggregatesFilter<"Order"> | string
     userId?: StringWithAggregatesFilter<"Order"> | string
@@ -32131,6 +32148,7 @@ export namespace Prisma {
     qrCode?: string | null
     siteReceiptNumber?: string | null
     receiverName?: string | null
+    purchaseOrderNumber?: string | null
     invoiceType?: string
     status?: string
     createdAt?: Date | string
@@ -32153,6 +32171,7 @@ export namespace Prisma {
     qrCode?: string | null
     siteReceiptNumber?: string | null
     receiverName?: string | null
+    purchaseOrderNumber?: string | null
     invoiceType?: string
     status?: string
     userId: string
@@ -32173,6 +32192,7 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceType?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -32195,6 +32215,7 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceType?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -32215,6 +32236,7 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceType?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -32233,6 +32255,7 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceType?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -34195,6 +34218,7 @@ export namespace Prisma {
     qrCode?: SortOrder
     siteReceiptNumber?: SortOrder
     receiverName?: SortOrder
+    purchaseOrderNumber?: SortOrder
     invoiceType?: SortOrder
     status?: SortOrder
     userId?: SortOrder
@@ -34220,6 +34244,7 @@ export namespace Prisma {
     qrCode?: SortOrder
     siteReceiptNumber?: SortOrder
     receiverName?: SortOrder
+    purchaseOrderNumber?: SortOrder
     invoiceType?: SortOrder
     status?: SortOrder
     userId?: SortOrder
@@ -34239,6 +34264,7 @@ export namespace Prisma {
     qrCode?: SortOrder
     siteReceiptNumber?: SortOrder
     receiverName?: SortOrder
+    purchaseOrderNumber?: SortOrder
     invoiceType?: SortOrder
     status?: SortOrder
     userId?: SortOrder
@@ -37047,6 +37073,7 @@ export namespace Prisma {
     qrCode?: string | null
     siteReceiptNumber?: string | null
     receiverName?: string | null
+    purchaseOrderNumber?: string | null
     invoiceType?: string
     status?: string
     createdAt?: Date | string
@@ -37068,6 +37095,7 @@ export namespace Prisma {
     qrCode?: string | null
     siteReceiptNumber?: string | null
     receiverName?: string | null
+    purchaseOrderNumber?: string | null
     invoiceType?: string
     status?: string
     createdAt?: Date | string
@@ -37151,6 +37179,7 @@ export namespace Prisma {
     qrCode?: StringNullableFilter<"Order"> | string | null
     siteReceiptNumber?: StringNullableFilter<"Order"> | string | null
     receiverName?: StringNullableFilter<"Order"> | string | null
+    purchaseOrderNumber?: StringNullableFilter<"Order"> | string | null
     invoiceType?: StringFilter<"Order"> | string
     status?: StringFilter<"Order"> | string
     userId?: StringFilter<"Order"> | string
@@ -38170,6 +38199,7 @@ export namespace Prisma {
     qrCode?: string | null
     siteReceiptNumber?: string | null
     receiverName?: string | null
+    purchaseOrderNumber?: string | null
     invoiceType?: string
     status?: string
     createdAt?: Date | string
@@ -38190,6 +38220,7 @@ export namespace Prisma {
     qrCode?: string | null
     siteReceiptNumber?: string | null
     receiverName?: string | null
+    purchaseOrderNumber?: string | null
     invoiceType?: string
     status?: string
     userId: string
@@ -38732,6 +38763,7 @@ export namespace Prisma {
     qrCode?: string | null
     siteReceiptNumber?: string | null
     receiverName?: string | null
+    purchaseOrderNumber?: string | null
     invoiceType?: string
     status?: string
     createdAt?: Date | string
@@ -38753,6 +38785,7 @@ export namespace Prisma {
     qrCode?: string | null
     siteReceiptNumber?: string | null
     receiverName?: string | null
+    purchaseOrderNumber?: string | null
     invoiceType?: string
     status?: string
     userId: string
@@ -38880,6 +38913,7 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceType?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -38901,6 +38935,7 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceType?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -39009,6 +39044,7 @@ export namespace Prisma {
     qrCode?: string | null
     siteReceiptNumber?: string | null
     receiverName?: string | null
+    purchaseOrderNumber?: string | null
     invoiceType?: string
     status?: string
     createdAt?: Date | string
@@ -39030,6 +39066,7 @@ export namespace Prisma {
     qrCode?: string | null
     siteReceiptNumber?: string | null
     receiverName?: string | null
+    purchaseOrderNumber?: string | null
     invoiceType?: string
     status?: string
     userId: string
@@ -39191,6 +39228,7 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceType?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39212,6 +39250,7 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceType?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -41616,6 +41655,7 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceType?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41637,6 +41677,7 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceType?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41657,6 +41698,7 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceType?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42039,6 +42081,7 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceType?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42059,6 +42102,7 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceType?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -42079,6 +42123,7 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceType?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string

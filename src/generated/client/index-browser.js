@@ -220,6 +220,7 @@ exports.Prisma.OrderScalarFieldEnum = {
   qrCode: 'qrCode',
   siteReceiptNumber: 'siteReceiptNumber',
   receiverName: 'receiverName',
+  purchaseOrderNumber: 'purchaseOrderNumber',
   invoiceType: 'invoiceType',
   status: 'status',
   userId: 'userId',

@@ -17,7 +17,7 @@ const render = (component, props) => renderToStaticMarkup(React.createElement(co
 const invoice = {
   createdAt: '2026-10-01T14:35:00', invoiceNumber: 'INV-123', billNumber: 'PUR-123',
   invoiceType: 'فاتورة ضريبية', totalAmount: 100, taxAmount: 14, netAmount: 114,
-  siteReceiptNumber: 'SITE-123', receiverName: 'Receiver',
+  siteReceiptNumber: 'SITE-123', receiverName: 'Receiver', purchaseOrderNumber: 'PO-123',
   customer: { name: 'Customer', location: 'Address', phone: '012345', trn: 'CUSTOMER-TAX' },
   supplier: { name: 'Supplier', address: 'Supplier address', cr: 'SUPPLIER-CR', trn: 'SUPPLIER-TAX' },
   items: [{ id: 'item', product: { name: 'Product', code: 'P-123', size: '20', color: 'Blue' },
@@ -66,8 +66,8 @@ test('sales invoices and quotations preserve items, tax, totals, parties, QR and
     actions: React.createElement('button', { type: 'button' }, 'Convert')
   });
   for (const value of ['printable-invoice', 'INV-123', 'P-123', 'Product', 'Customer',
-    'SITE-123', 'Receiver', '100.00', '14.00', '114.00', 'data:image/png;base64,QR', 'Convert',
-    'https://www.alentlaq.online/']) {
+    'SITE-123', 'Receiver', 'أمر التوريد:', 'PO-123', '100.00', '14.00', '114.00', 'data:image/png;base64,QR', 'Convert',
+    'https://www.alentlaq.online/', 'https://alentlaq.com/']) {
     assert.ok(html.includes(value), value);
   }
   assert.equal((html.match(/<table/g) || []).length, 1);
@@ -78,6 +78,8 @@ test('sales invoices and quotations preserve items, tax, totals, parties, QR and
   })));
   const quotation = render(InvoicePrint, { invoice: { ...invoice, isQuotation: true } });
   assert.ok(quotation.includes('عرض سعر') && quotation.includes('لا يحتاج رمز QR'));
+  const purchase = render(InvoicePrint, { invoice, purchase: true });
+  assert.ok(!purchase.includes('أمر التوريد:'));
   const converted = render(InvoicePrint, { invoice: { ...invoice, isQuotation: true, status: 'CONVERTED' } });
   assert.ok(converted.includes('تم التحويل'));
 });

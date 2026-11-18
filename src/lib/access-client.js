@@ -69,7 +69,7 @@ const models = {
       id, invoiceNumber: text({ nullable: false }), isQuotation: boolean({ nullable: false }),
       customerName: text(), customerId: text({ size: 50 }), totalAmount: number({ nullable: false }),
       taxAmount: number({ nullable: false }), netAmount: number({ nullable: false }),
-      qrCode: text({ memo: true }), siteReceiptNumber: text(), receiverName: text(),
+      qrCode: text({ memo: true }), siteReceiptNumber: text(), receiverName: text(), purchaseOrderNumber: text(),
       invoiceType: text({ nullable: false }), status: text({ nullable: false }),
       userId: text({ size: 50, nullable: false }), createdAt: timestamp, updatedAt: timestamp
     },
@@ -600,6 +600,10 @@ async function ensureSchema() {
     const purchaseOrderColumns = await connection.columns(null, null, 'PurchaseOrder', null);
     if (!purchaseOrderColumns.some(column => column.COLUMN_NAME.toLowerCase() === 'warehousereceiptnumber')) {
       await connection.query('ALTER TABLE [PurchaseOrder] ADD COLUMN [warehouseReceiptNumber] VARCHAR(255)');
+    }
+    const orderColumns = await connection.columns(null, null, 'Order', null);
+    if (!orderColumns.some(column => column.COLUMN_NAME.toLowerCase() === 'purchaseordernumber')) {
+      await connection.query('ALTER TABLE [Order] ADD COLUMN [purchaseOrderNumber] VARCHAR(255)');
     }
     await connection.beginTransaction();
     try {

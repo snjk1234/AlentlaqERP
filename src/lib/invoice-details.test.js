@@ -16,13 +16,14 @@ const compile = source => ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX }
 }).outputText;
 const version = '2026-10-25T10:00:00.000Z';
-const base = { id: 'invoice', userId: 'admin', updatedAt: version, customerId: 'c1', receiverName: ' New receiver ', siteReceiptNumber: ' NEW-SITE ' };
+const base = { id: 'invoice', userId: 'admin', updatedAt: version, customerId: 'c1', receiverName: ' New receiver ',
+  siteReceiptNumber: ' NEW-SITE ', purchaseOrderNumber: ' NEW-PO ' };
 function store() {
   const state = {
     user: [{ id: 'admin', role: 'ADMIN' }, { id: 'cashier', role: 'CASHIER' }, { id: 'keeper', role: 'STOREKEEPER' }],
     customer: [{ id: 'c1', name: 'Original', openingBalance: 10 }, { id: 'c2', name: 'Target', openingBalance: 20 }],
     order: [{ id: 'invoice', invoiceNumber: 'INV-1', isQuotation: false, status: 'COMPLETED', customerId: 'c1', customerName: 'Old snapshot',
-      receiverName: 'Old receiver', siteReceiptNumber: 'OLD-SITE', totalAmount: 500, taxAmount: 70, netAmount: 570,
+      receiverName: 'Old receiver', siteReceiptNumber: 'OLD-SITE', purchaseOrderNumber: 'OLD-PO', totalAmount: 500, taxAmount: 70, netAmount: 570,
       invoiceType: 'فاتورة ضريبية', qrCode: 'original-qr', createdAt: version, updatedAt: version, userId: 'cashier' }],
     orderItem: [
       { id: 'i1', orderId: 'invoice', productId: 'p1', quantity: 2, unitPrice: 100, taxAmount: 28, total: 228, position: 0 },
@@ -92,6 +93,7 @@ test('metadata edits retain monetary fields, items, stock, QR, invoice identity 
   const saved = await editInvoiceDetails(client, { ...base, items: [], netAmount: 1, invoiceNumber: 'FORGED', createdAt: '2000-01-01' });
   assert.equal(saved.receiverName, 'New receiver');
   assert.equal(saved.siteReceiptNumber, 'NEW-SITE');
+  assert.equal(saved.purchaseOrderNumber, 'NEW-PO');
   assert.equal(saved.customerName, 'Original');
   for (const field of ['id', 'invoiceNumber', 'totalAmount', 'taxAmount', 'netAmount', 'qrCode', 'invoiceType', 'createdAt', 'status', 'userId']) {
     assert.equal(saved[field], before.order[0][field], field);
@@ -99,7 +101,16 @@ test('metadata edits retain monetary fields, items, stock, QR, invoice identity 
   for (const field of ['product', 'orderItem', 'customerCeilingQuota', 'customer', 'payment', 'orderReturn', 'bank']) assert.deepEqual(state[field], before[field]);
   assert.equal(calls.length, 1);
   assert.equal(calls[0].model, 'order');
+  assert.equal(calls[0].data.purchaseOrderNumber, 'NEW-PO');
   assert.equal(saved.orderReturns.length, 1);
+});
+
+test('older invoice detail clients preserve an existing purchase order number when they omit the field', async () => {
+  const { client } = store();
+  const legacyInput = { ...base };
+  delete legacyInput.purchaseOrderNumber;
+  const saved = await editInvoiceDetails(client, legacyInput);
+  assert.equal(saved.purchaseOrderNumber, 'OLD-PO');
 });
 
 test('reassigns invoice and account effect and transfers existing quota deliveries only without moving payments or stock', async () => {
@@ -163,10 +174,11 @@ test('supports named cash invoices, cash-to-registered and registered-to-cash mo
   assert.equal(saved.customerName, 'Named cash');
   assert.equal(saved.customer, null);
   assert.deepEqual(state.customerCeilingQuota.map(q => q.deliveredQuantity), [10, 20, 4, 7]);
-  const renamed = await editInvoiceDetails(client, { ...base, updatedAt: saved.updatedAt, customerId: null, customerName: 'Updated cash', receiverName: '', siteReceiptNumber: '' });
+  const renamed = await editInvoiceDetails(client, { ...base, updatedAt: saved.updatedAt, customerId: null, customerName: 'Updated cash', receiverName: '', siteReceiptNumber: '', purchaseOrderNumber: '' });
   assert.equal(renamed.customerName, 'Updated cash');
   assert.equal(renamed.receiverName, null);
   assert.equal(renamed.siteReceiptNumber, null);
+  assert.equal(renamed.purchaseOrderNumber, null);
   const linked = await editInvoiceDetails(client, { ...base, updatedAt: renamed.updatedAt, customerId: 'c2' });
   assert.equal(linked.customerId, 'c2');
   assert.deepEqual(state.customerCeilingQuota.map(q => q.deliveredQuantity), [10, 20, 6, 10]);
@@ -198,7 +210,8 @@ test('only current administrators edit completed sales invoices and stale or inv
   }
   for (const extra of [{ updatedAt: 'bad' }, { updatedAt: '2020-01-01' }, { id: 'missing' },
     { customerId: 'missing' }, { customerId: undefined }, { customerId: '' }, { receiverName: 4 },
-    { receiverName: 'x'.repeat(256) }, { siteReceiptNumber: '\0' }, { customerId: null, customerName: ' ' }]) {
+    { receiverName: 'x'.repeat(256) }, { siteReceiptNumber: '\0' }, { purchaseOrderNumber: 3 },
+    { purchaseOrderNumber: 'x'.repeat(256) }, { customerId: null, customerName: ' ' }]) {
     const { client, calls } = store();
     await assert.rejects(editInvoiceDetails(client, { ...base, ...extra }));
     assert.equal(calls.length, 0);
@@ -327,18 +340,21 @@ test('dialog sends only allowed metadata over web/desktop, preserves input on fa
     });
     let tree = ui.render();
     elements(tree).find(node => node.props?.['aria-label'] === 'اسم المستلم').props.onChange({ target: { value: 'Edited receiver' } });
+    elements(tree).find(node => node.props?.['aria-label'] === 'رقم أمر التوريد').props.onChange({ target: { value: 'Edited PO' } });
     elements(tree).find(node => node.props?.['aria-label'] === 'عميل الفاتورة').props.onChange({ target: { value: 'c2' } });
     tree = ui.render();
     const submit = elements(tree).find(node => node.type === 'form').props.onSubmit;
     await Promise.all([submit({ preventDefault() {} }), submit({ preventDefault() {} })]);
     assert.equal(calls.length, 1);
-    assert.deepEqual(Object.keys(calls[0]).sort(), ['customerId', 'customerName', 'id', 'receiverName', 'siteReceiptNumber', 'updatedAt']);
+    assert.deepEqual(Object.keys(calls[0]).sort(), ['customerId', 'customerName', 'id', 'purchaseOrderNumber', 'receiverName', 'siteReceiptNumber', 'updatedAt']);
     assert.equal(calls[0].receiverName, 'Edited receiver');
+    assert.equal(calls[0].purchaseOrderNumber, 'Edited PO');
     assert.equal(calls[0].customerId, 'c2');
     if (fail) {
       assert.equal(ui.saved(), undefined);
       tree = ui.render();
       assert.equal(elements(tree).find(node => node.props?.['aria-label'] === 'اسم المستلم').props.value, 'Edited receiver');
+      assert.equal(elements(tree).find(node => node.props?.['aria-label'] === 'رقم أمر التوريد').props.value, 'Edited PO');
       assert.ok(renderToStaticMarkup(tree).includes('Transfer blocked'));
     } else assert.equal(ui.saved().invoiceNumber, 'INV-1');
   }
@@ -405,10 +421,11 @@ test('Access persists invoice reassignment, quota movement and metadata edits wi
       const q1 = await db.customerCeilingQuota.create({ data: { customerId: old.id, productId: product.id, buildingsCount: 1, floorsCount: 6, quantityPerFloor: 10, totalQuantity: 60, deliveredQuantity: 5 } });
       const q2 = await db.customerCeilingQuota.create({ data: { customerId: target.id, productId: product.id, buildingsCount: 1, floorsCount: 6, quantityPerFloor: 10, totalQuantity: 60, deliveredQuantity: 10 } });
       const invoice = await db.order.create({ data: { invoiceNumber: 'INV-DETAIL-TEST', customerId: old.id, customerName: old.name, userId: user.id,
-        totalAmount: 200, taxAmount: 28, netAmount: 228, qrCode: 'original-qr', receiverName: 'قديم', siteReceiptNumber: 'OLD',
+        totalAmount: 200, taxAmount: 28, netAmount: 228, qrCode: 'original-qr', receiverName: 'قديم', siteReceiptNumber: 'OLD', purchaseOrderNumber: 'OLD-PO',
         items: { create: [{ productId: product.id, quantity: 2, unitPrice: 100, taxAmount: 28, total: 228 }] }
       }, include: { items: true } });
-      const input = { ...base, id: invoice.id, userId: user.id, updatedAt: invoice.updatedAt, customerId: target.id, receiverName: 'مستلم جديد', siteReceiptNumber: 'إذن-123' };
+      const input = { ...base, id: invoice.id, userId: user.id, updatedAt: invoice.updatedAt, customerId: target.id,
+        receiverName: 'مستلم جديد', siteReceiptNumber: 'إذن-123', purchaseOrderNumber: 'أمر-123' };
       const failing = { ...db, $transaction: callback => db.$transaction(tx => callback({
         ...tx, order: { ...tx.order, update: async () => { throw new Error('Injected final invoice failure'); } }
       })) };
@@ -424,6 +441,7 @@ test('Access persists invoice reassignment, quota movement and metadata edits wi
       assert.equal(reloaded.customerName, target.name);
       assert.equal(reloaded.receiverName, input.receiverName);
       assert.equal(reloaded.siteReceiptNumber, input.siteReceiptNumber);
+      assert.equal(reloaded.purchaseOrderNumber, input.purchaseOrderNumber);
       assert.equal(reloaded.createdAt.toISOString(), invoice.createdAt.toISOString());
       assert.equal(reloaded.netAmount, invoice.netAmount);
       assert.equal(reloaded.qrCode, invoice.qrCode);
@@ -440,9 +458,10 @@ test('Access persists invoice reassignment, quota movement and metadata edits wi
       const bank = await db.bank.create({ data: { name: 'بنك الاختبار', balance: 100 } });
       await db.payment.create({ data: { customerId: target.id, bankId: bank.id, amount: 100, date: new Date() } });
       await assert.rejects(editInvoiceDetails(db, { ...input, updatedAt: saved.updatedAt, customerId: old.id }), { statusCode: 409 });
-      const metadata = await editInvoiceDetails(db, { ...input, updatedAt: saved.updatedAt, receiverName: '', siteReceiptNumber: '' });
+      const metadata = await editInvoiceDetails(db, { ...input, updatedAt: saved.updatedAt, receiverName: '', siteReceiptNumber: '', purchaseOrderNumber: '' });
       assert.equal(metadata.receiverName, null);
       assert.equal(metadata.siteReceiptNumber, null);
+      assert.equal(metadata.purchaseOrderNumber, null);
       assert.equal((await db.bank.findUnique({ where: { id: bank.id } })).balance, 100);
     } finally {
       await db.$disconnect();

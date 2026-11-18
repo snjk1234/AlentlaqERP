@@ -175,19 +175,33 @@ test('price modal saves via desktop or browser, keeps edits on failure and rejec
   }
 });
 
-test('customer price product details show only requested fields on one horizontally scrollable line', () => {
+test('customer price product details show values without field labels on one horizontally scrollable line', () => {
   const page = read('src', 'app', 'page.tsx');
-  const start = page.indexOf('<div className="mt-2 max-w-full overflow-x-auto custom-scrollbar">');
-  const end = page.indexOf('</dl>', start);
-  assert.ok(start >= 0 && end > start);
-  const details = page.slice(start, end);
-  const labels = ['اسم الصنف:', "['الكود'", "['النوع'", "['المقاس'", "['الدرجة'", "['اللون'",
-    "['المورد'", "['الطول'", "['الوزن'", "['سعر الكيلو'"];
+  const tree = ts.createSourceFile('page.tsx', page, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let details;
+  let productFields;
+  const visit = node => {
+    if (ts.isVariableDeclaration(node) && node.name.getText(tree) === 'productDetails') {
+      productFields = node.initializer.getText(tree);
+    }
+    if (ts.isJsxElement(node) && node.openingElement.tagName.getText(tree) === 'div'
+      && node.getText(tree).includes('productDetails.filter')) {
+      details = node.getText(tree);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(tree);
+  assert.ok(details && productFields);
+  const expectedFields = ["['code'", "['type'", "['size'", "['gauge'", "['color'",
+    "['supplier'", "['length'", "['weight'", "['pricePerKilo'"];
   let previous = -1;
-  for (const label of labels) {
-    const index = details.indexOf(label);
-    assert.ok(index > previous, `${label} appears in the requested order on the product details row`);
+  for (const field of expectedFields) {
+    const index = productFields.indexOf(field);
+    assert.ok(index > previous, `${field} appears in the requested order on the product details row`);
     previous = index;
+  }
+  for (const label of ['اسم الصنف:', 'الكود:', 'النوع:', 'المقاس:', 'الدرجة:', 'اللون:', 'المورد:', 'الطول:', 'الوزن:', 'سعر الكيلو:']) {
+    assert.ok(!details.includes(label), `${label} is not displayed on the product details row`);
   }
   for (const omitted of ['الباركود', 'الضريبة', 'المخزون', 'الحد الأدنى', 'الحد الأقصى', 'التكلفة', 'معامل التسعير']) {
     assert.ok(!details.includes(omitted), `${omitted} is not part of the product details row`);
@@ -199,12 +213,12 @@ test('customer price product details show only requested fields on one horizonta
   assert.ok(page.includes('min-w-[650px] table-fixed'));
 });
 
-test('price list renders only requested product properties and preserves zero-valued price per kilo', () => {
+test('price list renders values without field labels and preserves zero-valued price per kilo', () => {
   const source = read('src', 'app', 'page.tsx');
   const tree = ts.createSourceFile('page.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   let details;
   const visit = node => {
-    if (ts.isJsxElement(node) && node.openingElement.tagName.getText(tree) === 'dl'
+    if (ts.isJsxElement(node) && node.openingElement.tagName.getText(tree) === 'div'
       && node.getText(tree).includes('flex w-max items-center')) {
       details = node.getText(tree);
     }
@@ -213,22 +227,29 @@ test('price list renders only requested product properties and preserves zero-va
   visit(tree);
   assert.ok(details);
   const exports = {};
+  const product = {
+    name: 'Test product', imageUrl: null, code: 'P-1', type: 'PIPE', size: '20mm',
+    gauge: 'Heavy', color: 'Blue', supplierId: 'supplier', length: '10m',
+    weight: '5kg', pricePerKilo: 0
+  };
+  const suppliers = [{ id: 'supplier', name: 'Variant supplier' }];
   vm.runInNewContext(compile(`exports.details = (${details});`), {
-    exports, require, formatTotal, suppliers: [{ id: 'supplier', name: 'Variant supplier' }],
-    p: {
-      name: 'Test product', imageUrl: null, code: 'P-1', type: 'PIPE', size: '20mm',
-      gauge: 'Heavy', color: 'Blue', supplierId: 'supplier', length: '10m',
-      weight: '5kg', pricePerKilo: 0
-    }
+    exports, require, formatTotal, suppliers, p: product,
+    productDetails: [
+      ['code', product.code], ['type', product.type], ['size', product.size],
+      ['gauge', product.gauge], ['color', product.color],
+      ['supplier', suppliers.find(supplier => supplier.id === product.supplierId)?.name],
+      ['length', product.length], ['weight', product.weight], ['pricePerKilo', formatTotal(product.pricePerKilo)]
+    ]
   });
   const html = renderToStaticMarkup(exports.details);
   for (const value of ['Test product', 'P-1', 'PIPE', '20mm', 'Heavy', 'Blue', 'Variant supplier', '10m', '5kg']) {
     assert.ok(html.includes(value), value);
   }
   for (const label of ['اسم الصنف:', 'الكود:', 'النوع:', 'المقاس:', 'الدرجة:', 'اللون:', 'المورد:', 'الطول:', 'الوزن:', 'سعر الكيلو:']) {
-    assert.ok(html.includes(label), label);
+    assert.ok(!html.includes(label), label);
   }
-  assert.ok(html.includes('>0.00</dd>'));
+  assert.ok(html.includes('>0.00</span>'));
   for (const omitted of ['BARCODE-123', 'الباركود', 'الضريبة', 'المخزون', 'الحد الأدنى', 'الحد الأقصى', 'التكلفة', 'معامل التسعير']) {
     assert.ok(!html.includes(omitted), omitted);
   }

@@ -19,7 +19,7 @@ export type PrintInvoice = Dated & {
   invoiceNumber?: string; billNumber?: string; invoiceType?: string;
   isQuotation?: boolean; status?: string; customerName?: string | null;
   customer?: Party | null; supplier?: Party | null;
-  siteReceiptNumber?: string | null; receiverName?: string | null;
+  siteReceiptNumber?: string | null; receiverName?: string | null; purchaseOrderNumber?: string | null;
   warehouseReceiptNumber?: string | null;
   totalAmount: number; taxAmount: number; netAmount: number; items?: Item[];
 };
@@ -130,7 +130,7 @@ function DocumentFooter() {
   return (
     <footer className="statement-footer document-footer">
       <span>الإنطلاق · شكرًا لتعاملكم معنا</span>
-      <span><bdi>https://www.alentlaq.online/</bdi></span>
+      <span><bdi>https://www.alentlaq.online/</bdi> · <bdi>https://alentlaq.com/</bdi></span>
       <span><bdi>01030099400 / 01021683030</bdi> · <bdi>admin@alentlaq.online</bdi></span>
     </footer>
   );
@@ -150,7 +150,7 @@ export function InvoicePrint({ invoice, purchase = false, showAmounts = true, qr
   };
   return (
     <DocumentFrame id={purchase ? 'printable-purchase' : 'printable-invoice'} title={title} onClose={onClose} actions={actions}>
-      <table className="statement-ledger document-table">
+      <table className={`statement-ledger document-table ${purchase ? '' : 'sales-document-table'}`}>
         <colgroup>
           {(showAmounts ? [5, 11, 34, 8, 14, 12, 16] : [6, 16, 62, 16]).map((width, index) => <col key={index} style={{ width: `${width}%` }} />)}
         </colgroup>
@@ -162,11 +162,12 @@ export function InvoicePrint({ invoice, purchase = false, showAmounts = true, qr
                 <PartyDetails title={purchase ? 'المورد' : 'البائع'} party={purchase ? invoice.supplier || {} : company} />
                 <PartyDetails title={purchase ? 'المشتري' : 'العميل'} party={purchase ? company : invoice.customer || { name: invoice.customerName || 'عميل نقدي' }} />
               </div>
-              {(invoice.siteReceiptNumber || invoice.receiverName || (purchase && invoice.warehouseReceiptNumber)) && (
+              {(invoice.siteReceiptNumber || invoice.receiverName || (!purchase && invoice.purchaseOrderNumber) || (purchase && invoice.warehouseReceiptNumber)) && (
                 <div className="document-meta">
                   {purchase && invoice.warehouseReceiptNumber && <span>رقم استلام المخزن: <bdi>{invoice.warehouseReceiptNumber}</bdi></span>}
                   {invoice.siteReceiptNumber && <span>إذن استلام بالموقع: <bdi>{invoice.siteReceiptNumber}</bdi></span>}
                   {invoice.receiverName && <span>المستلم: {invoice.receiverName}</span>}
+                  {!purchase && invoice.purchaseOrderNumber && <span>أمر التوريد: <bdi>{invoice.purchaseOrderNumber}</bdi></span>}
                 </div>
               )}
             </DocumentHeader>
@@ -201,9 +202,9 @@ export function InvoicePrint({ invoice, purchase = false, showAmounts = true, qr
         <div className="document-invoice-note">
           {qrCodeUrl
             ? /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={qrCodeUrl} alt="رمز QR للفاتورة الإلكترونية" width={112} height={112} />
+              <img src={qrCodeUrl} alt="رمز QR لبيانات الفاتورة" width={180} height={180} />
             : invoice.isQuotation && <span>عرض سعر · لا يحتاج رمز QR</span>}
-          <p>شكرًا لتعاملكم مع مصنع الانطلاق ونتطلع لخدمتكم دائمًا!</p>
+          <p>شكرًا لتعاملكم مع مصنع الانطلاق ونتطلع لخدمتكم دائمًا! <strong className="document-invoice-slogan"> == الإنطلاق صنع ليتحمل صنع ليقاوم ==</strong></p>
         </div>
       )}
       <DocumentFooter />

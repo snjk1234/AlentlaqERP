@@ -3,7 +3,7 @@ import type { PrintInvoice } from '../components/PrintDocuments';
 
 export type MovementKind = 'sales' | 'purchases';
 export type MovementProduct = {
-  id: string; code: string; name: string; size?: string; color?: string | null;
+  id: string; code: string; name: string; supplierId?: string | null; size?: string; color?: string | null;
   type?: string; gauge?: string | null; length?: string | null;
 };
 type MovementItem = {

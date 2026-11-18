@@ -21,7 +21,8 @@ export default function InvoiceDetailsEdit({ invoice, customers, user, onClose, 
     customerId: invoice.customerId || '',
     customerName: invoice.customerName || 'عميل نقدي',
     receiverName: invoice.receiverName || '',
-    siteReceiptNumber: invoice.siteReceiptNumber || ''
+    siteReceiptNumber: invoice.siteReceiptNumber || '',
+    purchaseOrderNumber: invoice.purchaseOrderNumber || ''
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -64,7 +65,7 @@ export default function InvoiceDetailsEdit({ invoice, customers, user, onClose, 
         <h2 id="invoice-details-title" className="text-lg font-bold">تعديل بيانات الفاتورة <bdi>{invoice.invoiceNumber}</bdi></h2>
         <button type="button" className={field} disabled={busy} onClick={onClose}>إلغاء</button>
       </div>
-      <p className="text-sm text-slate-400">تعديل العميل والمستلم ورقم إذن الاستلام فقط. لا تتغير الأصناف أو الأسعار أو الضرائب أو رقم الفاتورة وتاريخها أو المخزون.</p>
+      <p className="text-sm text-slate-400">تعديل العميل والمستلم ورقم إذن الاستلام وأمر التوريد فقط. لا تتغير الأصناف أو الأسعار أو الضرائب أو رقم الفاتورة وتاريخها أو المخزون.</p>
       {error && <p role="alert" className="rounded bg-red-950 p-3 text-red-200">{error}</p>}
       <label className="grid gap-1 text-sm">العميل المرتبط بالفاتورة
         <select aria-label="عميل الفاتورة" className={field} disabled={busy} value={form.customerId}
@@ -87,6 +88,10 @@ export default function InvoiceDetailsEdit({ invoice, customers, user, onClose, 
       <label className="grid gap-1 text-sm">رقم إذن الاستلام
         <input aria-label="رقم إذن الاستلام" className={field} maxLength={255} disabled={busy} value={form.siteReceiptNumber}
           onChange={event => setForm(previous => ({ ...previous, siteReceiptNumber: event.target.value }))} />
+      </label>
+      <label className="grid gap-1 text-sm">رقم أمر التوريد
+        <input aria-label="رقم أمر التوريد" className={field} maxLength={255} disabled={busy} value={form.purchaseOrderNumber}
+          onChange={event => setForm(previous => ({ ...previous, purchaseOrderNumber: event.target.value }))} />
       </label>
       <p className="rounded border border-amber-600/30 p-3 text-xs text-amber-200">
         تغيير العميل ينقل الفاتورة وأثرها الحسابي وتسليماتها إلى الحساب المختار، وليس مجرد تغيير اسم بالطباعة.

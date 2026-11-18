@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { PrinterIcon } from 'lucide-react';
+import { invoiceQrTextFromDocument } from '../lib/invoice-qr';
 import { InvoicePrint, ReturnPrint, TablePrint, type PrintTableData } from './PrintDocuments';
 import { formatMoney } from '../lib/money-format';
 import {
@@ -44,7 +45,11 @@ export default function ItemMovementsReport({ role, customers, suppliers }: {
   }, [kind, allowed, reload]);
   if (!allowed) return null;
 
-  const sourceRows = source?.kind === kind ? source.rows : [];
+  const supplierNames = new Map(suppliers.map(supplier => [supplier.id, supplier.name]));
+  const sourceRows = source?.kind === kind ? source.rows.map(row => ({
+    ...row,
+    description: [row.description, supplierNames.get(row.product.supplierId || '') || 'مورد غير محدد'].join(' · ')
+  })) : [];
   let rows: ItemMovement[] = [];
   let filterError = '';
   try { rows = filterItemMovements(sourceRows, filters); }
@@ -89,7 +94,7 @@ export default function ItemMovementsReport({ role, customers, suppliers }: {
     setOpening(true); setError('');
     try {
       const qr = row.document.qrCode && !row.orderReturn && kind === 'sales'
-        ? await QRCode.toDataURL(row.document.qrCode, { width: 160, margin: 1 }) : '';
+        ? await QRCode.toDataURL(invoiceQrTextFromDocument(row.document), { width: 320, margin: 4 }) : '';
       setPreview({ row, qr });
     } catch (failure) {
       console.error('Failed to open movement invoice:', failure);

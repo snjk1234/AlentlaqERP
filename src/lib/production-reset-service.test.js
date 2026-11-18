@@ -5,6 +5,31 @@ const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
 const { productionResetOperation } = require('./production-reset-service');
+const { TRANSACTION_MODELS } = require('./production-reset');
+
+test('production reset preview lists product attributes as values without field names', async () => {
+  const product = {
+    id: 'p1', code: 'P-1', name: 'Pipe', size: '20', color: 'Blue', type: 'PVC',
+    gauge: 'Heavy', supplier: { name: 'Vendor' }, length: '3m', weight: '5kg', stockQty: 10
+  };
+  const tx = {
+    user: { findUnique: async () => ({ id: 'admin', role: 'ADMIN' }) },
+    bank: { findMany: async () => [] },
+    supplier: { findMany: async () => [] },
+    customer: { findMany: async () => [] },
+    product: { findMany: async () => [product] }
+  };
+  for (const model of TRANSACTION_MODELS) {
+    tx[model] = { ...(tx[model] || {}), count: async () => 0 };
+  }
+  const database = { $transaction: callback => callback(tx) };
+
+  const preview = await productionResetOperation(database, 'admin', { action: 'preview' });
+  assert.equal(preview.entities.product[0].details, 'PVC · Heavy · Vendor · 3m · 5kg');
+  for (const label of ['النوع:', 'الدرجة:', 'المورد:', 'الطول:', 'الوزن:']) {
+    assert.ok(!preview.entities.product[0].details.includes(label), label);
+  }
+});
 
 test('production reset service enforces admin, validation and applies values',
   { skip: !process.env.ACCESS_TEST_SOURCE_DB }, async () => {

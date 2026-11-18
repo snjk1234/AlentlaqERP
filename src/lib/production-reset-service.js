@@ -30,12 +30,8 @@ async function loadEntities(tx) {
       id: row.id,
       name: [row.code, row.name, row.size, row.color].filter(Boolean).join(' - '),
       details: [
-        `النوع: ${row.type || 'غير مسجل'}`,
-        `الدرجة: ${row.gauge || 'غير مسجلة'}`,
-        `المورد: ${(row.supplier && row.supplier.name) || 'غير مسجل'}`,
-        `الطول: ${row.length || 'غير مسجل'}`,
-        `الوزن: ${row.weight || 'غير مسجل'}`
-      ].join(' · '),
+        row.type, row.gauge, row.supplier && row.supplier.name, row.length, row.weight
+      ].filter(Boolean).join(' · '),
       value: Number(row.stockQty)
     }))
   };

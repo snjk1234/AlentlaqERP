@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { generateZatcaQrCode } from '@/lib/zatca';
+import { invoiceQrText } from '@/lib/invoice-qr';
 
 export async function POST(request: Request) {
   try {
@@ -48,27 +48,15 @@ export async function POST(request: Request) {
 
     const netAmount = Number((totalAmount + taxAmount).toFixed(2));
 
-    // Generate ZATCA compliant invoice details
-    const sellerName = 'شركة الإنطلاق لتصنيع وتوريد الخراطيم والمواسير والأسلاك';
-    const trn = '310122345600003'; // Mock Saudi ZATCA TRN
     const timestamp = new Date().toISOString();
-    
-    // Generate QR Code if it's a final invoice, not a quotation
-    let qrCodeBase64: string | null = null;
-    if (!isQuotation) {
-      qrCodeBase64 = generateZatcaQrCode(
-        sellerName,
-        trn,
-        timestamp,
-        netAmount.toFixed(2),
-        taxAmount.toFixed(2)
-      );
-    }
 
     // Generate Invoice/Receipt Number
     const count = await prisma.order.count();
     const prefix = isQuotation ? 'QT-' : 'INV-';
     const invoiceNumber = `${prefix}${new Date().getFullYear()}-${String(count + 1).padStart(5, '0')}`;
+    const qrCode = !isQuotation ? invoiceQrText({
+      invoiceNumber, issuedAt: timestamp, totalAmount: netAmount.toFixed(2), taxAmount: taxAmount.toFixed(2)
+    }) : null;
 
     // Get a default user if none provided
     let dbUserId = userId;
@@ -88,7 +76,7 @@ export async function POST(request: Request) {
           totalAmount,
           taxAmount,
           netAmount,
-          qrCode: qrCodeBase64,
+          qrCode,
           userId: dbUserId || '',
           items: {
             create: orderItemsData

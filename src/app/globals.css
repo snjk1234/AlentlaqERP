@@ -204,6 +204,10 @@ body {
 .statement-date { font-size: 10px; color: var(--statement-muted); }
 .statement-description { font-size: 11px; color: #52667a; line-height: 1.8; }
 .statement-ledger .statement-number { direction: ltr; text-align: left; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 12px; }
+.statement-ledger.sales-document-table,
+.statement-ledger.sales-document-table th,
+.statement-ledger.sales-document-table td { text-align: right; }
+.statement-ledger.sales-document-table .statement-number { text-align: right; }
 .statement-payment .statement-number { color: var(--statement-teal); }
 .statement-ledger .statement-empty { text-align: center; color: var(--statement-muted); padding-block: 24px; }
 .statement-ledger .statement-total th, .statement-ledger .statement-total td { padding-block: 10px; background: #f8fafc; font-size: 12px; color: #000; }
@@ -237,7 +241,17 @@ body {
 .document-meta { display: flex; flex-wrap: wrap; gap: 8px 20px; padding-top: 8px; color: var(--statement-muted); font-size: 11px; }
 .stocktake-print-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; break-inside: avoid; }
 .document-invoice-note { display: flex; align-items: center; gap: 16px; padding-top: 12px; color: var(--statement-muted); font-size: 11px; break-inside: avoid; }
-.document-invoice-note img { width: 24mm; height: 24mm; object-fit: contain; flex-shrink: 0; }
+.document-invoice-note img { width: 45mm; height: 45mm; object-fit: contain; flex-shrink: 0; }
+.document-invoice-slogan {
+  display: inline-block;
+  margin-inline-start: 8px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: var(--statement-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
 .document-signatures { display: flex; justify-content: space-between; gap: 30px; padding: 16px 6px 8px; color: var(--statement-muted); font-size: 11px; break-inside: avoid; }
 .document-signatures > div { min-width: 160px; text-align: center; }
 .document-signatures p { margin-top: 22px; border-top: 1px solid var(--statement-line); padding-top: 4px; }

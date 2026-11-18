@@ -6,6 +6,7 @@ const { saveCustomerPrices } = require('../src/lib/customer-prices');
 const { saveSupplierPrices } = require('../src/lib/supplier-prices');
 const { correctPayment } = require('../src/lib/payment-corrections');
 const { editDocument, editQuotation, normalizeWarehouseReceiptNumber } = require('../src/lib/document-edits');
+const { invoiceQrText } = require('../src/lib/invoice-qr');
 
 // Register 'app' as a standard and secure scheme supporting fetch
 protocol.registerSchemesAsPrivileged([
@@ -87,24 +88,6 @@ function createWindow() {
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
-}
-
-// ZATCA QR Code Helper (TLV format)
-function generateZatcaQrCode(sellerName, trn, timestamp, totalAmount, vatAmount) {
-  const getTlv = (tag, value) => {
-    const valueBuffer = Buffer.from(value, 'utf-8');
-    const tagBuffer = Buffer.from([tag]);
-    const lengthBuffer = Buffer.from([valueBuffer.length]);
-    return Buffer.concat([tagBuffer, lengthBuffer, valueBuffer]);
-  };
-
-  const tag1 = getTlv(1, sellerName);
-  const tag2 = getTlv(2, trn);
-  const tag3 = getTlv(3, timestamp);
-  const tag4 = getTlv(4, totalAmount);
-  const tag5 = getTlv(5, vatAmount);
-
-  return Buffer.concat([tag1, tag2, tag3, tag4, tag5]).toString('base64');
 }
 
 // Native IPC database endpoints
@@ -330,7 +313,7 @@ ipcMain.handle('update-customer', async (event, customerData) => {
 });
 
 ipcMain.handle('create-order', async (event, orderData) => {
-  const { customerName, customerId, isQuotation, items, userId, siteReceiptNumber, receiverName, invoiceType, linkedQuotationId } = orderData;
+  const { customerName, customerId, isQuotation, items, userId, siteReceiptNumber, receiverName, purchaseOrderNumber, invoiceType, linkedQuotationId } = orderData;
   try {
     const productIds = items.map(item => item.productId);
     const dbProducts = await prisma.product.findMany({
@@ -363,25 +346,14 @@ ipcMain.handle('create-order', async (event, orderData) => {
 
     const netAmount = Number((totalAmount + taxAmount).toFixed(2));
 
-    // ZATCA details
-    const sellerName = 'شركة الإنطلاق لتصنيع وتوريد الخراطيم والمواسير والأسلاك';
-    const trn = '310122345600003';
     const timestamp = new Date().toISOString();
-    
-    let qrCodeBase64 = null;
-    if (!isQuotation) {
-      qrCodeBase64 = generateZatcaQrCode(
-        sellerName,
-        trn,
-        timestamp,
-        netAmount.toFixed(2),
-        taxAmount.toFixed(2)
-      );
-    }
 
     const count = await prisma.order.count();
     const prefix = isQuotation ? 'QT-' : 'INV-';
     const invoiceNumber = `${prefix}${new Date().getFullYear()}-${String(count + 1).padStart(5, '0')}`;
+    const qrCode = !isQuotation ? invoiceQrText({
+      invoiceNumber, issuedAt: timestamp, totalAmount: netAmount.toFixed(2), taxAmount: taxAmount.toFixed(2)
+    }) : null;
 
     let finalUserId = userId;
     if (!finalUserId) {
@@ -409,9 +381,10 @@ ipcMain.handle('create-order', async (event, orderData) => {
           totalAmount,
           taxAmount,
           netAmount,
-          qrCode: qrCodeBase64,
+          qrCode,
           siteReceiptNumber: siteReceiptNumber || null,
           receiverName: receiverName || null,
+          purchaseOrderNumber: purchaseOrderNumber || null,
           invoiceType: invoiceType || 'فاتورة ضريبية',
           userId: finalUserId,
           status: !isQuotation ? 'COMPLETED' : 'PENDING',

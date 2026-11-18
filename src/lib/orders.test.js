@@ -63,15 +63,18 @@ test('cashier invoices without a linked quotation save successfully and deduct s
     const { client, state } = store();
     const issue = loadOrderHandler(client);
     const invoice = await issue({
-      userId: 'cashier', customerId: 'customer', invoiceType: 'فاتورة',
+      userId: 'cashier', customerId: 'customer', invoiceType: 'فاتورة', purchaseOrderNumber: 'PO-123',
       items: [{ productId: 'product', quantity: 2, unitPrice: 12 }], ...linked
     });
+    assert.equal(invoice.purchaseOrderNumber, 'PO-123');
     assert.equal(invoice.userId, 'cashier');
     assert.equal(invoice.totalAmount, 24);
     assert.equal(invoice.taxAmount, 0);
     assert.equal(invoice.netAmount, 24);
     assert.equal(invoice.status, 'COMPLETED');
     assert.ok(invoice.qrCode);
+    assert.ok(invoice.qrCode.startsWith('بيانات الفاتورة\n'));
+    assert.ok(invoice.qrCode.includes('رقم الفاتورة: INV-'));
     assert.equal(state.orders.length, 1);
     assert.equal(state.stock, 98);
     assert.equal(state.delivered, 2);
@@ -139,7 +142,7 @@ test('browser invoices without linked quotations save and preserve cashier attri
     exports, console: { ...console, error() {} },
     require: id => {
       if (id === '@/lib/prisma') return { prisma: client };
-      if (id === '@/lib/zatca') return { generateZatcaQrCode: () => 'QR' };
+      if (id === '@/lib/invoice-qr') return require('./invoice-qr');
       if (id === 'next/server') return { NextResponse: { json: (body, init) => Response.json(body, init) } };
       throw new Error(`Unexpected import: ${id}`);
     }
@@ -150,6 +153,10 @@ test('browser invoices without linked quotations save and preserve cashier attri
     })
   }));
   assert.equal(response.status, 200);
-  assert.equal((await response.json()).userId, 'cashier');
+  const invoice = await response.json();
+  assert.equal(invoice.userId, 'cashier');
+  assert.ok(invoice.qrCode.includes('رقم الفاتورة: INV-'));
+  assert.ok(invoice.qrCode.includes('الإجمالي شامل الضريبة: 26.00 جنيه مصري'));
+  assert.ok(invoice.qrCode.includes('ضريبة القيمة المضافة: 0.00 جنيه مصري'));
   assert.equal(state.stock, 98);
 });

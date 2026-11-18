@@ -701,6 +701,10 @@ test('invoice item edits replace lines, adjust stock by net differences and refr
   assert.equal(result.taxAmount, 77);
   assert.equal(result.netAmount, 727);
   assert.ok(typeof result.qrCode === 'string' && result.qrCode.length > 20 && result.qrCode !== 'OLD-QR');
+  assert.ok(result.qrCode.startsWith('بيانات الفاتورة\n'));
+  assert.ok(result.qrCode.includes('رقم الفاتورة: INV-00001'));
+  assert.ok(result.qrCode.includes('الإجمالي شامل الضريبة: 727.00 جنيه مصري'));
+  assert.ok(result.qrCode.includes('ضريبة القيمة المضافة: 77.00 جنيه مصري'));
   for (const key of ['invoiceNumber', 'customerId', 'customerName', 'receiverName', 'siteReceiptNumber', 'createdAt', 'invoiceType', 'isQuotation', 'status']) {
     assert.equal(result[key], original[key], key);
   }

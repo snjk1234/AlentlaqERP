@@ -24,11 +24,8 @@ const fieldClass = 'bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 te
 const buttonClass = 'rounded-lg border border-slate-600 px-3 py-2 text-sm font-bold hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed';
 const label = (product: Product) => [product.code, product.name, product.size, product.color].filter(Boolean).join(' - ');
 const details = (product: Product) => [
-  `الباركود: ${product.barcode || 'غير مسجل'}`,
-  `النوع: ${product.type || 'غير مسجل'}`, `الدرجة: ${product.gauge || 'غير مسجلة'}`,
-  `المورد: ${product.supplier?.name || 'غير مسجل'}`, `الطول: ${product.length || 'غير مسجل'}`,
-  `الوزن: ${product.weight || 'غير مسجل'}`
-].join(' · ');
+  product.barcode, product.type, product.gauge, product.supplier?.name, product.length, product.weight
+].filter(Boolean).join(' · ');
 const date = (value: string) => new Date(value).toLocaleString('ar-EG');
 
 export default function StocktakePanel({ user, onInventoryChanged, onPrint }: {

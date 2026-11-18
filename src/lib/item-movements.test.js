@@ -25,7 +25,9 @@ function loadLogic(extra = {}) {
 }
 const logic = loadLogic();
 const { buildItemMovements, filterItemMovements, summarizeItemMovements, itemMovementTotals, CASH_PARTY } = logic;
-const product = { id: 'p1', code: 'P-20', name: 'Pipe', type: 'PVC', size: '20', color: 'Blue', gauge: 'Heavy', price: 900, costPrice: 800, taxRate: 0.25 };
+let lastQrOptions;
+let lastQrInput;
+const product = { id: 'p1', code: 'P-20', name: 'Pipe', type: 'PVC', size: '20', color: 'Blue', gauge: 'Heavy', supplierId: 's1', price: 900, costPrice: 800, taxRate: 0.25 };
 const item = (id, quantity = 2, price = 100) => ({
   id, productId: product.id, product, quantity, unitPrice: price, unitCost: price,
   taxAmount: quantity * price * 0.14, total: quantity * price * 1.14
@@ -171,7 +173,10 @@ function harness(role = 'ADMIN', load = async () => [invoice]) {
       if (name === 'react') return react;
       if (name === '../lib/item-movements') return { ...logic, loadItemMovementDocuments: load };
       if (name === './PrintDocuments') return printExports;
-      if (name === 'qrcode') return { default: { toDataURL: async () => 'data:image/png;base64,fixture' } };
+      if (name === 'qrcode') return { default: { toDataURL: async (value, options) => {
+        lastQrInput = value;
+        lastQrOptions = options; return 'data:image/png;base64,fixture';
+      } } };
       return require(name);
     }
   });
@@ -215,7 +220,23 @@ test('report detailed and summary views, party/date/product filters and print sn
   assert.equal(button(tree, 'طباعة الكشف').props.disabled, true);
 });
 
+test('product specifications include supplier in detailed, summary and printed item movement reports', async () => {
+  const ui = harness('ADMIN');
+  ui.render(); await ui.flush();
+  let tree = ui.render();
+  assert.ok(html(tree).includes('Pipe · PVC · 20 · Heavy · Blue · Supplier 1'));
+  button(tree, 'طباعة الكشف').props.onClick();
+  tree = ui.render();
+  assert.ok(tree.props.report.rows.some(row => row[1].includes('Supplier 1')));
+  tree.props.onClose();
+  tree = ui.render();
+  control(tree, 'طريقة العرض').props.onChange({ target: { value: 'summary' } });
+  assert.ok(html(ui.render()).includes('Pipe · PVC · 20 · Heavy · Blue · Supplier 1'));
+});
+
 test('opening original invoice and return preserves full items and original QR and allows returning to filtered report', async () => {
+  lastQrOptions = null;
+  lastQrInput = null;
   const ui = harness('ADMIN', async () => [{ ...invoice, qrCode: 'original-qr' }]);
   ui.render(); await ui.flush();
   let tree = ui.render();
@@ -224,6 +245,10 @@ test('opening original invoice and return preserves full items and original QR a
   assert.equal(tree.type, printExports.InvoicePrint);
   assert.equal(tree.props.invoice.items.length, 2);
   assert.equal(tree.props.qrCodeUrl, 'data:image/png;base64,fixture');
+  assert.ok(lastQrInput.includes('رقم الفاتورة: INV-1'));
+  assert.ok(lastQrInput.includes('الإجمالي شامل الضريبة: 342.00 جنيه مصري'));
+  assert.equal(lastQrOptions.width, 320);
+  assert.equal(lastQrOptions.margin, 4);
   tree.props.onClose();
   await button(ui.render(), 'RET-1').props.onClick();
   tree = ui.render();

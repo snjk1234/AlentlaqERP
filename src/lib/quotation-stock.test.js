@@ -80,7 +80,7 @@ async function createOrderSubmitter(desktop, client) {
     exports, console: quietConsole, Response,
     require: id => {
       if (id === '@/lib/prisma') return { prisma: client };
-      if (id === '@/lib/zatca') return { generateZatcaQrCode: () => 'QR' };
+      if (id === '@/lib/invoice-qr') return { invoiceQrText: () => 'QR' };
       if (id === 'next/server') return { NextResponse: { json: (body, init) => Response.json(body, init) } };
       throw new Error(`Unexpected import: ${id}`);
     }

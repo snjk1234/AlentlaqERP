@@ -63,17 +63,20 @@ test('Access adds the position column to existing databases only once without re
   const declaration = tree.statements.find(node => ts.isFunctionDeclaration(node) && node.name.text === 'ensureSchema');
   const queries = [];
   let columnExists = false;
+  let orderColumnExists = false;
   const connection = {
     tables: async () => [{ TABLE_NAME: 'OrderItem' }],
     columns: async (_catalog, _schema, table) => {
       if (table === 'OrderItem') return columnExists ? [{ COLUMN_NAME: 'position' }] : [];
       if (table === 'StocktakeItem') return [{ COLUMN_NAME: 'unitCost' }];
       if (table === 'PurchaseOrder') return [{ COLUMN_NAME: 'warehouseReceiptNumber' }];
+      if (table === 'Order') return orderColumnExists ? [{ COLUMN_NAME: 'purchaseOrderNumber' }] : [];
       return [{ COLUMN_NAME: table === 'Supplier' ? 'openingBalance' : 'correctionHistory' }];
     },
     query: async sql => {
       queries.push(sql);
       if (sql === 'ALTER TABLE [OrderItem] ADD COLUMN [position] LONG') columnExists = true;
+      if (sql === 'ALTER TABLE [Order] ADD COLUMN [purchaseOrderNumber] VARCHAR(255)') orderColumnExists = true;
       return [];
     },
     beginTransaction: async () => {}, commit: async () => {}, close: async () => {}
@@ -86,8 +89,10 @@ test('Access adds the position column to existing databases only once without re
   });
   await exports.migrate();
   await exports.migrate();
-  assert.equal(queries.filter(sql => sql.startsWith('ALTER TABLE')).length, 1);
+  assert.equal(queries.filter(sql => sql === 'ALTER TABLE [OrderItem] ADD COLUMN [position] LONG').length, 1);
+  assert.equal(queries.filter(sql => sql === 'ALTER TABLE [Order] ADD COLUMN [purchaseOrderNumber] VARCHAR(255)').length, 1);
   assert.ok(columnExists);
+  assert.ok(orderColumnExists);
   assert.ok(!queries.some(sql => /UPDATE \[OrderItem\]/i.test(sql)));
 });
 
@@ -168,7 +173,7 @@ test('browser and Electron preserve item order, totals and stock for invoices, q
         exports, console,
         require: id => {
           if (id === '@/lib/prisma') return { prisma: client };
-          if (id === '@/lib/zatca') return { generateZatcaQrCode: () => 'QR' };
+          if (id === '@/lib/invoice-qr') return { invoiceQrText: () => 'QR' };
           if (id === 'next/server') return { NextResponse: { json: (body, init) => Response.json(body, init) } };
           throw new Error(id);
         }
@@ -198,4 +203,28 @@ test('invoice printing keeps input order rather than sorting by code, size or co
   const html = renderToStaticMarkup(React.createElement(exports.InvoicePrint, { invoice, onClose() {} }));
   assert.ok(html.indexOf('Z-30') < html.indexOf('A-10'));
   assert.ok(html.indexOf('A-10') < html.indexOf('M-20'));
+});
+
+test('sales invoice and quotation printing right-aligns table columns and includes the new slogan', () => {
+  const exports = {};
+  vm.runInNewContext(compile(read('src', 'components', 'PrintDocuments.tsx')), { exports, require });
+  const invoice = {
+    createdAt: '2026-11-17', totalAmount: 10, taxAmount: 0, netAmount: 10,
+    items: [{ product: { code: 'P-1', name: 'Product' }, quantity: 1, unitPrice: 10, taxAmount: 0, total: 10 }]
+  };
+  const slogan = 'الإنطلاق صنع ليتحمل صنع ليقاوم';
+
+  for (const isQuotation of [false, true]) {
+    const html = renderToStaticMarkup(React.createElement(exports.InvoicePrint, {
+      invoice: { ...invoice, isQuotation }, qrCodeUrl: 'data:image/png;base64,QR', onClose() {}
+    }));
+    assert.ok(html.includes('sales-document-table'));
+    assert.ok(html.includes(slogan));
+    assert.ok(html.includes('document-invoice-slogan'));
+    assert.ok(html.includes('width="180" height="180"'));
+  }
+
+  const css = read('src', 'app', 'globals.css');
+  assert.ok(css.includes('.statement-ledger.sales-document-table .statement-number { text-align: right; }'));
+  assert.ok(css.includes('.document-invoice-note img { width: 45mm; height: 45mm;'));
 });

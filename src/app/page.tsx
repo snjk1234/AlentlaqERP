@@ -2,9 +2,10 @@
 
 
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 import QRCode from 'qrcode';
+import { invoiceQrTextFromDocument } from '@/lib/invoice-qr';
 import { customerInPeriod, inAccountPeriod, statementTotals, supplierInPeriod, type StatementDiscount } from '@/lib/account-period';
 import { buildBankStatement } from '@/lib/bank-statement';
 import AccountStatement from '@/components/AccountStatement';
@@ -17,7 +18,7 @@ import SupplierPricesModal from '@/components/SupplierPricesModal';
 import StocktakePanel from '@/components/StocktakePanel';
 import ProductListingControls from '@/components/ProductListingControls';
 import ProductTable from '@/components/ProductTable';
-import { sortProducts, type ProductSortField } from '@/lib/product-listing';
+import { productSalesQuantities, sortProducts, type ProductSalesPeriod, type ProductSortField } from '@/lib/product-listing';
 import ProductOptionField, { initialProductOptions, requestExpenseCategories, requestProductOptions, type ProductOptionLists } from '@/components/ProductOptionField';
 import QuotationEdit, { type EditableQuotation } from '@/components/QuotationEdit';
 import InvoiceDetailsEdit, { type EditableInvoiceDetails } from '@/components/InvoiceDetailsEdit';
@@ -381,6 +382,8 @@ export default function POSDashboard() {
   const [payments, setPayments] = useState<any[]>([]);
 
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [invoicesLoaded, setInvoicesLoaded] = useState(false);
+  const [invoiceLoadError, setInvoiceLoadError] = useState('');
 
   const [showCustomerHistoryModal, setShowCustomerHistoryModal] = useState(false);
 
@@ -698,6 +701,8 @@ export default function POSDashboard() {
 
   const [receiverName, setReceiverName] = useState('');
 
+  const [purchaseOrderNumber, setPurchaseOrderNumber] = useState('');
+
   const [invoiceType, setInvoiceType] = useState('فاتورة ضريبية');
 
   const [linkedQuotationId, setLinkedQuotationId] = useState<string | null>(null);
@@ -721,6 +726,9 @@ export default function POSDashboard() {
   const [inventoryProductSortBy, setInventoryProductSortBy] = useState<ProductSortField>('code');
   const [posProductSortDirection, setPosProductSortDirection] = useState<'asc' | 'desc'>('asc');
   const [inventoryProductSortDirection, setInventoryProductSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [posSalesSortOrder, setPosSalesSortOrder] = useState<'most' | 'least' | null>(null);
+  const [inventorySalesSortOrder, setInventorySalesSortOrder] = useState<'most' | 'least' | null>(null);
+  const [bestSellingPeriod, setBestSellingPeriod] = useState<ProductSalesPeriod>('90');
   const [posProductColumnOrder, setPosProductColumnOrder] = useState<string[]>([]);
   const [inventoryProductColumnOrder, setInventoryProductColumnOrder] = useState<string[]>([]);
 
@@ -1212,17 +1220,38 @@ export default function POSDashboard() {
 
     if (typeof window !== 'undefined' && (window as any).electronAPI) {
 
-      (window as any).electronAPI.getOrders().then((data: any) => setInvoices(data)).catch(console.error);
+      (window as any).electronAPI.getOrders()
+        .then((data: any) => {
+          if (!Array.isArray(data)) throw new Error('استجابة فواتير المبيعات غير صالحة.');
+          setInvoices(data);
+          setInvoicesLoaded(true);
+          setInvoiceLoadError('');
+        })
+        .catch((error: unknown) => {
+          console.error('Failed to load sales invoices for product ranking:', error);
+          setInvoiceLoadError(error instanceof Error ? error.message : 'تعذر تحميل بيانات المبيعات.');
+        });
 
     } else {
 
       fetch('/api/orders')
 
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) throw new Error('تعذر تحميل فواتير المبيعات لترتيب الأصناف.');
+          return res.json();
+        })
 
-        .then(data => setInvoices(Array.isArray(data) ? data : []))
+        .then(data => {
+          if (!Array.isArray(data)) throw new Error('استجابة فواتير المبيعات غير صالحة.');
+          setInvoices(data);
+          setInvoicesLoaded(true);
+          setInvoiceLoadError('');
+        })
 
-        .catch(console.error);
+        .catch((error: unknown) => {
+          console.error('Failed to load sales invoices for product ranking:', error);
+          setInvoiceLoadError(error instanceof Error ? error.message : 'تعذر تحميل بيانات المبيعات.');
+        });
 
     }
 
@@ -1720,6 +1749,8 @@ export default function POSDashboard() {
 
     setReceiverName('');
 
+    setPurchaseOrderNumber('');
+
     setInvoiceType('فاتورة ضريبية');
 
     setLinkedQuotationId(null);
@@ -1739,10 +1770,29 @@ export default function POSDashboard() {
 
   const availableProductSortField = (field: ProductSortField): ProductSortField =>
     currentUser?.role === 'ADMIN' || (field !== 'costPrice' && field !== 'markup') ? field : 'code';
+  const salesRanking = useMemo(() => {
+    try {
+      return { quantities: productSalesQuantities(invoices, bestSellingPeriod), error: '' };
+    } catch (error) {
+      console.error('Failed to calculate product sales ranking:', error);
+      return {
+        quantities: {},
+        error: error instanceof Error ? error.message : 'تعذر حساب ترتيب الأصناف حسب المبيعات.'
+      };
+    }
+  },
+    [invoices, bestSellingPeriod]
+  );
+  const salesDataStatus = invoicesLoaded ? invoiceLoadError || salesRanking.error ? 'error' : 'ready' : 'loading';
+  const salesDataError = invoiceLoadError || salesRanking.error;
+  const rankedProducts = useMemo(() => products.map(product => ({
+    ...product,
+    bestSellingQuantity: salesDataStatus === 'ready' ? salesRanking.quantities[product.id] || 0 : undefined
+  })), [products, salesDataStatus, salesRanking]);
 
   // Filter products by type and search query
 
-  const filteredProducts = sortProducts((Array.isArray(products) ? products : [])
+  const filteredProducts = sortProducts((Array.isArray(rankedProducts) ? rankedProducts : [])
 
     .filter(p => {
 
@@ -1753,12 +1803,13 @@ export default function POSDashboard() {
       const matchesSearch = (p.name || '').includes(searchQuery) || (p.code || '').includes(searchQuery);
 
       return matchesCategory && matchesSupplier && matchesSearch;
-    }), availableProductSortField(posProductSortBy), posProductSortDirection);
+    }), posSalesSortOrder ? 'bestSelling' : availableProductSortField(posProductSortBy),
+    posSalesSortOrder === 'most' ? 'desc' : posSalesSortOrder === 'least' ? 'asc' : posProductSortDirection);
 
 
   // Filter products by type and search query for Inventory tab
 
-  const filteredInventoryProducts = sortProducts((Array.isArray(products) ? products : [])
+  const filteredInventoryProducts = sortProducts((Array.isArray(rankedProducts) ? rankedProducts : [])
 
     .filter(p => {
 
@@ -1767,7 +1818,8 @@ export default function POSDashboard() {
       const matchesSearch = (p.name || '').includes(inventorySearchQuery) || (p.code || '').includes(inventorySearchQuery);
 
       return matchesCategory && matchesSearch;
-    }), availableProductSortField(inventoryProductSortBy), inventoryProductSortDirection);
+    }), inventorySalesSortOrder ? 'bestSelling' : availableProductSortField(inventoryProductSortBy),
+    inventorySalesSortOrder === 'most' ? 'desc' : inventorySalesSortOrder === 'least' ? 'asc' : inventoryProductSortDirection);
 
 
 
@@ -2065,6 +2117,8 @@ export default function POSDashboard() {
 
       receiverName: receiverName.trim() || null,
 
+      purchaseOrderNumber: purchaseOrderNumber.trim() || null,
+
       invoiceType,
 
       isQuotation,
@@ -2126,11 +2180,11 @@ export default function POSDashboard() {
 
 
 
-      // Generate QR Code if ZATCA compliant QR string exists in order
+      // Build a scannable text QR from the saved invoice details
 
       if (data.qrCode) {
 
-        const qrUrl = await QRCode.toDataURL(data.qrCode, { width: 160, margin: 1 });
+        const qrUrl = await QRCode.toDataURL(invoiceQrTextFromDocument(data), { width: 320, margin: 4 });
 
         setQrCodeUrl(qrUrl);
 
@@ -2225,6 +2279,8 @@ export default function POSDashboard() {
     setReceiverName(invoice.receiverName || '');
 
     setSiteReceiptNumber(invoice.siteReceiptNumber || '');
+
+    setPurchaseOrderNumber(invoice.purchaseOrderNumber || '');
 
     setLinkedQuotationId(invoice.id);
 
@@ -3644,7 +3700,7 @@ export default function POSDashboard() {
 
         <div className="py-2 text-[9px] text-indigo-400/50 text-center font-mono shrink-0 bg-slate-950">
 
-          <span>الإصدار 2.3.0</span>
+          <span>الإصدار 2.5.0</span>
 
         </div>
 
@@ -3826,9 +3882,21 @@ export default function POSDashboard() {
                 layout={posProductLayout}
                 onLayoutChange={setPosProductLayout}
                 sortBy={posProductSortBy}
-                onSortByChange={setPosProductSortBy}
+                onSortByChange={field => {
+                  setPosProductSortBy(field);
+                  setPosSalesSortOrder(null);
+                }}
                 sortDirection={posProductSortDirection}
-                onSortDirectionChange={setPosProductSortDirection}
+                onSortDirectionChange={direction => {
+                  setPosProductSortDirection(direction);
+                  setPosSalesSortOrder(null);
+                }}
+                salesSortOrder={posSalesSortOrder}
+                onSalesSortToggle={() => setPosSalesSortOrder(order => order === 'most' ? 'least' : 'most')}
+                bestSellingPeriod={bestSellingPeriod}
+                onBestSellingPeriodChange={setBestSellingPeriod}
+                salesDataStatus={salesDataStatus}
+                salesDataError={salesDataError}
                 isAdmin={currentUser?.role === 'ADMIN'}
               />
 
@@ -4139,54 +4207,42 @@ export default function POSDashboard() {
 
 
 
-                    {/* Bottom Row: Receipt, receiver, and invoice type */}
-                    <div className="flex gap-2 w-full select-none">
-
-                      <div className="w-1/4 shrink-0">
-
+                    {/* Invoice metadata */}
+                    <div className="grid gap-2 w-full select-none">
+                      <div className="flex gap-2 w-full">
                         <input
-
                           type="text"
-
                           value={siteReceiptNumber}
-
                           onChange={(e) => setSiteReceiptNumber(e.target.value)}
-
                           placeholder="رقم إذن الاستلام بالموقع"
-
-                          className="w-full bg-slate-900 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold"
-
+                          className="min-w-0 w-1/2 shrink-0 bg-slate-900 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold"
                         />
-
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-
                         <input
-
                           type="text"
-
                           value={receiverName}
-
                           onChange={(e) => setReceiverName(e.target.value)}
-
                           placeholder="اسم المستلم"
-
-                          className="w-full bg-slate-900 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold"
-
+                          className="min-w-0 flex-1 bg-slate-900 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold"
                         />
-
                       </div>
-
-                      <select
-                        value={invoiceType}
-                        onChange={(e) => setInvoiceType(e.target.value)}
-                        className="min-w-0 flex-1 bg-slate-900 border border-white/10 rounded-sm py-2 px-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold"
-                      >
-                        <option className="bg-slate-900 text-slate-200" value="فاتورة ضريبية">فاتورة ضريبية</option>
-                        <option className="bg-slate-900 text-slate-200" value="فاتورة">فاتورة</option>
-                      </select>
-
+                      <div className="flex gap-2 w-full">
+                        <input
+                          type="text"
+                          value={purchaseOrderNumber}
+                          onChange={(e) => setPurchaseOrderNumber(e.target.value)}
+                          placeholder="رقم أمر التوريد"
+                          maxLength={255}
+                          className="min-w-0 w-1/2 shrink-0 bg-slate-900 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold"
+                        />
+                        <select
+                          value={invoiceType}
+                          onChange={(e) => setInvoiceType(e.target.value)}
+                          className="min-w-0 flex-1 bg-slate-900 border border-white/10 rounded-sm py-2 px-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold"
+                        >
+                          <option className="bg-slate-900 text-slate-200" value="فاتورة ضريبية">فاتورة ضريبية</option>
+                          <option className="bg-slate-900 text-slate-200" value="فاتورة">فاتورة</option>
+                        </select>
+                      </div>
                     </div>
 
                   </div>
@@ -5403,9 +5459,21 @@ export default function POSDashboard() {
               layout={inventoryProductLayout}
               onLayoutChange={setInventoryProductLayout}
               sortBy={inventoryProductSortBy}
-              onSortByChange={setInventoryProductSortBy}
+              onSortByChange={field => {
+                setInventoryProductSortBy(field);
+                setInventorySalesSortOrder(null);
+              }}
               sortDirection={inventoryProductSortDirection}
-              onSortDirectionChange={setInventoryProductSortDirection}
+              onSortDirectionChange={direction => {
+                setInventoryProductSortDirection(direction);
+                setInventorySalesSortOrder(null);
+              }}
+              salesSortOrder={inventorySalesSortOrder}
+              onSalesSortToggle={() => setInventorySalesSortOrder(order => order === 'most' ? 'least' : 'most')}
+              bestSellingPeriod={bestSellingPeriod}
+              onBestSellingPeriodChange={setBestSellingPeriod}
+              salesDataStatus={salesDataStatus}
+              salesDataError={salesDataError}
               isAdmin={currentUser?.role === 'ADMIN'}
             />
 
@@ -7110,7 +7178,7 @@ export default function POSDashboard() {
 
                       if (inv.qrCode) {
 
-                        QRCode.toDataURL(inv.qrCode, { width: 160, margin: 1 })
+                        QRCode.toDataURL(invoiceQrTextFromDocument(inv), { width: 320, margin: 4 })
 
                           .then(url => setQrCodeUrl(url))
 
@@ -7241,7 +7309,7 @@ export default function POSDashboard() {
             fetchProducts(true);
             setQrCodeUrl('');
             if (saved.qrCode) {
-              try { setQrCodeUrl(await QRCode.toDataURL(saved.qrCode, { width: 160, margin: 1 })); }
+              try { setQrCodeUrl(await QRCode.toDataURL(invoiceQrTextFromDocument(saved), { width: 320, margin: 4 })); }
               catch (error) {
                 console.error('Failed to render invoice QR after items edit:', error);
                 alert('تم حفظ تعديل الأصناف، لكن تعذر عرض رمز QR. أعد فتح الفاتورة.');
@@ -7260,7 +7328,7 @@ export default function POSDashboard() {
             fetchCustomers();
             setQrCodeUrl('');
             if (saved.qrCode) {
-              try { setQrCodeUrl(await QRCode.toDataURL(saved.qrCode, { width: 160, margin: 1 })); }
+              try { setQrCodeUrl(await QRCode.toDataURL(invoiceQrTextFromDocument(saved), { width: 320, margin: 4 })); }
               catch (error) {
                 console.error('Failed to render invoice QR after detail edit:', error);
                 alert('تم حفظ بيانات الفاتورة، لكن تعذر عرض رمز QR. أعد فتح الفاتورة.');
@@ -9004,7 +9072,7 @@ export default function POSDashboard() {
           onInvoice={(ord) => {
             setInvoice(ord);
             if (ord.qrCode) {
-              QRCode.toDataURL(ord.qrCode, { width: 160, margin: 1 })
+              QRCode.toDataURL(invoiceQrTextFromDocument(ord), { width: 320, margin: 4 })
                 .then(url => setQrCodeUrl(url)).catch(console.error);
             } else setQrCodeUrl('');
             setShowModal(true);
@@ -10092,6 +10160,13 @@ export default function POSDashboard() {
                   {customerPriceProducts.map((p: any) => {
 
                     const hasCustom = customerPricesMap[p.id] !== undefined;
+                    const productDetails = [
+                      ['code', p.code], ['type', p.type], ['size', p.size],
+                      ['gauge', p.gauge], ['color', p.color],
+                      ['supplier', p.supplier?.name || suppliers.find(supplier => supplier.id === p.supplierId)?.name],
+                      ['length', p.length], ['weight', p.weight],
+                      ['pricePerKilo', p.pricePerKilo === null || p.pricePerKilo === undefined ? null : formatTotal(p.pricePerKilo)]
+                    ];
 
                     return (
 
@@ -10100,30 +10175,19 @@ export default function POSDashboard() {
                         <td className="p-2 text-slate-200">
 
                           <div className="mt-2 max-w-full overflow-x-auto custom-scrollbar">
-                            <dl className="flex w-max items-center gap-x-3 whitespace-nowrap text-xs">
-                              <div className="flex shrink-0 items-center gap-1">
-                                <dt className="text-slate-500">اسم الصنف:</dt>
-                                <dd className="flex items-center gap-1 font-bold text-slate-100">
-                                  {p.imageUrl && (
-                                    /* eslint-disable-next-line @next/next/no-img-element */
-                                    <img src={p.imageUrl} alt={p.name} className="h-8 w-8 rounded object-contain bg-white/5" />
-                                  )}
-                                  {p.name}
-                                </dd>
-                              </div>
-                              {[
-                                ['الكود', p.code], ['النوع', p.type], ['المقاس', p.size],
-                                ['الدرجة', p.gauge], ['اللون', p.color],
-                                ['المورد', p.supplier?.name || suppliers.find(supplier => supplier.id === p.supplierId)?.name],
-                                ['الطول', p.length], ['الوزن', p.weight],
-                                ['سعر الكيلو', p.pricePerKilo === null || p.pricePerKilo === undefined ? '—' : formatTotal(p.pricePerKilo)]
-                              ].map(([label, value]) => (
-                                <div key={label} className="flex shrink-0 gap-1">
-                                  <dt className="text-slate-500">{label}:</dt>
-                                  <dd className="text-slate-300">{value === null || value === undefined || value === '' ? '—' : value}</dd>
-                                </div>
-                              ))}
-                            </dl>
+                            <div className="flex w-max items-center gap-x-3 whitespace-nowrap text-xs">
+                              <span className="flex shrink-0 items-center gap-1 font-bold text-slate-100">
+                                {p.imageUrl && (
+                                  /* eslint-disable-next-line @next/next/no-img-element */
+                                  <img src={p.imageUrl} alt={p.name} className="h-8 w-8 rounded object-contain bg-white/5" />
+                                )}
+                                {p.name}
+                              </span>
+                              {productDetails.filter(([, value]) => value !== null && value !== undefined && value !== '')
+                                .map(([key, value]) => (
+                                  <span key={key} className="shrink-0 text-slate-300">{value}</span>
+                                ))}
+                            </div>
                           </div>
 
                         </td>
