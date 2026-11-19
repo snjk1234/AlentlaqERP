@@ -36,12 +36,12 @@ const models = {
       color: text(), length: text(), weight: text(), pricePerKilo: number({ nullable: true }),
       costPrice: number({ nullable: false }), markup: number({ nullable: false }),
       price: number({ nullable: false }), taxRate: number({ nullable: false }),
-      stockQty: integer({ nullable: false }), minStockQty: integer({ nullable: false }),
+      stockQty: integer({ nullable: false }), reservedQty: integer({ nullable: false }), minStockQty: integer({ nullable: false }),
       maxStockQty: integer({ nullable: false }), supplierId: text({ size: 50 }),
       imageUrl: text({ memo: true }), createdAt: timestamp, updatedAt: timestamp
     },
     defaults: {
-      pricePerKilo: 0, costPrice: 0, markup: 1.3, taxRate: 0.14, stockQty: 0,
+      pricePerKilo: 0, costPrice: 0, markup: 1.3, taxRate: 0.14, stockQty: 0, reservedQty: 0,
       minStockQty: 10, maxStockQty: 1000
     },
     unique: [],
@@ -53,7 +53,8 @@ const models = {
       purchaseItems: { model: 'purchaseOrderItem', many: true, foreignKey: 'productId', onDelete: 'cascade' },
       customPrices: { model: 'customerPrice', many: true, foreignKey: 'productId', onDelete: 'cascade' },
       ceilingQuotas: { model: 'customerCeilingQuota', many: true, foreignKey: 'productId', onDelete: 'cascade' },
-      supplierPrices: { model: 'supplierPrice', many: true, foreignKey: 'productId', onDelete: 'cascade' }
+      supplierPrices: { model: 'supplierPrice', many: true, foreignKey: 'productId', onDelete: 'cascade' },
+      distributionItems: { model: 'distributionItem', many: true, foreignKey: 'productId' }
     }
   },
   category: {
@@ -83,7 +84,8 @@ const models = {
       customer: { model: 'customer', foreignKey: 'customerId' },
       user: { model: 'user', foreignKey: 'userId' },
       items: { model: 'orderItem', many: true, foreignKey: 'orderId', onDelete: 'cascade' },
-      orderReturns: { model: 'orderReturn', many: true, foreignKey: 'orderId' }
+      orderReturns: { model: 'orderReturn', many: true, foreignKey: 'orderId' },
+      distributionInvoice: { model: 'distributionInvoice', foreignKey: 'orderId' }
     }
   },
   customer: {
@@ -102,7 +104,8 @@ const models = {
       payments: { model: 'payment', many: true, foreignKey: 'customerId' },
       discounts: { model: 'accountDiscount', many: true, foreignKey: 'customerId' },
       customPrices: { model: 'customerPrice', many: true, foreignKey: 'customerId', onDelete: 'cascade' },
-      ceilingQuotas: { model: 'customerCeilingQuota', many: true, foreignKey: 'customerId', onDelete: 'cascade' }
+      ceilingQuotas: { model: 'customerCeilingQuota', many: true, foreignKey: 'customerId', onDelete: 'cascade' },
+      distributions: { model: 'distribution', many: true, foreignKey: 'customerId' }
     }
   },
   customerPrice: {
@@ -138,7 +141,8 @@ const models = {
     relations: {
       order: { model: 'order', foreignKey: 'orderId' },
       product: { model: 'product', foreignKey: 'productId' },
-      returnItems: { model: 'orderReturnItem', many: true, foreignKey: 'orderItemId' }
+      returnItems: { model: 'orderReturnItem', many: true, foreignKey: 'orderItemId' },
+      distributionInvoiceItems: { model: 'distributionInvoiceItem', many: true, foreignKey: 'orderItemId' }
     }
   },
   orderReturn: {
@@ -392,6 +396,123 @@ payment: {
     ],
     relations: { stocktake: { model: 'stocktake', foreignKey: 'stocktakeId' } }
   },
+  distribution: {
+    table: 'Distribution',
+    fields: {
+      id, documentNumber: text({ nullable: false }), customerId: text({ size: 50, nullable: false }),
+      customerName: text({ nullable: false }), status: text({ nullable: false }), notes: text({ memo: true }),
+      revision: integer({ nullable: false }), createdBy: text({ nullable: false }), updatedBy: text(),
+      approvedBy: text(), approvedAt: field('date'), createdAt: timestamp, updatedAt: timestamp
+    },
+    defaults: { status: 'DRAFT', revision: 1 }, unique: [['documentNumber']], relations: {
+      customer: { model: 'customer', foreignKey: 'customerId' },
+      items: { model: 'distributionItem', many: true, foreignKey: 'distributionId' },
+      revisions: { model: 'distributionRevision', many: true, foreignKey: 'distributionId' },
+      dispatches: { model: 'distributionDispatch', many: true, foreignKey: 'distributionId' },
+      invoiceItems: { model: 'distributionInvoiceItem', many: true, foreignKey: 'distributionId' }
+    }
+  },
+  distributionItem: {
+    table: 'DistributionItem',
+    fields: {
+      id, distributionId: text({ size: 50, nullable: false }), productId: text({ size: 50, nullable: false }),
+      position: integer({ nullable: false }), productLabel: text({ memo: true, nullable: false }),
+      quantity: integer({ nullable: false }), shippedQuantity: integer({ nullable: false }),
+      invoicedQuantity: integer({ nullable: false }), unitPrice: number({ nullable: false }),
+      taxRate: number({ nullable: false }), isCancelled: boolean({ nullable: false })
+    },
+    defaults: { shippedQuantity: 0, invoicedQuantity: 0, isCancelled: false },
+    unique: [['distributionId', 'productId']], foreignKeys: [
+      { field: 'distributionId', model: 'distribution' },
+      { field: 'productId', model: 'product' }
+    ],
+    relations: {
+      distribution: { model: 'distribution', foreignKey: 'distributionId' },
+      product: { model: 'product', foreignKey: 'productId' },
+      dispatchItems: { model: 'distributionDispatchItem', many: true, foreignKey: 'distributionItemId' },
+      invoiceItems: { model: 'distributionInvoiceItem', many: true, foreignKey: 'distributionItemId' }
+    }
+  },
+  distributionRevision: {
+    table: 'DistributionRevision',
+    fields: {
+      id, distributionId: text({ size: 50, nullable: false }), revision: integer({ nullable: false }),
+      action: text({ nullable: false }), performedBy: text({ nullable: false }),
+      beforeSnapshot: text({ memo: true }), afterSnapshot: text({ memo: true, nullable: false }), createdAt: timestamp
+    },
+    defaults: {}, unique: [['distributionId', 'revision']],
+    foreignKeys: [{ field: 'distributionId', model: 'distribution' }],
+    relations: { distribution: { model: 'distribution', foreignKey: 'distributionId' } }
+  },
+  distributionDispatch: {
+    table: 'DistributionDispatch',
+    fields: {
+      id, dispatchNumber: text({ nullable: false }), distributionId: text({ size: 50, nullable: false }),
+      notes: text({ memo: true }), createdBy: text({ nullable: false }), dispatchedAt: timestamp, createdAt: timestamp
+    },
+    defaults: {}, unique: [['dispatchNumber']],
+    foreignKeys: [{ field: 'distributionId', model: 'distribution' }],
+    relations: {
+      distribution: { model: 'distribution', foreignKey: 'distributionId' },
+      items: { model: 'distributionDispatchItem', many: true, foreignKey: 'dispatchId' }
+    }
+  },
+  distributionDispatchItem: {
+    table: 'DistributionDispatchItem',
+    fields: {
+      id, dispatchId: text({ size: 50, nullable: false }),
+      distributionItemId: text({ size: 50, nullable: false }), quantity: integer({ nullable: false })
+    },
+    defaults: {}, unique: [],
+    foreignKeys: [
+      { field: 'dispatchId', model: 'distributionDispatch' },
+      { field: 'distributionItemId', model: 'distributionItem' }
+    ],
+    relations: {
+      dispatch: { model: 'distributionDispatch', foreignKey: 'dispatchId' },
+      distributionItem: { model: 'distributionItem', foreignKey: 'distributionItemId' }
+    }
+  },
+  distributionInvoice: {
+    table: 'DistributionInvoice',
+    fields: {
+      id, requestId: text({ size: 50, nullable: false }), requestSnapshot: text({ memo: true, nullable: false }),
+      orderId: text({ size: 50, nullable: false }),
+      customerId: text({ size: 50, nullable: false }), customerName: text({ nullable: false }),
+      createdBy: text({ nullable: false }), createdAt: timestamp
+    },
+    defaults: {}, unique: [['requestId'], ['orderId']],
+    foreignKeys: [
+      { field: 'orderId', model: 'order' },
+      { field: 'customerId', model: 'customer' }
+    ],
+    relations: {
+      order: { model: 'order', foreignKey: 'orderId' },
+      customer: { model: 'customer', foreignKey: 'customerId' },
+      items: { model: 'distributionInvoiceItem', many: true, foreignKey: 'distributionInvoiceId' }
+    }
+  },
+  distributionInvoiceItem: {
+    table: 'DistributionInvoiceItem',
+    fields: {
+      id, distributionInvoiceId: text({ size: 50, nullable: false }),
+      distributionId: text({ size: 50, nullable: false }), distributionItemId: text({ size: 50, nullable: false }),
+      orderItemId: text({ size: 50, nullable: false }), quantity: integer({ nullable: false })
+    },
+    defaults: {}, unique: [['orderItemId']],
+    foreignKeys: [
+      { field: 'distributionInvoiceId', model: 'distributionInvoice' },
+      { field: 'distributionId', model: 'distribution' },
+      { field: 'distributionItemId', model: 'distributionItem' },
+      { field: 'orderItemId', model: 'orderItem' }
+    ],
+    relations: {
+      invoice: { model: 'distributionInvoice', foreignKey: 'distributionInvoiceId' },
+      distribution: { model: 'distribution', foreignKey: 'distributionId' },
+      distributionItem: { model: 'distributionItem', foreignKey: 'distributionItemId' },
+      orderItem: { model: 'orderItem', foreignKey: 'orderItemId' }
+    }
+  },
   generalExpense: {
     table: 'GeneralExpense',
     fields: {
@@ -605,6 +726,11 @@ async function ensureSchema() {
     if (!orderColumns.some(column => column.COLUMN_NAME.toLowerCase() === 'purchaseordernumber')) {
       await connection.query('ALTER TABLE [Order] ADD COLUMN [purchaseOrderNumber] VARCHAR(255)');
     }
+    const productColumns = await connection.columns(null, null, 'Product', null);
+    if (!productColumns.some(column => column.COLUMN_NAME.toLowerCase() === 'reservedqty')) {
+      await connection.query('ALTER TABLE [Product] ADD COLUMN [reservedQty] LONG');
+      await connection.query('UPDATE [Product] SET [reservedQty] = 0 WHERE [reservedQty] IS NULL');
+    }
     await connection.beginTransaction();
     try {
       const customerPayments = await connection.query('SELECT [id], [receiptNumber] FROM [Payment] ORDER BY [createdAt], [date], [id]');
@@ -804,6 +930,30 @@ async function executeRows(connection, modelName, sql) {
   return Array.from(result, (row) => normalizeRow(modelName, row));
 }
 
+function splitMemoFields(modelName, data) {
+  const remaining = [];
+  for (const [name, value] of Object.entries(data)) {
+    const definition = models[modelName].fields[name];
+    if (!definition?.memo || typeof value !== 'string' || value.length <= 32) continue;
+    if (value.includes('\0')) throw new Error('Access text values cannot contain NUL characters.');
+    data[name] = value.slice(0, 32);
+    remaining.push({ name, value: value.slice(32) });
+  }
+  return remaining;
+}
+
+async function appendMemoFields(connection, modelName, idValue, remainingFields) {
+  const table = quoteIdentifier(models[modelName].table);
+  const idLiteral = encodeText(idValue);
+  for (const { name, value } of remainingFields) {
+    const column = quoteIdentifier(name);
+    for (let offset = 0; offset < value.length; offset += 32) {
+      const chunk = encodeText(value.slice(offset, offset + 32));
+      await execute(connection, `UPDATE ${table} SET ${column} = ${column} & ${chunk} WHERE [id] = ${idLiteral}`);
+    }
+  }
+}
+
 async function loadIncludes(connection, modelName, rows, include) {
   if (!include || !rows.length) return rows;
   const model = models[modelName];
@@ -892,12 +1042,15 @@ async function insert(connection, modelName, input, include) {
   for (const name of Object.keys(data)) {
     if (!model.fields[name]) throw new Error(`Unsupported data field for ${modelName}: ${name}`);
   }
+  // Keep Unicode memo values in short expressions because Access rejects complex ChrW concatenations.
+  const remainingMemoFields = splitMemoFields(modelName, data);
   const entries = Object.entries(data).filter(([name, value]) => value !== undefined && model.fields[name]);
   for (const [name] of entries) ensureField(modelName, name);
   if (!entries.length) throw new Error(`No data provided to create ${modelName}.`);
   const columns = entries.map(([name]) => quoteIdentifier(name)).join(', ');
   const values = entries.map(([name, value]) => encodeValue(value, ensureField(modelName, name))).join(', ');
   await execute(connection, `INSERT INTO ${quoteIdentifier(model.table)} (${columns}) VALUES (${values})`);
+  if (remainingMemoFields.length) await appendMemoFields(connection, modelName, data.id, remainingMemoFields);
 
   for (const [relationName, children] of Object.entries(nested)) {
     const relation = model.relations[relationName];
@@ -928,6 +1081,7 @@ async function updateRecord(connection, modelName, where, input, include) {
     data.balance = Number(existing.balance) + opening - Number(existing.openingBalance);
   }
   if (model.fields.updatedAt && data.updatedAt === undefined) data.updatedAt = new Date();
+  const remainingMemoFields = splitMemoFields(modelName, data);
   const updates = [];
   for (const [name, value] of Object.entries(data)) {
     if (value === undefined) continue;
@@ -948,6 +1102,7 @@ async function updateRecord(connection, modelName, where, input, include) {
     updates.push(`${column} = ${encodeValue(value, definition)}`);
   }
   if (updates.length) await execute(connection, `UPDATE ${quoteIdentifier(model.table)} SET ${updates.join(', ')}${whereSql(modelName, where)}`);
+  if (remainingMemoFields.length) await appendMemoFields(connection, modelName, existing.id, remainingMemoFields);
   return findOne(connection, modelName, { where: { id: existing.id }, include });
 }
 
@@ -1129,9 +1284,11 @@ module.exports = {
   createAccessClient,
   encodeText,
   encodeValue,
+  appendMemoFields,
   initializeAccessDatabase: ready,
   modelNames,
   models,
+  splitMemoFields,
   rollbackRemoteTransaction,
   runRemoteOperation
 };

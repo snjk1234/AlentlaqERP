@@ -26,6 +26,7 @@ import InvoiceItemsEdit, { type EditableInvoiceItems } from '@/components/Invoic
 import QuotationPricingDraft from '@/components/QuotationPricingDraft';
 import { confirmQuotationProfit, type PricingLine } from '@/lib/quotation-pricing';
 import BankTransfersPanel, { type BankTransfer, type TransferSnapshot } from '@/components/BankTransfersPanel';
+import DistributionPanel, { type DistributionInvoiceDraft } from '@/components/DistributionPanel';
 import { formatMoney as formatTotal, normalizeMoneyInput } from '@/lib/money-format';
 import { purchaseTaxRate } from '@/lib/document-edits';
 import ProductCardDetails, { ProductCardHeader } from '@/components/ProductCardDetails';
@@ -335,13 +336,13 @@ export default function POSDashboard() {
 
     if (currentUser.role === 'CASHIER') {
 
-      return ['POS', 'CUSTOMERS', 'INVOICES', 'PAYMENTS', 'ITEM_REPORTS', 'DISCOUNTS'].includes(tab);
+      return ['POS', 'CUSTOMERS', 'INVOICES', 'PAYMENTS', 'ITEM_REPORTS', 'DISCOUNTS', 'DISTRIBUTIONS'].includes(tab);
 
     }
 
     if (currentUser.role === 'STOREKEEPER') {
 
-      return ['INVENTORY', 'STOCKTAKE', 'SUPPLIERS', 'PURCHASES', 'ITEM_REPORTS', 'DISCOUNTS'].includes(tab);
+      return ['INVENTORY', 'STOCKTAKE', 'SUPPLIERS', 'PURCHASES', 'ITEM_REPORTS', 'DISCOUNTS', 'DISTRIBUTIONS'].includes(tab);
 
     }
 
@@ -429,6 +430,7 @@ export default function POSDashboard() {
             عرض الكل
           </button>
         )}
+
       </div>
     );
   };
@@ -472,6 +474,7 @@ export default function POSDashboard() {
                 عرض الكل
               </button>
             )}
+
           </div>
         )}
         <div className="flex flex-nowrap gap-1.5 items-center">
@@ -599,7 +602,7 @@ export default function POSDashboard() {
 
   // Navigation active tab
 
-  const [activeTab, setActiveTab] = useState<'POS' | 'CUSTOMERS' | 'INVENTORY' | 'STOCKTAKE' | 'BANKS' | 'PAYMENTS' | 'INVOICES' | 'SUPPLIERS' | 'PURCHASES' | 'EXPENSES' | 'GENERAL_EXPENSES' | 'ITEM_REPORTS' | 'PRODUCTION_RESET' | 'DISCOUNTS'>('POS');
+  const [activeTab, setActiveTab] = useState<'POS' | 'CUSTOMERS' | 'INVENTORY' | 'STOCKTAKE' | 'BANKS' | 'PAYMENTS' | 'INVOICES' | 'SUPPLIERS' | 'PURCHASES' | 'EXPENSES' | 'GENERAL_EXPENSES' | 'ITEM_REPORTS' | 'PRODUCTION_RESET' | 'DISCOUNTS' | 'DISTRIBUTIONS'>('POS');
 
   const [showReceiptModal, setShowReceiptModal] = useState(false);
 
@@ -706,6 +709,8 @@ export default function POSDashboard() {
   const [invoiceType, setInvoiceType] = useState('فاتورة ضريبية');
 
   const [linkedQuotationId, setLinkedQuotationId] = useState<string | null>(null);
+  const [distributionDraft, setDistributionDraft] = useState<DistributionInvoiceDraft | null>(null);
+  const distributionRequestId = useRef<string | null>(null);
 
 
 
@@ -760,7 +765,7 @@ export default function POSDashboard() {
 
   useEffect(() => {
 
-    if (cart.length === 0) return;
+    if (cart.length === 0 || distributionDraft) return;
 
 
 
@@ -834,11 +839,12 @@ export default function POSDashboard() {
 
     }));
 
-  }, [selectedCustomerId, customers]);
+  }, [selectedCustomerId, customers, distributionDraft]);
 
 
 
   const handlePriceDoubleClick = (itemId: string) => {
+    if (distributionDraft) return;
 
     setPasswordPrompt({ isOpen: true, itemId });
 
@@ -1581,6 +1587,10 @@ export default function POSDashboard() {
 
 
   const addToCart = (product: any) => {
+    if (distributionDraft) {
+      alert('السلة مرتبطة بتوزيعات. أكمل إصدار الفاتورة أو أفرغ السلة قبل إضافة أصناف أخرى.');
+      return;
+    }
 
     // Out-of-stock products can still be quoted; invoices validate stock at checkout.
 
@@ -1738,6 +1748,8 @@ export default function POSDashboard() {
 
 
   const clearCart = () => {
+    setDistributionDraft(null);
+    distributionRequestId.current = null;
 
     setCart([]);
 
@@ -1757,6 +1769,30 @@ export default function POSDashboard() {
 
   };
 
+  const prepareDistributionInvoice = (draft: DistributionInvoiceDraft) => {
+    if (submitting) return false;
+    if (cart.length && !window.confirm('توجد أصناف في السلة. هل تريد استبدالها بالمشحون من التوزيعات المختارة؟')) return false;
+    clearCart();
+    setDistributionDraft(draft);
+    setCart(draft.items.map(item => ({
+      ...item.productDetails,
+      id: item.distributionItemId,
+      productId: item.productId,
+      name: item.productDetails?.name || item.productLabel,
+      originalPrice: item.unitPrice,
+      price: item.unitPrice,
+      qty: item.quantity,
+      tax: item.unitPrice * item.taxRate,
+      discountPercent: 0,
+      isManualPrice: true
+    })));
+    setSelectedCustomerId(draft.customerId);
+    setCustomerSearch(draft.customerName);
+    setInvoiceType(draft.invoiceType);
+    setEditingCartPriceId(null);
+    setActiveTab('POS');
+    return true;
+  };
 
 
   const isSimplified = invoiceType === 'فاتورة' || invoiceType === 'فاتورة مبسطة';
@@ -2081,11 +2117,17 @@ export default function POSDashboard() {
 
 
 
-    if (!isQuotation) {
+    if (distributionDraft && isQuotation) {
+      alert('أصناف التوزيعات المشحونة مخصصة لإصدار فاتورة وليست عرض سعر.');
+      return;
+    }
+
+    if (!isQuotation && !distributionDraft) {
 
       const shortages = cart.map(item => {
 
-        const stock = Number(products.find((p: any) => p.id === item.id)?.stockQty ?? 0);
+        const product = products.find((p: any) => p.id === item.id);
+        const stock = Math.max(0, Number(product?.stockQty ?? 0) - Number(product?.reservedQty ?? 0));
 
         return item.qty > stock ? `${item.name}: المطلوب ${item.qty} والمتاح ${stock}` : null;
 
@@ -2125,7 +2167,7 @@ export default function POSDashboard() {
 
       items: cart.map(item => ({
 
-        productId: item.id,
+        productId: distributionDraft ? item.productId : item.id,
 
         quantity: item.qty,
 
@@ -2149,7 +2191,35 @@ export default function POSDashboard() {
 
       // Check if running inside Electron wrapper
 
-      if (typeof window !== 'undefined' && (window as any).electronAPI) {
+      if (distributionDraft) {
+        distributionRequestId.current ||= Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, '0')).join('');
+        const payload = {
+          action: 'invoice',
+          requestId: distributionRequestId.current,
+          customerId: distributionDraft.customerId,
+          documents: distributionDraft.documents,
+          items: distributionDraft.items.map(item => ({ distributionItemId: item.distributionItemId, quantity: item.quantity })),
+          invoiceType,
+          siteReceiptNumber: orderData.siteReceiptNumber,
+          receiverName: orderData.receiverName,
+          purchaseOrderNumber: orderData.purchaseOrderNumber
+        };
+        const desktop = window as Window & {
+          electronAPI?: { distributionOperation: (input: typeof payload) => Promise<{ order: unknown }> };
+        };
+        if (desktop.electronAPI) {
+          data = (await desktop.electronAPI.distributionOperation(payload)).order;
+        } else {
+          const response = await fetch('/api/distributions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', authorization: `Bearer ${currentUser?.sessionToken || ''}` },
+            body: JSON.stringify(payload)
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'تعذر إصدار فاتورة التوزيعات.');
+          data = result.data.order;
+        }
+      } else if (typeof window !== 'undefined' && (window as any).electronAPI) {
 
         data = await (window as any).electronAPI.createOrder(orderData);
 
@@ -2221,6 +2291,9 @@ export default function POSDashboard() {
   const convertQuotationToInvoice = () => {
 
     if (!invoice || !invoice.isQuotation || !invoice.items) return;
+    if (cart.length && !window.confirm('سيتم استبدال محتويات السلة بعرض السعر. متابعة؟')) return;
+    setDistributionDraft(null);
+    distributionRequestId.current = null;
 
     const newCart = invoice.items.map((item: any) => ({
 
@@ -3461,6 +3534,14 @@ export default function POSDashboard() {
             </button>
           )}
 
+          {isRoleAllowed('DISTRIBUTIONS') && (
+            <button onClick={() => setActiveTab('DISTRIBUTIONS')}
+              className={`flex items-center gap-1.5 px-2 py-1.5 text-sm font-bold transition-all duration-300 cursor-pointer border-b border-white/5 ${activeTab === 'DISTRIBUTIONS' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}>
+              <TruckIcon className="h-5 w-5" />
+              <span>التوزيعات</span>
+            </button>
+          )}
+
           {isRoleAllowed('INVENTORY') && (
 
             <button
@@ -3736,6 +3817,15 @@ export default function POSDashboard() {
           />
         )}
 
+        {activeTab === 'DISTRIBUTIONS' && isRoleAllowed('DISTRIBUTIONS') && currentUser && (
+          <DistributionPanel
+            key={currentUser.id}
+            user={currentUser}
+            onPrintTable={setPrintTableData}
+            onPrepareInvoice={prepareDistributionInvoice}
+          />
+        )}
+
         {/* TAB 1: POS DASHBOARD */}
 
         {activeTab === 'ITEM_REPORTS' && isRoleAllowed('ITEM_REPORTS') && currentUser && (
@@ -3939,8 +4029,8 @@ export default function POSDashboard() {
                         ] : []),
                         { key: 'price', label: 'سعر البيع', render: item => formatTotal(item.price || 0) },
                         {
-                          key: 'stockQty', label: 'المخزون', render: item => {
-                            const quantity = item.stockQty ?? 0;
+                          key: 'stockQty', label: 'المتاح للبيع', render: item => {
+                            const quantity = Math.max(0, Number(item.stockQty ?? 0) - Number(item.reservedQty ?? 0));
                             const out = quantity <= 0;
                             const low = !out && quantity <= (item.minStockQty ?? 0);
                             return <span className={out ? 'text-red-400' : low ? 'text-amber-400' : 'text-emerald-400'}>
@@ -3977,9 +4067,10 @@ export default function POSDashboard() {
 
                   {filteredProducts.map((item) => {
 
-                    const isLowStock = item.stockQty <= item.minStockQty;
+                    const availableQty = Math.max(0, Number(item.stockQty) - Number(item.reservedQty || 0));
+                    const isLowStock = availableQty <= item.minStockQty;
 
-                    const isOutOfStock = item.stockQty <= 0;
+                    const isOutOfStock = availableQty <= 0;
 
                     return (
 
@@ -4136,6 +4227,7 @@ export default function POSDashboard() {
                       <select
 
                         value={selectedCustomerId || ''}
+                        disabled={!!distributionDraft}
 
                         onChange={(e) => setSelectedCustomerId(e.target.value)}
 
@@ -4165,6 +4257,7 @@ export default function POSDashboard() {
 
                         <button
 
+                          disabled={!!distributionDraft || submitting}
                           onClick={() => {
 
                             setCustomerForm({ id: '', name: '', phone: '', location: '', buildingsCount: '0', cr: '', trn: '', customerType: 'CASH', discount: '0', openingBalance: '0' });
@@ -4189,7 +4282,7 @@ export default function POSDashboard() {
 
                           onClick={clearCart}
 
-                          disabled={cart.length === 0}
+                          disabled={cart.length === 0 || submitting}
 
                           className="bg-red-500/10 border border-red-500/20 p-2.5 rounded-sm text-red-500 hover:bg-red-500 hover:text-white transition-colors disabled:opacity-30 cursor-pointer"
 
@@ -4213,6 +4306,7 @@ export default function POSDashboard() {
                         <input
                           type="text"
                           value={siteReceiptNumber}
+                          maxLength={255}
                           onChange={(e) => setSiteReceiptNumber(e.target.value)}
                           placeholder="رقم إذن الاستلام بالموقع"
                           className="min-w-0 w-1/2 shrink-0 bg-slate-900 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold"
@@ -4220,6 +4314,7 @@ export default function POSDashboard() {
                         <input
                           type="text"
                           value={receiverName}
+                          maxLength={255}
                           onChange={(e) => setReceiverName(e.target.value)}
                           placeholder="اسم المستلم"
                           className="min-w-0 flex-1 bg-slate-900 border border-white/10 rounded-sm py-2 px-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 font-bold"
@@ -4254,6 +4349,9 @@ export default function POSDashboard() {
 
 
               {/* Cart Items */}
+              {distributionDraft && <div role="status" className="border-b border-amber-400/20 bg-amber-500/10 p-3 text-xs text-amber-200">
+                فاتورة من {distributionDraft.documents.length} توزيعة — أكمل بيانات الاستلام وأمر التوريد ثم اضغط «إصدار فاتورة». الأصناف والكميات والأسعار محفوظة من التوزيعات؛ تفريغ السلة لا يلغيها.
+              </div>}
 
               {cart.length === 0 ? (
 
@@ -4273,7 +4371,7 @@ export default function POSDashboard() {
 
               ) : (
 
-                <div className="flex-1 overflow-y-auto p-2.5 space-y-2 custom-scrollbar min-h-0">
+                <fieldset disabled={!!distributionDraft} aria-label="أصناف السلة" className="flex-1 min-w-0 overflow-y-auto border-0 p-2.5 space-y-2 custom-scrollbar min-h-0">
 
                   {cart.map((item) => (
 
@@ -4317,7 +4415,8 @@ export default function POSDashboard() {
 
                         {(() => {
 
-                          const stock = Number(products.find((p: any) => p.id === item.id)?.stockQty ?? 0);
+                          const product = products.find((p: any) => p.id === item.id);
+                          const stock = Math.max(0, Number(product?.stockQty ?? 0) - Number(product?.reservedQty ?? 0));
 
                           return item.qty > stock ? (
 
@@ -4517,7 +4616,7 @@ export default function POSDashboard() {
 
                   ))}
 
-                </div>
+                </fieldset>
 
               )}
 
@@ -4565,7 +4664,7 @@ export default function POSDashboard() {
 
                 {/* Checkout Actions */}
                 {currentUser?.role === 'ADMIN' && <button type="button"
-                  disabled={!cart.length || submitting}
+                  disabled={!cart.length || submitting || !!distributionDraft}
                   onClick={() => setShowQuotationPricing(true)}
                   className="w-full rounded-sm border border-emerald-500/30 bg-emerald-600/15 py-2 text-sm font-bold text-emerald-300 disabled:opacity-40">
                   تسعير وأرباح عرض السعر
@@ -4575,7 +4674,7 @@ export default function POSDashboard() {
 
                   <button
 
-                    disabled={cart.length === 0 || submitting}
+                    disabled={cart.length === 0 || submitting || !!distributionDraft}
 
                     onClick={() => handleCheckout(true)}
 
@@ -5117,9 +5216,6 @@ export default function POSDashboard() {
                                 <span className="text-[10px] text-slate-400 font-bold ml-1">الدفعات:</span>
                                 <span className="text-xs font-black text-white font-mono">{paymentsCount}</span>
                               </div>
-                            </div>
-                            <div className="grid grid-cols-[1fr_1fr_1fr_1fr_1.15fr] gap-1">
-
                               <div className="bg-black/25 px-1.5 py-1.5 rounded-sm flex flex-col 2xl:flex-row justify-between items-center border border-white/5">
 
                                 <span className="text-[10px] text-slate-400 font-bold shrink-0">مسحوبات:</span>
@@ -5127,6 +5223,10 @@ export default function POSDashboard() {
                                 <span className="text-xs font-black text-red-400 font-mono truncate" title={`${formatTotal(totalSpent)} ج.م`}>{totalSpent.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}</span>
 
                               </div>
+                            </div>
+                            <div className="grid grid-cols-[1fr_1fr_1fr_1fr_1.15fr] gap-1">
+
+                              
 
                               <div className="bg-black/25 px-1.5 py-1.5 rounded-sm flex flex-col 2xl:flex-row justify-between items-center border border-white/5">
 
@@ -5523,8 +5623,8 @@ export default function POSDashboard() {
                       ] : []),
                       { key: 'price', label: 'سعر البيع', render: product => formatTotal(product.price || 0) },
                       {
-                        key: 'stockQty', label: 'المخزون', render: product => {
-                          const quantity = product.stockQty ?? 0;
+                        key: 'stockQty', label: 'المتاح للبيع', render: product => {
+                          const quantity = Math.max(0, Number(product.stockQty ?? 0) - Number(product.reservedQty ?? 0));
                           const out = quantity <= 0;
                           const low = !out && quantity <= (product.minStockQty ?? 0);
                           return <span className={out ? 'text-red-400' : low ? 'text-amber-400' : 'text-emerald-400'}>
@@ -5583,9 +5683,10 @@ export default function POSDashboard() {
 
                   {filteredInventoryProducts.map((p) => {
 
-                    const isLowStock = p.stockQty <= p.minStockQty;
+                    const availableQty = Math.max(0, Number(p.stockQty) - Number(p.reservedQty || 0));
+                    const isLowStock = availableQty <= p.minStockQty;
 
-                    const isOutOfStock = p.stockQty <= 0;
+                    const isOutOfStock = availableQty <= 0;
 
                     return (
 
@@ -7888,9 +7989,9 @@ export default function POSDashboard() {
 
                   <span className="text-[10px] text-slate-400 block">المخزون المتاح</span>
 
-                  <span className={`text-base font-bold font-mono ${selectedProduct.stockQty <= 0 ? 'text-red-500' : selectedProduct.stockQty <= selectedProduct.minStockQty ? 'text-amber-400' : 'text-emerald-400'}`}>
+                  <span className={`text-base font-bold font-mono ${Number(selectedProduct.stockQty) - Number(selectedProduct.reservedQty || 0) <= 0 ? 'text-red-500' : Number(selectedProduct.stockQty) - Number(selectedProduct.reservedQty || 0) <= selectedProduct.minStockQty ? 'text-amber-400' : 'text-emerald-400'}`}>
 
-                    {selectedProduct.stockQty} وحدة
+                    {Math.max(0, Number(selectedProduct.stockQty) - Number(selectedProduct.reservedQty || 0))} وحدة
 
                   </span>
 

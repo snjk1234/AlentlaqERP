@@ -25,7 +25,14 @@ type AccessModelName =
   | 'stocktake'
   | 'stocktakeItem'
   | 'stocktakeSetting'
-  | 'productOption';
+  | 'productOption'
+  | 'distribution'
+  | 'distributionItem'
+  | 'distributionRevision'
+  | 'distributionDispatch'
+  | 'distributionDispatchItem'
+  | 'distributionInvoice'
+  | 'distributionInvoiceItem';
 
 type AccessOperation = 'findMany' | 'findFirst' | 'findUnique' | 'count' | 'create' | 'update' | 'delete' | 'upsert';
 type AccessDelegate<ModelName extends AccessModelName> = Pick<PrismaClient[ModelName], AccessOperation>;

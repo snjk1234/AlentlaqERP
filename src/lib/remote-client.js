@@ -140,6 +140,10 @@ function createRemoteClient(getConfig, transactionId = null) {
     if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وتأكد من تحديث الخادم.');
     return request('/api/bank-transfers', data, sessionToken);
   };
+  client.distributionOperation = (data, sessionToken) => {
+    if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وتأكد من تحديث الخادم.');
+    return request('/api/distributions', data, sessionToken);
+  };
   client.$disconnect = async () => {};
   client.quotationCosts = (data, sessionToken) => {
     if (!sessionToken) throw new Error('جلسة المستخدم غير موجودة. سجّل الدخول مجددًا، وتأكد من تحديث الخادم.');

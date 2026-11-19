@@ -1,6 +1,7 @@
 /* eslint @typescript-eslint/no-require-imports: "off" */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const vm = require('node:vm');
 const { test } = require('node:test');
@@ -126,6 +127,47 @@ test('out-of-stock quantities are allowed in quotations but blocked when issuing
     assert.equal(products[0].stockQty, 0);
     assert.equal(orders.length, 2);
     assert.deepEqual(convertedQuotations, [[orders[0].id, 'CONVERTED']]);
+  }
+});
+
+test('Electron conversion persists a new invoice and marks the original quotation converted in Access', {
+  skip: !process.env.ACCESS_TEST_SOURCE_DB
+}, async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'pos-conversion-'));
+  const database = path.join(directory, 'test.accdb');
+  fs.copyFileSync(process.env.ACCESS_TEST_SOURCE_DB, database);
+  const previous = process.env.ACCESS_DB_PATH;
+  process.env.ACCESS_DB_PATH = database;
+  const client = require('./access-client').createAccessClient();
+  try {
+    const user = await client.user.create({ data: {
+      username: 'conversion-test', name: 'Test', password: 'test', role: 'CASHIER'
+    } });
+    const product = await client.product.create({ data: {
+      code: 'CONVERSION-TEST', name: 'Test', type: 'Test', size: 'test', price: 10, stockQty: 4
+    } });
+    const submit = await createOrderSubmitter(true, client);
+    const data = {
+      userId: user.id, invoiceType: 'فاتورة ضريبية', purchaseOrderNumber: 'PO-123',
+      items: [{ productId: product.id, quantity: 2, unitPrice: 12 }]
+    };
+    const quote = await submit({ ...data, isQuotation: true });
+    const invoice = await submit({ ...data, isQuotation: false, linkedQuotationId: quote.id });
+    const savedInvoice = await client.order.findUnique({ where: { id: invoice.id }, include: { items: true } });
+    const savedQuote = await client.order.findUnique({ where: { id: quote.id } });
+    assert.notEqual(savedInvoice.id, savedQuote.id);
+    assert.equal(savedInvoice.isQuotation, false);
+    assert.equal(savedInvoice.status, 'COMPLETED');
+    assert.match(savedInvoice.qrCode, /بيانات الفاتورة/);
+    assert.equal(savedInvoice.items[0].unitPrice, 12);
+    assert.equal(savedQuote.isQuotation, true);
+    assert.equal(savedQuote.status, 'CONVERTED');
+    assert.equal((await client.product.findUnique({ where: { id: product.id } })).stockQty, 2);
+  } finally {
+    await client.$disconnect();
+    if (previous === undefined) delete process.env.ACCESS_DB_PATH;
+    else process.env.ACCESS_DB_PATH = previous;
+    fs.rmSync(directory, { recursive: true, force: true });
   }
 });
 

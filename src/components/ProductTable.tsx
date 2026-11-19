@@ -34,6 +34,7 @@ export type ProductTableProduct = {
   markup?: number | null;
   price?: number | null;
   stockQty?: number | null;
+  reservedQty?: number | null;
   minStockQty?: number | null;
   maxStockQty?: number | null;
   supplier?: { name?: string | null } | null;

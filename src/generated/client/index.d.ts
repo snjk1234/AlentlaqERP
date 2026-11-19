@@ -45,6 +45,7 @@ export type ProductPayload<ExtArgs extends $Extensions.Args = $Extensions.Defaul
     ceilingQuotas: CustomerCeilingQuotaPayload<ExtArgs>[]
     supplierPrices: SupplierPricePayload<ExtArgs>[]
     stocktakeItems: StocktakeItemPayload<ExtArgs>[]
+    distributionItems: DistributionItemPayload<ExtArgs>[]
     supplier: SupplierPayload<ExtArgs> | null
   }
   scalars: $Extensions.GetResult<{
@@ -64,6 +65,7 @@ export type ProductPayload<ExtArgs extends $Extensions.Args = $Extensions.Defaul
     price: number
     taxRate: number
     stockQty: number
+    reservedQty: number
     minStockQty: number
     maxStockQty: number
     supplierId: string | null
@@ -222,6 +224,7 @@ export type OrderPayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultA
     user: UserPayload<ExtArgs>
     items: OrderItemPayload<ExtArgs>[]
     orderReturns: OrderReturnPayload<ExtArgs>[]
+    distributionInvoice: DistributionInvoicePayload<ExtArgs> | null
   }
   scalars: $Extensions.GetResult<{
     id: string
@@ -259,6 +262,7 @@ export type CustomerPayload<ExtArgs extends $Extensions.Args = $Extensions.Defau
     discounts: AccountDiscountPayload<ExtArgs>[]
     customPrices: CustomerPricePayload<ExtArgs>[]
     ceilingQuotas: CustomerCeilingQuotaPayload<ExtArgs>[]
+    distributions: DistributionPayload<ExtArgs>[]
   }
   scalars: $Extensions.GetResult<{
     id: string
@@ -310,6 +314,7 @@ export type OrderItemPayload<ExtArgs extends $Extensions.Args = $Extensions.Defa
     order: OrderPayload<ExtArgs>
     product: ProductPayload<ExtArgs>
     returnItems: OrderReturnItemPayload<ExtArgs>[]
+    distributionInvoiceItems: DistributionInvoiceItemPayload<ExtArgs>[]
   }
   scalars: $Extensions.GetResult<{
     id: string
@@ -329,6 +334,181 @@ export type OrderItemPayload<ExtArgs extends $Extensions.Args = $Extensions.Defa
  * 
  */
 export type OrderItem = runtime.Types.DefaultSelection<OrderItemPayload>
+export type DistributionPayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+  name: "Distribution"
+  objects: {
+    customer: CustomerPayload<ExtArgs>
+    items: DistributionItemPayload<ExtArgs>[]
+    revisions: DistributionRevisionPayload<ExtArgs>[]
+    dispatches: DistributionDispatchPayload<ExtArgs>[]
+    invoiceItems: DistributionInvoiceItemPayload<ExtArgs>[]
+  }
+  scalars: $Extensions.GetResult<{
+    id: string
+    documentNumber: string
+    customerId: string
+    customerName: string
+    status: string
+    notes: string | null
+    revision: number
+    createdBy: string
+    updatedBy: string | null
+    approvedBy: string | null
+    approvedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+  }, ExtArgs["result"]["distribution"]>
+  composites: {}
+}
+
+/**
+ * Model Distribution
+ * 
+ */
+export type Distribution = runtime.Types.DefaultSelection<DistributionPayload>
+export type DistributionItemPayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+  name: "DistributionItem"
+  objects: {
+    distribution: DistributionPayload<ExtArgs>
+    product: ProductPayload<ExtArgs>
+    dispatchItems: DistributionDispatchItemPayload<ExtArgs>[]
+    invoiceItems: DistributionInvoiceItemPayload<ExtArgs>[]
+  }
+  scalars: $Extensions.GetResult<{
+    id: string
+    distributionId: string
+    productId: string
+    position: number
+    productLabel: string
+    quantity: number
+    shippedQuantity: number
+    invoicedQuantity: number
+    unitPrice: number
+    taxRate: number
+    isCancelled: boolean
+  }, ExtArgs["result"]["distributionItem"]>
+  composites: {}
+}
+
+/**
+ * Model DistributionItem
+ * 
+ */
+export type DistributionItem = runtime.Types.DefaultSelection<DistributionItemPayload>
+export type DistributionRevisionPayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+  name: "DistributionRevision"
+  objects: {
+    distribution: DistributionPayload<ExtArgs>
+  }
+  scalars: $Extensions.GetResult<{
+    id: string
+    distributionId: string
+    revision: number
+    action: string
+    performedBy: string
+    beforeSnapshot: string | null
+    afterSnapshot: string
+    createdAt: Date
+  }, ExtArgs["result"]["distributionRevision"]>
+  composites: {}
+}
+
+/**
+ * Model DistributionRevision
+ * 
+ */
+export type DistributionRevision = runtime.Types.DefaultSelection<DistributionRevisionPayload>
+export type DistributionDispatchPayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+  name: "DistributionDispatch"
+  objects: {
+    distribution: DistributionPayload<ExtArgs>
+    items: DistributionDispatchItemPayload<ExtArgs>[]
+  }
+  scalars: $Extensions.GetResult<{
+    id: string
+    dispatchNumber: string
+    distributionId: string
+    notes: string | null
+    createdBy: string
+    dispatchedAt: Date
+    createdAt: Date
+  }, ExtArgs["result"]["distributionDispatch"]>
+  composites: {}
+}
+
+/**
+ * Model DistributionDispatch
+ * 
+ */
+export type DistributionDispatch = runtime.Types.DefaultSelection<DistributionDispatchPayload>
+export type DistributionDispatchItemPayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+  name: "DistributionDispatchItem"
+  objects: {
+    dispatch: DistributionDispatchPayload<ExtArgs>
+    distributionItem: DistributionItemPayload<ExtArgs>
+  }
+  scalars: $Extensions.GetResult<{
+    id: string
+    dispatchId: string
+    distributionItemId: string
+    quantity: number
+  }, ExtArgs["result"]["distributionDispatchItem"]>
+  composites: {}
+}
+
+/**
+ * Model DistributionDispatchItem
+ * 
+ */
+export type DistributionDispatchItem = runtime.Types.DefaultSelection<DistributionDispatchItemPayload>
+export type DistributionInvoicePayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+  name: "DistributionInvoice"
+  objects: {
+    order: OrderPayload<ExtArgs>
+    items: DistributionInvoiceItemPayload<ExtArgs>[]
+  }
+  scalars: $Extensions.GetResult<{
+    id: string
+    requestId: string
+    requestSnapshot: string
+    orderId: string
+    customerId: string
+    customerName: string
+    createdBy: string
+    createdAt: Date
+  }, ExtArgs["result"]["distributionInvoice"]>
+  composites: {}
+}
+
+/**
+ * Model DistributionInvoice
+ * 
+ */
+export type DistributionInvoice = runtime.Types.DefaultSelection<DistributionInvoicePayload>
+export type DistributionInvoiceItemPayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+  name: "DistributionInvoiceItem"
+  objects: {
+    invoice: DistributionInvoicePayload<ExtArgs>
+    distribution: DistributionPayload<ExtArgs>
+    distributionItem: DistributionItemPayload<ExtArgs>
+    orderItem: OrderItemPayload<ExtArgs>
+  }
+  scalars: $Extensions.GetResult<{
+    id: string
+    distributionInvoiceId: string
+    distributionId: string
+    distributionItemId: string
+    orderItemId: string
+    quantity: number
+  }, ExtArgs["result"]["distributionInvoiceItem"]>
+  composites: {}
+}
+
+/**
+ * Model DistributionInvoiceItem
+ * 
+ */
+export type DistributionInvoiceItem = runtime.Types.DefaultSelection<DistributionInvoiceItemPayload>
 export type OrderReturnPayload<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
   name: "OrderReturn"
   objects: {
@@ -905,6 +1085,76 @@ export class PrismaClient<
     * ```
     */
   get orderItem(): Prisma.OrderItemDelegate<ExtArgs>;
+
+  /**
+   * `prisma.distribution`: Exposes CRUD operations for the **Distribution** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Distributions
+    * const distributions = await prisma.distribution.findMany()
+    * ```
+    */
+  get distribution(): Prisma.DistributionDelegate<ExtArgs>;
+
+  /**
+   * `prisma.distributionItem`: Exposes CRUD operations for the **DistributionItem** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DistributionItems
+    * const distributionItems = await prisma.distributionItem.findMany()
+    * ```
+    */
+  get distributionItem(): Prisma.DistributionItemDelegate<ExtArgs>;
+
+  /**
+   * `prisma.distributionRevision`: Exposes CRUD operations for the **DistributionRevision** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DistributionRevisions
+    * const distributionRevisions = await prisma.distributionRevision.findMany()
+    * ```
+    */
+  get distributionRevision(): Prisma.DistributionRevisionDelegate<ExtArgs>;
+
+  /**
+   * `prisma.distributionDispatch`: Exposes CRUD operations for the **DistributionDispatch** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DistributionDispatches
+    * const distributionDispatches = await prisma.distributionDispatch.findMany()
+    * ```
+    */
+  get distributionDispatch(): Prisma.DistributionDispatchDelegate<ExtArgs>;
+
+  /**
+   * `prisma.distributionDispatchItem`: Exposes CRUD operations for the **DistributionDispatchItem** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DistributionDispatchItems
+    * const distributionDispatchItems = await prisma.distributionDispatchItem.findMany()
+    * ```
+    */
+  get distributionDispatchItem(): Prisma.DistributionDispatchItemDelegate<ExtArgs>;
+
+  /**
+   * `prisma.distributionInvoice`: Exposes CRUD operations for the **DistributionInvoice** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DistributionInvoices
+    * const distributionInvoices = await prisma.distributionInvoice.findMany()
+    * ```
+    */
+  get distributionInvoice(): Prisma.DistributionInvoiceDelegate<ExtArgs>;
+
+  /**
+   * `prisma.distributionInvoiceItem`: Exposes CRUD operations for the **DistributionInvoiceItem** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DistributionInvoiceItems
+    * const distributionInvoiceItems = await prisma.distributionInvoiceItem.findMany()
+    * ```
+    */
+  get distributionInvoiceItem(): Prisma.DistributionInvoiceItemDelegate<ExtArgs>;
 
   /**
    * `prisma.orderReturn`: Exposes CRUD operations for the **OrderReturn** model.
@@ -1530,6 +1780,13 @@ export namespace Prisma {
     Customer: 'Customer',
     CustomerPrice: 'CustomerPrice',
     OrderItem: 'OrderItem',
+    Distribution: 'Distribution',
+    DistributionItem: 'DistributionItem',
+    DistributionRevision: 'DistributionRevision',
+    DistributionDispatch: 'DistributionDispatch',
+    DistributionDispatchItem: 'DistributionDispatchItem',
+    DistributionInvoice: 'DistributionInvoice',
+    DistributionInvoiceItem: 'DistributionInvoiceItem',
     OrderReturn: 'OrderReturn',
     OrderReturnItem: 'OrderReturnItem',
     Bank: 'Bank',
@@ -1559,7 +1816,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
     meta: {
-      modelProps: 'user' | 'product' | 'category' | 'bankTransfer' | 'productOption' | 'stocktakeSetting' | 'stocktake' | 'stocktakeItem' | 'order' | 'customer' | 'customerPrice' | 'orderItem' | 'orderReturn' | 'orderReturnItem' | 'bank' | 'supplierPrice' | 'customerCeilingQuota' | 'payment' | 'supplier' | 'accountDiscount' | 'purchaseOrder' | 'purchaseOrderItem' | 'expensePayment' | 'expenseCategory' | 'generalExpense'
+      modelProps: 'user' | 'product' | 'category' | 'bankTransfer' | 'productOption' | 'stocktakeSetting' | 'stocktake' | 'stocktakeItem' | 'order' | 'customer' | 'customerPrice' | 'orderItem' | 'distribution' | 'distributionItem' | 'distributionRevision' | 'distributionDispatch' | 'distributionDispatchItem' | 'distributionInvoice' | 'distributionInvoiceItem' | 'orderReturn' | 'orderReturnItem' | 'bank' | 'supplierPrice' | 'customerCeilingQuota' | 'payment' | 'supplier' | 'accountDiscount' | 'purchaseOrder' | 'purchaseOrderItem' | 'expensePayment' | 'expenseCategory' | 'generalExpense'
       txIsolationLevel: Prisma.TransactionIsolationLevel
     },
     model: {
@@ -2304,6 +2561,440 @@ export namespace Prisma {
           count: {
             args: Prisma.OrderItemCountArgs<ExtArgs>,
             result: $Utils.Optional<OrderItemCountAggregateOutputType> | number
+          }
+        }
+      }
+      Distribution: {
+        payload: DistributionPayload<ExtArgs>
+        fields: Prisma.DistributionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DistributionFindUniqueArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DistributionFindUniqueOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionPayload>
+          }
+          findFirst: {
+            args: Prisma.DistributionFindFirstArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DistributionFindFirstOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionPayload>
+          }
+          findMany: {
+            args: Prisma.DistributionFindManyArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionPayload>[]
+          }
+          create: {
+            args: Prisma.DistributionCreateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionPayload>
+          }
+          delete: {
+            args: Prisma.DistributionDeleteArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionPayload>
+          }
+          update: {
+            args: Prisma.DistributionUpdateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionPayload>
+          }
+          deleteMany: {
+            args: Prisma.DistributionDeleteManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DistributionUpdateManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          upsert: {
+            args: Prisma.DistributionUpsertArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionPayload>
+          }
+          aggregate: {
+            args: Prisma.DistributionAggregateArgs<ExtArgs>,
+            result: $Utils.Optional<AggregateDistribution>
+          }
+          groupBy: {
+            args: Prisma.DistributionGroupByArgs<ExtArgs>,
+            result: $Utils.Optional<DistributionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DistributionCountArgs<ExtArgs>,
+            result: $Utils.Optional<DistributionCountAggregateOutputType> | number
+          }
+        }
+      }
+      DistributionItem: {
+        payload: DistributionItemPayload<ExtArgs>
+        fields: Prisma.DistributionItemFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DistributionItemFindUniqueArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionItemPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DistributionItemFindUniqueOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionItemPayload>
+          }
+          findFirst: {
+            args: Prisma.DistributionItemFindFirstArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionItemPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DistributionItemFindFirstOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionItemPayload>
+          }
+          findMany: {
+            args: Prisma.DistributionItemFindManyArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionItemPayload>[]
+          }
+          create: {
+            args: Prisma.DistributionItemCreateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionItemPayload>
+          }
+          delete: {
+            args: Prisma.DistributionItemDeleteArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionItemPayload>
+          }
+          update: {
+            args: Prisma.DistributionItemUpdateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionItemPayload>
+          }
+          deleteMany: {
+            args: Prisma.DistributionItemDeleteManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DistributionItemUpdateManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          upsert: {
+            args: Prisma.DistributionItemUpsertArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionItemPayload>
+          }
+          aggregate: {
+            args: Prisma.DistributionItemAggregateArgs<ExtArgs>,
+            result: $Utils.Optional<AggregateDistributionItem>
+          }
+          groupBy: {
+            args: Prisma.DistributionItemGroupByArgs<ExtArgs>,
+            result: $Utils.Optional<DistributionItemGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DistributionItemCountArgs<ExtArgs>,
+            result: $Utils.Optional<DistributionItemCountAggregateOutputType> | number
+          }
+        }
+      }
+      DistributionRevision: {
+        payload: DistributionRevisionPayload<ExtArgs>
+        fields: Prisma.DistributionRevisionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DistributionRevisionFindUniqueArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionRevisionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DistributionRevisionFindUniqueOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionRevisionPayload>
+          }
+          findFirst: {
+            args: Prisma.DistributionRevisionFindFirstArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionRevisionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DistributionRevisionFindFirstOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionRevisionPayload>
+          }
+          findMany: {
+            args: Prisma.DistributionRevisionFindManyArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionRevisionPayload>[]
+          }
+          create: {
+            args: Prisma.DistributionRevisionCreateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionRevisionPayload>
+          }
+          delete: {
+            args: Prisma.DistributionRevisionDeleteArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionRevisionPayload>
+          }
+          update: {
+            args: Prisma.DistributionRevisionUpdateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionRevisionPayload>
+          }
+          deleteMany: {
+            args: Prisma.DistributionRevisionDeleteManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DistributionRevisionUpdateManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          upsert: {
+            args: Prisma.DistributionRevisionUpsertArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionRevisionPayload>
+          }
+          aggregate: {
+            args: Prisma.DistributionRevisionAggregateArgs<ExtArgs>,
+            result: $Utils.Optional<AggregateDistributionRevision>
+          }
+          groupBy: {
+            args: Prisma.DistributionRevisionGroupByArgs<ExtArgs>,
+            result: $Utils.Optional<DistributionRevisionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DistributionRevisionCountArgs<ExtArgs>,
+            result: $Utils.Optional<DistributionRevisionCountAggregateOutputType> | number
+          }
+        }
+      }
+      DistributionDispatch: {
+        payload: DistributionDispatchPayload<ExtArgs>
+        fields: Prisma.DistributionDispatchFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DistributionDispatchFindUniqueArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DistributionDispatchFindUniqueOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchPayload>
+          }
+          findFirst: {
+            args: Prisma.DistributionDispatchFindFirstArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DistributionDispatchFindFirstOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchPayload>
+          }
+          findMany: {
+            args: Prisma.DistributionDispatchFindManyArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchPayload>[]
+          }
+          create: {
+            args: Prisma.DistributionDispatchCreateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchPayload>
+          }
+          delete: {
+            args: Prisma.DistributionDispatchDeleteArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchPayload>
+          }
+          update: {
+            args: Prisma.DistributionDispatchUpdateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchPayload>
+          }
+          deleteMany: {
+            args: Prisma.DistributionDispatchDeleteManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DistributionDispatchUpdateManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          upsert: {
+            args: Prisma.DistributionDispatchUpsertArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchPayload>
+          }
+          aggregate: {
+            args: Prisma.DistributionDispatchAggregateArgs<ExtArgs>,
+            result: $Utils.Optional<AggregateDistributionDispatch>
+          }
+          groupBy: {
+            args: Prisma.DistributionDispatchGroupByArgs<ExtArgs>,
+            result: $Utils.Optional<DistributionDispatchGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DistributionDispatchCountArgs<ExtArgs>,
+            result: $Utils.Optional<DistributionDispatchCountAggregateOutputType> | number
+          }
+        }
+      }
+      DistributionDispatchItem: {
+        payload: DistributionDispatchItemPayload<ExtArgs>
+        fields: Prisma.DistributionDispatchItemFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DistributionDispatchItemFindUniqueArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchItemPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DistributionDispatchItemFindUniqueOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchItemPayload>
+          }
+          findFirst: {
+            args: Prisma.DistributionDispatchItemFindFirstArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchItemPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DistributionDispatchItemFindFirstOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchItemPayload>
+          }
+          findMany: {
+            args: Prisma.DistributionDispatchItemFindManyArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchItemPayload>[]
+          }
+          create: {
+            args: Prisma.DistributionDispatchItemCreateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchItemPayload>
+          }
+          delete: {
+            args: Prisma.DistributionDispatchItemDeleteArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchItemPayload>
+          }
+          update: {
+            args: Prisma.DistributionDispatchItemUpdateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchItemPayload>
+          }
+          deleteMany: {
+            args: Prisma.DistributionDispatchItemDeleteManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DistributionDispatchItemUpdateManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          upsert: {
+            args: Prisma.DistributionDispatchItemUpsertArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionDispatchItemPayload>
+          }
+          aggregate: {
+            args: Prisma.DistributionDispatchItemAggregateArgs<ExtArgs>,
+            result: $Utils.Optional<AggregateDistributionDispatchItem>
+          }
+          groupBy: {
+            args: Prisma.DistributionDispatchItemGroupByArgs<ExtArgs>,
+            result: $Utils.Optional<DistributionDispatchItemGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DistributionDispatchItemCountArgs<ExtArgs>,
+            result: $Utils.Optional<DistributionDispatchItemCountAggregateOutputType> | number
+          }
+        }
+      }
+      DistributionInvoice: {
+        payload: DistributionInvoicePayload<ExtArgs>
+        fields: Prisma.DistributionInvoiceFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DistributionInvoiceFindUniqueArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoicePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DistributionInvoiceFindUniqueOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoicePayload>
+          }
+          findFirst: {
+            args: Prisma.DistributionInvoiceFindFirstArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoicePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DistributionInvoiceFindFirstOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoicePayload>
+          }
+          findMany: {
+            args: Prisma.DistributionInvoiceFindManyArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoicePayload>[]
+          }
+          create: {
+            args: Prisma.DistributionInvoiceCreateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoicePayload>
+          }
+          delete: {
+            args: Prisma.DistributionInvoiceDeleteArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoicePayload>
+          }
+          update: {
+            args: Prisma.DistributionInvoiceUpdateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoicePayload>
+          }
+          deleteMany: {
+            args: Prisma.DistributionInvoiceDeleteManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DistributionInvoiceUpdateManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          upsert: {
+            args: Prisma.DistributionInvoiceUpsertArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoicePayload>
+          }
+          aggregate: {
+            args: Prisma.DistributionInvoiceAggregateArgs<ExtArgs>,
+            result: $Utils.Optional<AggregateDistributionInvoice>
+          }
+          groupBy: {
+            args: Prisma.DistributionInvoiceGroupByArgs<ExtArgs>,
+            result: $Utils.Optional<DistributionInvoiceGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DistributionInvoiceCountArgs<ExtArgs>,
+            result: $Utils.Optional<DistributionInvoiceCountAggregateOutputType> | number
+          }
+        }
+      }
+      DistributionInvoiceItem: {
+        payload: DistributionInvoiceItemPayload<ExtArgs>
+        fields: Prisma.DistributionInvoiceItemFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DistributionInvoiceItemFindUniqueArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoiceItemPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DistributionInvoiceItemFindUniqueOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoiceItemPayload>
+          }
+          findFirst: {
+            args: Prisma.DistributionInvoiceItemFindFirstArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoiceItemPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DistributionInvoiceItemFindFirstOrThrowArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoiceItemPayload>
+          }
+          findMany: {
+            args: Prisma.DistributionInvoiceItemFindManyArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoiceItemPayload>[]
+          }
+          create: {
+            args: Prisma.DistributionInvoiceItemCreateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoiceItemPayload>
+          }
+          delete: {
+            args: Prisma.DistributionInvoiceItemDeleteArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoiceItemPayload>
+          }
+          update: {
+            args: Prisma.DistributionInvoiceItemUpdateArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoiceItemPayload>
+          }
+          deleteMany: {
+            args: Prisma.DistributionInvoiceItemDeleteManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DistributionInvoiceItemUpdateManyArgs<ExtArgs>,
+            result: Prisma.BatchPayload
+          }
+          upsert: {
+            args: Prisma.DistributionInvoiceItemUpsertArgs<ExtArgs>,
+            result: $Utils.PayloadToResult<DistributionInvoiceItemPayload>
+          }
+          aggregate: {
+            args: Prisma.DistributionInvoiceItemAggregateArgs<ExtArgs>,
+            result: $Utils.Optional<AggregateDistributionInvoiceItem>
+          }
+          groupBy: {
+            args: Prisma.DistributionInvoiceItemGroupByArgs<ExtArgs>,
+            result: $Utils.Optional<DistributionInvoiceItemGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DistributionInvoiceItemCountArgs<ExtArgs>,
+            result: $Utils.Optional<DistributionInvoiceItemCountAggregateOutputType> | number
           }
         }
       }
@@ -3311,6 +4002,7 @@ export namespace Prisma {
     ceilingQuotas: number
     supplierPrices: number
     stocktakeItems: number
+    distributionItems: number
   }
 
   export type ProductCountOutputTypeSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
@@ -3321,6 +4013,7 @@ export namespace Prisma {
     ceilingQuotas?: boolean | ProductCountOutputTypeCountCeilingQuotasArgs
     supplierPrices?: boolean | ProductCountOutputTypeCountSupplierPricesArgs
     stocktakeItems?: boolean | ProductCountOutputTypeCountStocktakeItemsArgs
+    distributionItems?: boolean | ProductCountOutputTypeCountDistributionItemsArgs
   }
 
   // Custom InputTypes
@@ -3389,6 +4082,14 @@ export namespace Prisma {
    */
   export type ProductCountOutputTypeCountStocktakeItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
     where?: StocktakeItemWhereInput
+  }
+
+
+  /**
+   * ProductCountOutputType without action
+   */
+  export type ProductCountOutputTypeCountDistributionItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionItemWhereInput
   }
 
 
@@ -3485,6 +4186,7 @@ export namespace Prisma {
     discounts: number
     customPrices: number
     ceilingQuotas: number
+    distributions: number
   }
 
   export type CustomerCountOutputTypeSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
@@ -3494,6 +4196,7 @@ export namespace Prisma {
     discounts?: boolean | CustomerCountOutputTypeCountDiscountsArgs
     customPrices?: boolean | CustomerCountOutputTypeCountCustomPricesArgs
     ceilingQuotas?: boolean | CustomerCountOutputTypeCountCeilingQuotasArgs
+    distributions?: boolean | CustomerCountOutputTypeCountDistributionsArgs
   }
 
   // Custom InputTypes
@@ -3557,6 +4260,14 @@ export namespace Prisma {
   }
 
 
+  /**
+   * CustomerCountOutputType without action
+   */
+  export type CustomerCountOutputTypeCountDistributionsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionWhereInput
+  }
+
+
 
   /**
    * Count Type OrderItemCountOutputType
@@ -3565,10 +4276,12 @@ export namespace Prisma {
 
   export type OrderItemCountOutputType = {
     returnItems: number
+    distributionInvoiceItems: number
   }
 
   export type OrderItemCountOutputTypeSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
     returnItems?: boolean | OrderItemCountOutputTypeCountReturnItemsArgs
+    distributionInvoiceItems?: boolean | OrderItemCountOutputTypeCountDistributionInvoiceItemsArgs
   }
 
   // Custom InputTypes
@@ -3589,6 +4302,194 @@ export namespace Prisma {
    */
   export type OrderItemCountOutputTypeCountReturnItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
     where?: OrderReturnItemWhereInput
+  }
+
+
+  /**
+   * OrderItemCountOutputType without action
+   */
+  export type OrderItemCountOutputTypeCountDistributionInvoiceItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionInvoiceItemWhereInput
+  }
+
+
+
+  /**
+   * Count Type DistributionCountOutputType
+   */
+
+
+  export type DistributionCountOutputType = {
+    items: number
+    revisions: number
+    dispatches: number
+    invoiceItems: number
+  }
+
+  export type DistributionCountOutputTypeSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    items?: boolean | DistributionCountOutputTypeCountItemsArgs
+    revisions?: boolean | DistributionCountOutputTypeCountRevisionsArgs
+    dispatches?: boolean | DistributionCountOutputTypeCountDispatchesArgs
+    invoiceItems?: boolean | DistributionCountOutputTypeCountInvoiceItemsArgs
+  }
+
+  // Custom InputTypes
+
+  /**
+   * DistributionCountOutputType without action
+   */
+  export type DistributionCountOutputTypeArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionCountOutputType
+     */
+    select?: DistributionCountOutputTypeSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * DistributionCountOutputType without action
+   */
+  export type DistributionCountOutputTypeCountItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionItemWhereInput
+  }
+
+
+  /**
+   * DistributionCountOutputType without action
+   */
+  export type DistributionCountOutputTypeCountRevisionsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionRevisionWhereInput
+  }
+
+
+  /**
+   * DistributionCountOutputType without action
+   */
+  export type DistributionCountOutputTypeCountDispatchesArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionDispatchWhereInput
+  }
+
+
+  /**
+   * DistributionCountOutputType without action
+   */
+  export type DistributionCountOutputTypeCountInvoiceItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionInvoiceItemWhereInput
+  }
+
+
+
+  /**
+   * Count Type DistributionItemCountOutputType
+   */
+
+
+  export type DistributionItemCountOutputType = {
+    dispatchItems: number
+    invoiceItems: number
+  }
+
+  export type DistributionItemCountOutputTypeSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    dispatchItems?: boolean | DistributionItemCountOutputTypeCountDispatchItemsArgs
+    invoiceItems?: boolean | DistributionItemCountOutputTypeCountInvoiceItemsArgs
+  }
+
+  // Custom InputTypes
+
+  /**
+   * DistributionItemCountOutputType without action
+   */
+  export type DistributionItemCountOutputTypeArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionItemCountOutputType
+     */
+    select?: DistributionItemCountOutputTypeSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * DistributionItemCountOutputType without action
+   */
+  export type DistributionItemCountOutputTypeCountDispatchItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionDispatchItemWhereInput
+  }
+
+
+  /**
+   * DistributionItemCountOutputType without action
+   */
+  export type DistributionItemCountOutputTypeCountInvoiceItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionInvoiceItemWhereInput
+  }
+
+
+
+  /**
+   * Count Type DistributionDispatchCountOutputType
+   */
+
+
+  export type DistributionDispatchCountOutputType = {
+    items: number
+  }
+
+  export type DistributionDispatchCountOutputTypeSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    items?: boolean | DistributionDispatchCountOutputTypeCountItemsArgs
+  }
+
+  // Custom InputTypes
+
+  /**
+   * DistributionDispatchCountOutputType without action
+   */
+  export type DistributionDispatchCountOutputTypeArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatchCountOutputType
+     */
+    select?: DistributionDispatchCountOutputTypeSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * DistributionDispatchCountOutputType without action
+   */
+  export type DistributionDispatchCountOutputTypeCountItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionDispatchItemWhereInput
+  }
+
+
+
+  /**
+   * Count Type DistributionInvoiceCountOutputType
+   */
+
+
+  export type DistributionInvoiceCountOutputType = {
+    items: number
+  }
+
+  export type DistributionInvoiceCountOutputTypeSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    items?: boolean | DistributionInvoiceCountOutputTypeCountItemsArgs
+  }
+
+  // Custom InputTypes
+
+  /**
+   * DistributionInvoiceCountOutputType without action
+   */
+  export type DistributionInvoiceCountOutputTypeArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceCountOutputType
+     */
+    select?: DistributionInvoiceCountOutputTypeSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * DistributionInvoiceCountOutputType without action
+   */
+  export type DistributionInvoiceCountOutputTypeCountItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionInvoiceItemWhereInput
   }
 
 
@@ -4819,6 +5720,7 @@ export namespace Prisma {
     price: number | null
     taxRate: number | null
     stockQty: number | null
+    reservedQty: number | null
     minStockQty: number | null
     maxStockQty: number | null
   }
@@ -4830,6 +5732,7 @@ export namespace Prisma {
     price: number | null
     taxRate: number | null
     stockQty: number | null
+    reservedQty: number | null
     minStockQty: number | null
     maxStockQty: number | null
   }
@@ -4851,6 +5754,7 @@ export namespace Prisma {
     price: number | null
     taxRate: number | null
     stockQty: number | null
+    reservedQty: number | null
     minStockQty: number | null
     maxStockQty: number | null
     supplierId: string | null
@@ -4876,6 +5780,7 @@ export namespace Prisma {
     price: number | null
     taxRate: number | null
     stockQty: number | null
+    reservedQty: number | null
     minStockQty: number | null
     maxStockQty: number | null
     supplierId: string | null
@@ -4901,6 +5806,7 @@ export namespace Prisma {
     price: number
     taxRate: number
     stockQty: number
+    reservedQty: number
     minStockQty: number
     maxStockQty: number
     supplierId: number
@@ -4918,6 +5824,7 @@ export namespace Prisma {
     price?: true
     taxRate?: true
     stockQty?: true
+    reservedQty?: true
     minStockQty?: true
     maxStockQty?: true
   }
@@ -4929,6 +5836,7 @@ export namespace Prisma {
     price?: true
     taxRate?: true
     stockQty?: true
+    reservedQty?: true
     minStockQty?: true
     maxStockQty?: true
   }
@@ -4950,6 +5858,7 @@ export namespace Prisma {
     price?: true
     taxRate?: true
     stockQty?: true
+    reservedQty?: true
     minStockQty?: true
     maxStockQty?: true
     supplierId?: true
@@ -4975,6 +5884,7 @@ export namespace Prisma {
     price?: true
     taxRate?: true
     stockQty?: true
+    reservedQty?: true
     minStockQty?: true
     maxStockQty?: true
     supplierId?: true
@@ -5000,6 +5910,7 @@ export namespace Prisma {
     price?: true
     taxRate?: true
     stockQty?: true
+    reservedQty?: true
     minStockQty?: true
     maxStockQty?: true
     supplierId?: true
@@ -5113,6 +6024,7 @@ export namespace Prisma {
     price: number
     taxRate: number
     stockQty: number
+    reservedQty: number
     minStockQty: number
     maxStockQty: number
     supplierId: string | null
@@ -5157,6 +6069,7 @@ export namespace Prisma {
     price?: boolean
     taxRate?: boolean
     stockQty?: boolean
+    reservedQty?: boolean
     minStockQty?: boolean
     maxStockQty?: boolean
     supplierId?: boolean
@@ -5170,6 +6083,7 @@ export namespace Prisma {
     ceilingQuotas?: boolean | Product$ceilingQuotasArgs<ExtArgs>
     supplierPrices?: boolean | Product$supplierPricesArgs<ExtArgs>
     stocktakeItems?: boolean | Product$stocktakeItemsArgs<ExtArgs>
+    distributionItems?: boolean | Product$distributionItemsArgs<ExtArgs>
     supplier?: boolean | Product$supplierArgs<ExtArgs>
     _count?: boolean | ProductCountOutputTypeArgs<ExtArgs>
   }, ExtArgs["result"]["product"]>
@@ -5191,6 +6105,7 @@ export namespace Prisma {
     price?: boolean
     taxRate?: boolean
     stockQty?: boolean
+    reservedQty?: boolean
     minStockQty?: boolean
     maxStockQty?: boolean
     supplierId?: boolean
@@ -5207,6 +6122,7 @@ export namespace Prisma {
     ceilingQuotas?: boolean | Product$ceilingQuotasArgs<ExtArgs>
     supplierPrices?: boolean | Product$supplierPricesArgs<ExtArgs>
     stocktakeItems?: boolean | Product$stocktakeItemsArgs<ExtArgs>
+    distributionItems?: boolean | Product$distributionItemsArgs<ExtArgs>
     supplier?: boolean | Product$supplierArgs<ExtArgs>
     _count?: boolean | ProductCountOutputTypeArgs<ExtArgs>
   }
@@ -5582,6 +6498,8 @@ export namespace Prisma {
 
     stocktakeItems<T extends Product$stocktakeItemsArgs<ExtArgs> = {}>(args?: Subset<T, Product$stocktakeItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<StocktakeItemPayload<ExtArgs>, T, 'findMany'>| Null>;
 
+    distributionItems<T extends Product$distributionItemsArgs<ExtArgs> = {}>(args?: Subset<T, Product$distributionItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<DistributionItemPayload<ExtArgs>, T, 'findMany'>| Null>;
+
     supplier<T extends Product$supplierArgs<ExtArgs> = {}>(args?: Subset<T, Product$supplierArgs<ExtArgs>>): Prisma__SupplierClient<$Types.GetResult<SupplierPayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
 
     private get _document();
@@ -5629,6 +6547,7 @@ export namespace Prisma {
     readonly price: FieldRef<"Product", 'Float'>
     readonly taxRate: FieldRef<"Product", 'Float'>
     readonly stockQty: FieldRef<"Product", 'Int'>
+    readonly reservedQty: FieldRef<"Product", 'Int'>
     readonly minStockQty: FieldRef<"Product", 'Int'>
     readonly maxStockQty: FieldRef<"Product", 'Int'>
     readonly supplierId: FieldRef<"Product", 'String'>
@@ -6078,6 +6997,27 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: StocktakeItemScalarFieldEnum | StocktakeItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * Product.distributionItems
+   */
+  export type Product$distributionItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionItem
+     */
+    select?: DistributionItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionItemInclude<ExtArgs> | null
+    where?: DistributionItemWhereInput
+    orderBy?: DistributionItemOrderByWithRelationInput | DistributionItemOrderByWithRelationInput[]
+    cursor?: DistributionItemWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DistributionItemScalarFieldEnum | DistributionItemScalarFieldEnum[]
   }
 
 
@@ -11992,6 +12932,7 @@ export namespace Prisma {
     user?: boolean | UserArgs<ExtArgs>
     items?: boolean | Order$itemsArgs<ExtArgs>
     orderReturns?: boolean | Order$orderReturnsArgs<ExtArgs>
+    distributionInvoice?: boolean | Order$distributionInvoiceArgs<ExtArgs>
     _count?: boolean | OrderCountOutputTypeArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
 
@@ -12020,6 +12961,7 @@ export namespace Prisma {
     user?: boolean | UserArgs<ExtArgs>
     items?: boolean | Order$itemsArgs<ExtArgs>
     orderReturns?: boolean | Order$orderReturnsArgs<ExtArgs>
+    distributionInvoice?: boolean | Order$distributionInvoiceArgs<ExtArgs>
     _count?: boolean | OrderCountOutputTypeArgs<ExtArgs>
   }
 
@@ -12387,6 +13329,8 @@ export namespace Prisma {
     items<T extends Order$itemsArgs<ExtArgs> = {}>(args?: Subset<T, Order$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<OrderItemPayload<ExtArgs>, T, 'findMany'>| Null>;
 
     orderReturns<T extends Order$orderReturnsArgs<ExtArgs> = {}>(args?: Subset<T, Order$orderReturnsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<OrderReturnPayload<ExtArgs>, T, 'findMany'>| Null>;
+
+    distributionInvoice<T extends Order$distributionInvoiceArgs<ExtArgs> = {}>(args?: Subset<T, Order$distributionInvoiceArgs<ExtArgs>>): Prisma__DistributionInvoiceClient<$Types.GetResult<DistributionInvoicePayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
 
     private get _document();
     /**
@@ -12792,6 +13736,22 @@ export namespace Prisma {
 
 
   /**
+   * Order.distributionInvoice
+   */
+  export type Order$distributionInvoiceArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoice
+     */
+    select?: DistributionInvoiceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceInclude<ExtArgs> | null
+    where?: DistributionInvoiceWhereInput
+  }
+
+
+  /**
    * Order without action
    */
   export type OrderArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
@@ -13077,6 +14037,7 @@ export namespace Prisma {
     discounts?: boolean | Customer$discountsArgs<ExtArgs>
     customPrices?: boolean | Customer$customPricesArgs<ExtArgs>
     ceilingQuotas?: boolean | Customer$ceilingQuotasArgs<ExtArgs>
+    distributions?: boolean | Customer$distributionsArgs<ExtArgs>
     _count?: boolean | CustomerCountOutputTypeArgs<ExtArgs>
   }, ExtArgs["result"]["customer"]>
 
@@ -13102,6 +14063,7 @@ export namespace Prisma {
     discounts?: boolean | Customer$discountsArgs<ExtArgs>
     customPrices?: boolean | Customer$customPricesArgs<ExtArgs>
     ceilingQuotas?: boolean | Customer$ceilingQuotasArgs<ExtArgs>
+    distributions?: boolean | Customer$distributionsArgs<ExtArgs>
     _count?: boolean | CustomerCountOutputTypeArgs<ExtArgs>
   }
 
@@ -13473,6 +14435,8 @@ export namespace Prisma {
     customPrices<T extends Customer$customPricesArgs<ExtArgs> = {}>(args?: Subset<T, Customer$customPricesArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<CustomerPricePayload<ExtArgs>, T, 'findMany'>| Null>;
 
     ceilingQuotas<T extends Customer$ceilingQuotasArgs<ExtArgs> = {}>(args?: Subset<T, Customer$ceilingQuotasArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<CustomerCeilingQuotaPayload<ExtArgs>, T, 'findMany'>| Null>;
+
+    distributions<T extends Customer$distributionsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$distributionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<DistributionPayload<ExtArgs>, T, 'findMany'>| Null>;
 
     private get _document();
     /**
@@ -13937,6 +14901,27 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: CustomerCeilingQuotaScalarFieldEnum | CustomerCeilingQuotaScalarFieldEnum[]
+  }
+
+
+  /**
+   * Customer.distributions
+   */
+  export type Customer$distributionsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Distribution
+     */
+    select?: DistributionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInclude<ExtArgs> | null
+    where?: DistributionWhereInput
+    orderBy?: DistributionOrderByWithRelationInput | DistributionOrderByWithRelationInput[]
+    cursor?: DistributionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DistributionScalarFieldEnum | DistributionScalarFieldEnum[]
   }
 
 
@@ -15136,6 +16121,7 @@ export namespace Prisma {
     order?: boolean | OrderArgs<ExtArgs>
     product?: boolean | ProductArgs<ExtArgs>
     returnItems?: boolean | OrderItem$returnItemsArgs<ExtArgs>
+    distributionInvoiceItems?: boolean | OrderItem$distributionInvoiceItemsArgs<ExtArgs>
     _count?: boolean | OrderItemCountOutputTypeArgs<ExtArgs>
   }, ExtArgs["result"]["orderItem"]>
 
@@ -15154,6 +16140,7 @@ export namespace Prisma {
     order?: boolean | OrderArgs<ExtArgs>
     product?: boolean | ProductArgs<ExtArgs>
     returnItems?: boolean | OrderItem$returnItemsArgs<ExtArgs>
+    distributionInvoiceItems?: boolean | OrderItem$distributionInvoiceItemsArgs<ExtArgs>
     _count?: boolean | OrderItemCountOutputTypeArgs<ExtArgs>
   }
 
@@ -15520,6 +16507,8 @@ export namespace Prisma {
 
     returnItems<T extends OrderItem$returnItemsArgs<ExtArgs> = {}>(args?: Subset<T, OrderItem$returnItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<OrderReturnItemPayload<ExtArgs>, T, 'findMany'>| Null>;
 
+    distributionInvoiceItems<T extends OrderItem$distributionInvoiceItemsArgs<ExtArgs> = {}>(args?: Subset<T, OrderItem$distributionInvoiceItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<DistributionInvoiceItemPayload<ExtArgs>, T, 'findMany'>| Null>;
+
     private get _document();
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -15878,6 +16867,27 @@ export namespace Prisma {
 
 
   /**
+   * OrderItem.distributionInvoiceItems
+   */
+  export type OrderItem$distributionInvoiceItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceItem
+     */
+    select?: DistributionInvoiceItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceItemInclude<ExtArgs> | null
+    where?: DistributionInvoiceItemWhereInput
+    orderBy?: DistributionInvoiceItemOrderByWithRelationInput | DistributionInvoiceItemOrderByWithRelationInput[]
+    cursor?: DistributionInvoiceItemWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DistributionInvoiceItemScalarFieldEnum | DistributionInvoiceItemScalarFieldEnum[]
+  }
+
+
+  /**
    * OrderItem without action
    */
   export type OrderItemArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
@@ -15889,6 +16899,6867 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well.
      */
     include?: OrderItemInclude<ExtArgs> | null
+  }
+
+
+
+  /**
+   * Model Distribution
+   */
+
+
+  export type AggregateDistribution = {
+    _count: DistributionCountAggregateOutputType | null
+    _avg: DistributionAvgAggregateOutputType | null
+    _sum: DistributionSumAggregateOutputType | null
+    _min: DistributionMinAggregateOutputType | null
+    _max: DistributionMaxAggregateOutputType | null
+  }
+
+  export type DistributionAvgAggregateOutputType = {
+    revision: number | null
+  }
+
+  export type DistributionSumAggregateOutputType = {
+    revision: number | null
+  }
+
+  export type DistributionMinAggregateOutputType = {
+    id: string | null
+    documentNumber: string | null
+    customerId: string | null
+    customerName: string | null
+    status: string | null
+    notes: string | null
+    revision: number | null
+    createdBy: string | null
+    updatedBy: string | null
+    approvedBy: string | null
+    approvedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DistributionMaxAggregateOutputType = {
+    id: string | null
+    documentNumber: string | null
+    customerId: string | null
+    customerName: string | null
+    status: string | null
+    notes: string | null
+    revision: number | null
+    createdBy: string | null
+    updatedBy: string | null
+    approvedBy: string | null
+    approvedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DistributionCountAggregateOutputType = {
+    id: number
+    documentNumber: number
+    customerId: number
+    customerName: number
+    status: number
+    notes: number
+    revision: number
+    createdBy: number
+    updatedBy: number
+    approvedBy: number
+    approvedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type DistributionAvgAggregateInputType = {
+    revision?: true
+  }
+
+  export type DistributionSumAggregateInputType = {
+    revision?: true
+  }
+
+  export type DistributionMinAggregateInputType = {
+    id?: true
+    documentNumber?: true
+    customerId?: true
+    customerName?: true
+    status?: true
+    notes?: true
+    revision?: true
+    createdBy?: true
+    updatedBy?: true
+    approvedBy?: true
+    approvedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DistributionMaxAggregateInputType = {
+    id?: true
+    documentNumber?: true
+    customerId?: true
+    customerName?: true
+    status?: true
+    notes?: true
+    revision?: true
+    createdBy?: true
+    updatedBy?: true
+    approvedBy?: true
+    approvedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DistributionCountAggregateInputType = {
+    id?: true
+    documentNumber?: true
+    customerId?: true
+    customerName?: true
+    status?: true
+    notes?: true
+    revision?: true
+    createdBy?: true
+    updatedBy?: true
+    approvedBy?: true
+    approvedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type DistributionAggregateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Distribution to aggregate.
+     */
+    where?: DistributionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Distributions to fetch.
+     */
+    orderBy?: DistributionOrderByWithRelationInput | DistributionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DistributionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Distributions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Distributions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Distributions
+    **/
+    _count?: true | DistributionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: DistributionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: DistributionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DistributionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DistributionMaxAggregateInputType
+  }
+
+  export type GetDistributionAggregateType<T extends DistributionAggregateArgs> = {
+        [P in keyof T & keyof AggregateDistribution]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDistribution[P]>
+      : GetScalarType<T[P], AggregateDistribution[P]>
+  }
+
+
+
+
+  export type DistributionGroupByArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionWhereInput
+    orderBy?: DistributionOrderByWithAggregationInput | DistributionOrderByWithAggregationInput[]
+    by: DistributionScalarFieldEnum[] | DistributionScalarFieldEnum
+    having?: DistributionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DistributionCountAggregateInputType | true
+    _avg?: DistributionAvgAggregateInputType
+    _sum?: DistributionSumAggregateInputType
+    _min?: DistributionMinAggregateInputType
+    _max?: DistributionMaxAggregateInputType
+  }
+
+
+  export type DistributionGroupByOutputType = {
+    id: string
+    documentNumber: string
+    customerId: string
+    customerName: string
+    status: string
+    notes: string | null
+    revision: number
+    createdBy: string
+    updatedBy: string | null
+    approvedBy: string | null
+    approvedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: DistributionCountAggregateOutputType | null
+    _avg: DistributionAvgAggregateOutputType | null
+    _sum: DistributionSumAggregateOutputType | null
+    _min: DistributionMinAggregateOutputType | null
+    _max: DistributionMaxAggregateOutputType | null
+  }
+
+  type GetDistributionGroupByPayload<T extends DistributionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DistributionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DistributionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DistributionGroupByOutputType[P]>
+            : GetScalarType<T[P], DistributionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DistributionSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    documentNumber?: boolean
+    customerId?: boolean
+    customerName?: boolean
+    status?: boolean
+    notes?: boolean
+    revision?: boolean
+    createdBy?: boolean
+    updatedBy?: boolean
+    approvedBy?: boolean
+    approvedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    customer?: boolean | CustomerArgs<ExtArgs>
+    items?: boolean | Distribution$itemsArgs<ExtArgs>
+    revisions?: boolean | Distribution$revisionsArgs<ExtArgs>
+    dispatches?: boolean | Distribution$dispatchesArgs<ExtArgs>
+    invoiceItems?: boolean | Distribution$invoiceItemsArgs<ExtArgs>
+    _count?: boolean | DistributionCountOutputTypeArgs<ExtArgs>
+  }, ExtArgs["result"]["distribution"]>
+
+  export type DistributionSelectScalar = {
+    id?: boolean
+    documentNumber?: boolean
+    customerId?: boolean
+    customerName?: boolean
+    status?: boolean
+    notes?: boolean
+    revision?: boolean
+    createdBy?: boolean
+    updatedBy?: boolean
+    approvedBy?: boolean
+    approvedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type DistributionInclude<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    customer?: boolean | CustomerArgs<ExtArgs>
+    items?: boolean | Distribution$itemsArgs<ExtArgs>
+    revisions?: boolean | Distribution$revisionsArgs<ExtArgs>
+    dispatches?: boolean | Distribution$dispatchesArgs<ExtArgs>
+    invoiceItems?: boolean | Distribution$invoiceItemsArgs<ExtArgs>
+    _count?: boolean | DistributionCountOutputTypeArgs<ExtArgs>
+  }
+
+
+  type DistributionGetPayload<S extends boolean | null | undefined | DistributionArgs> = $Types.GetResult<DistributionPayload, S>
+
+  type DistributionCountArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = 
+    Omit<DistributionFindManyArgs, 'select' | 'include'> & {
+      select?: DistributionCountAggregateInputType | true
+    }
+
+  export interface DistributionDelegate<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Distribution'], meta: { name: 'Distribution' } }
+    /**
+     * Find zero or one Distribution that matches the filter.
+     * @param {DistributionFindUniqueArgs} args - Arguments to find a Distribution
+     * @example
+     * // Get one Distribution
+     * const distribution = await prisma.distribution.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUnique<T extends DistributionFindUniqueArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionFindUniqueArgs<ExtArgs>>
+    ): Prisma__DistributionClient<$Types.GetResult<DistributionPayload<ExtArgs>, T, 'findUnique'> | null, null, ExtArgs>
+
+    /**
+     * Find one Distribution that matches the filter or throw an error  with `error.code='P2025'` 
+     *     if no matches were found.
+     * @param {DistributionFindUniqueOrThrowArgs} args - Arguments to find a Distribution
+     * @example
+     * // Get one Distribution
+     * const distribution = await prisma.distribution.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUniqueOrThrow<T extends DistributionFindUniqueOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionFindUniqueOrThrowArgs<ExtArgs>>
+    ): Prisma__DistributionClient<$Types.GetResult<DistributionPayload<ExtArgs>, T, 'findUniqueOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find the first Distribution that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionFindFirstArgs} args - Arguments to find a Distribution
+     * @example
+     * // Get one Distribution
+     * const distribution = await prisma.distribution.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirst<T extends DistributionFindFirstArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionFindFirstArgs<ExtArgs>>
+    ): Prisma__DistributionClient<$Types.GetResult<DistributionPayload<ExtArgs>, T, 'findFirst'> | null, null, ExtArgs>
+
+    /**
+     * Find the first Distribution that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionFindFirstOrThrowArgs} args - Arguments to find a Distribution
+     * @example
+     * // Get one Distribution
+     * const distribution = await prisma.distribution.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirstOrThrow<T extends DistributionFindFirstOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionFindFirstOrThrowArgs<ExtArgs>>
+    ): Prisma__DistributionClient<$Types.GetResult<DistributionPayload<ExtArgs>, T, 'findFirstOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find zero or more Distributions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionFindManyArgs=} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Distributions
+     * const distributions = await prisma.distribution.findMany()
+     * 
+     * // Get first 10 Distributions
+     * const distributions = await prisma.distribution.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const distributionWithIdOnly = await prisma.distribution.findMany({ select: { id: true } })
+     * 
+    **/
+    findMany<T extends DistributionFindManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionFindManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<$Types.GetResult<DistributionPayload<ExtArgs>, T, 'findMany'>>
+
+    /**
+     * Create a Distribution.
+     * @param {DistributionCreateArgs} args - Arguments to create a Distribution.
+     * @example
+     * // Create one Distribution
+     * const Distribution = await prisma.distribution.create({
+     *   data: {
+     *     // ... data to create a Distribution
+     *   }
+     * })
+     * 
+    **/
+    create<T extends DistributionCreateArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionCreateArgs<ExtArgs>>
+    ): Prisma__DistributionClient<$Types.GetResult<DistributionPayload<ExtArgs>, T, 'create'>, never, ExtArgs>
+
+    /**
+     * Delete a Distribution.
+     * @param {DistributionDeleteArgs} args - Arguments to delete one Distribution.
+     * @example
+     * // Delete one Distribution
+     * const Distribution = await prisma.distribution.delete({
+     *   where: {
+     *     // ... filter to delete one Distribution
+     *   }
+     * })
+     * 
+    **/
+    delete<T extends DistributionDeleteArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionDeleteArgs<ExtArgs>>
+    ): Prisma__DistributionClient<$Types.GetResult<DistributionPayload<ExtArgs>, T, 'delete'>, never, ExtArgs>
+
+    /**
+     * Update one Distribution.
+     * @param {DistributionUpdateArgs} args - Arguments to update one Distribution.
+     * @example
+     * // Update one Distribution
+     * const distribution = await prisma.distribution.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    update<T extends DistributionUpdateArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionUpdateArgs<ExtArgs>>
+    ): Prisma__DistributionClient<$Types.GetResult<DistributionPayload<ExtArgs>, T, 'update'>, never, ExtArgs>
+
+    /**
+     * Delete zero or more Distributions.
+     * @param {DistributionDeleteManyArgs} args - Arguments to filter Distributions to delete.
+     * @example
+     * // Delete a few Distributions
+     * const { count } = await prisma.distribution.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+    **/
+    deleteMany<T extends DistributionDeleteManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionDeleteManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Distributions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Distributions
+     * const distribution = await prisma.distribution.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    updateMany<T extends DistributionUpdateManyArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionUpdateManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Distribution.
+     * @param {DistributionUpsertArgs} args - Arguments to update or create a Distribution.
+     * @example
+     * // Update or create a Distribution
+     * const distribution = await prisma.distribution.upsert({
+     *   create: {
+     *     // ... data to create a Distribution
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Distribution we want to update
+     *   }
+     * })
+    **/
+    upsert<T extends DistributionUpsertArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionUpsertArgs<ExtArgs>>
+    ): Prisma__DistributionClient<$Types.GetResult<DistributionPayload<ExtArgs>, T, 'upsert'>, never, ExtArgs>
+
+    /**
+     * Count the number of Distributions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionCountArgs} args - Arguments to filter Distributions to count.
+     * @example
+     * // Count the number of Distributions
+     * const count = await prisma.distribution.count({
+     *   where: {
+     *     // ... the filter for the Distributions we want to count
+     *   }
+     * })
+    **/
+    count<T extends DistributionCountArgs>(
+      args?: Subset<T, DistributionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DistributionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Distribution.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DistributionAggregateArgs>(args: Subset<T, DistributionAggregateArgs>): Prisma.PrismaPromise<GetDistributionAggregateType<T>>
+
+    /**
+     * Group by Distribution.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DistributionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DistributionGroupByArgs['orderBy'] }
+        : { orderBy?: DistributionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DistributionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDistributionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Distribution model
+   */
+  readonly fields: DistributionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Distribution.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export class Prisma__DistributionClient<T, Null = never, ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> implements Prisma.PrismaPromise<T> {
+    private readonly _dmmf;
+    private readonly _queryType;
+    private readonly _rootField;
+    private readonly _clientMethod;
+    private readonly _args;
+    private readonly _dataPath;
+    private readonly _errorFormat;
+    private readonly _measurePerformance?;
+    private _isList;
+    private _callsite;
+    private _requestPromise?;
+    readonly [Symbol.toStringTag]: 'PrismaPromise';
+    constructor(_dmmf: runtime.DMMFClass, _queryType: 'query' | 'mutation', _rootField: string, _clientMethod: string, _args: any, _dataPath: string[], _errorFormat: ErrorFormat, _measurePerformance?: boolean | undefined, _isList?: boolean);
+
+    customer<T extends CustomerArgs<ExtArgs> = {}>(args?: Subset<T, CustomerArgs<ExtArgs>>): Prisma__CustomerClient<$Types.GetResult<CustomerPayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
+
+    items<T extends Distribution$itemsArgs<ExtArgs> = {}>(args?: Subset<T, Distribution$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<DistributionItemPayload<ExtArgs>, T, 'findMany'>| Null>;
+
+    revisions<T extends Distribution$revisionsArgs<ExtArgs> = {}>(args?: Subset<T, Distribution$revisionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<DistributionRevisionPayload<ExtArgs>, T, 'findMany'>| Null>;
+
+    dispatches<T extends Distribution$dispatchesArgs<ExtArgs> = {}>(args?: Subset<T, Distribution$dispatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<DistributionDispatchPayload<ExtArgs>, T, 'findMany'>| Null>;
+
+    invoiceItems<T extends Distribution$invoiceItemsArgs<ExtArgs> = {}>(args?: Subset<T, Distribution$invoiceItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<DistributionInvoiceItemPayload<ExtArgs>, T, 'findMany'>| Null>;
+
+    private get _document();
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult>;
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+  }
+
+
+
+  /**
+   * Fields of the Distribution model
+   */ 
+  interface DistributionFieldRefs {
+    readonly id: FieldRef<"Distribution", 'String'>
+    readonly documentNumber: FieldRef<"Distribution", 'String'>
+    readonly customerId: FieldRef<"Distribution", 'String'>
+    readonly customerName: FieldRef<"Distribution", 'String'>
+    readonly status: FieldRef<"Distribution", 'String'>
+    readonly notes: FieldRef<"Distribution", 'String'>
+    readonly revision: FieldRef<"Distribution", 'Int'>
+    readonly createdBy: FieldRef<"Distribution", 'String'>
+    readonly updatedBy: FieldRef<"Distribution", 'String'>
+    readonly approvedBy: FieldRef<"Distribution", 'String'>
+    readonly approvedAt: FieldRef<"Distribution", 'DateTime'>
+    readonly createdAt: FieldRef<"Distribution", 'DateTime'>
+    readonly updatedAt: FieldRef<"Distribution", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+
+  /**
+   * Distribution findUnique
+   */
+  export type DistributionFindUniqueArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Distribution
+     */
+    select?: DistributionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInclude<ExtArgs> | null
+    /**
+     * Filter, which Distribution to fetch.
+     */
+    where: DistributionWhereUniqueInput
+  }
+
+
+  /**
+   * Distribution findUniqueOrThrow
+   */
+  export type DistributionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Distribution
+     */
+    select?: DistributionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInclude<ExtArgs> | null
+    /**
+     * Filter, which Distribution to fetch.
+     */
+    where: DistributionWhereUniqueInput
+  }
+
+
+  /**
+   * Distribution findFirst
+   */
+  export type DistributionFindFirstArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Distribution
+     */
+    select?: DistributionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInclude<ExtArgs> | null
+    /**
+     * Filter, which Distribution to fetch.
+     */
+    where?: DistributionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Distributions to fetch.
+     */
+    orderBy?: DistributionOrderByWithRelationInput | DistributionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Distributions.
+     */
+    cursor?: DistributionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Distributions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Distributions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Distributions.
+     */
+    distinct?: DistributionScalarFieldEnum | DistributionScalarFieldEnum[]
+  }
+
+
+  /**
+   * Distribution findFirstOrThrow
+   */
+  export type DistributionFindFirstOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Distribution
+     */
+    select?: DistributionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInclude<ExtArgs> | null
+    /**
+     * Filter, which Distribution to fetch.
+     */
+    where?: DistributionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Distributions to fetch.
+     */
+    orderBy?: DistributionOrderByWithRelationInput | DistributionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Distributions.
+     */
+    cursor?: DistributionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Distributions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Distributions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Distributions.
+     */
+    distinct?: DistributionScalarFieldEnum | DistributionScalarFieldEnum[]
+  }
+
+
+  /**
+   * Distribution findMany
+   */
+  export type DistributionFindManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Distribution
+     */
+    select?: DistributionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInclude<ExtArgs> | null
+    /**
+     * Filter, which Distributions to fetch.
+     */
+    where?: DistributionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Distributions to fetch.
+     */
+    orderBy?: DistributionOrderByWithRelationInput | DistributionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Distributions.
+     */
+    cursor?: DistributionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Distributions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Distributions.
+     */
+    skip?: number
+    distinct?: DistributionScalarFieldEnum | DistributionScalarFieldEnum[]
+  }
+
+
+  /**
+   * Distribution create
+   */
+  export type DistributionCreateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Distribution
+     */
+    select?: DistributionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Distribution.
+     */
+    data: XOR<DistributionCreateInput, DistributionUncheckedCreateInput>
+  }
+
+
+  /**
+   * Distribution update
+   */
+  export type DistributionUpdateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Distribution
+     */
+    select?: DistributionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Distribution.
+     */
+    data: XOR<DistributionUpdateInput, DistributionUncheckedUpdateInput>
+    /**
+     * Choose, which Distribution to update.
+     */
+    where: DistributionWhereUniqueInput
+  }
+
+
+  /**
+   * Distribution updateMany
+   */
+  export type DistributionUpdateManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Distributions.
+     */
+    data: XOR<DistributionUpdateManyMutationInput, DistributionUncheckedUpdateManyInput>
+    /**
+     * Filter which Distributions to update
+     */
+    where?: DistributionWhereInput
+  }
+
+
+  /**
+   * Distribution upsert
+   */
+  export type DistributionUpsertArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Distribution
+     */
+    select?: DistributionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Distribution to update in case it exists.
+     */
+    where: DistributionWhereUniqueInput
+    /**
+     * In case the Distribution found by the `where` argument doesn't exist, create a new Distribution with this data.
+     */
+    create: XOR<DistributionCreateInput, DistributionUncheckedCreateInput>
+    /**
+     * In case the Distribution was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DistributionUpdateInput, DistributionUncheckedUpdateInput>
+  }
+
+
+  /**
+   * Distribution delete
+   */
+  export type DistributionDeleteArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Distribution
+     */
+    select?: DistributionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInclude<ExtArgs> | null
+    /**
+     * Filter which Distribution to delete.
+     */
+    where: DistributionWhereUniqueInput
+  }
+
+
+  /**
+   * Distribution deleteMany
+   */
+  export type DistributionDeleteManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Distributions to delete
+     */
+    where?: DistributionWhereInput
+  }
+
+
+  /**
+   * Distribution.items
+   */
+  export type Distribution$itemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionItem
+     */
+    select?: DistributionItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionItemInclude<ExtArgs> | null
+    where?: DistributionItemWhereInput
+    orderBy?: DistributionItemOrderByWithRelationInput | DistributionItemOrderByWithRelationInput[]
+    cursor?: DistributionItemWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DistributionItemScalarFieldEnum | DistributionItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * Distribution.revisions
+   */
+  export type Distribution$revisionsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionRevision
+     */
+    select?: DistributionRevisionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionRevisionInclude<ExtArgs> | null
+    where?: DistributionRevisionWhereInput
+    orderBy?: DistributionRevisionOrderByWithRelationInput | DistributionRevisionOrderByWithRelationInput[]
+    cursor?: DistributionRevisionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DistributionRevisionScalarFieldEnum | DistributionRevisionScalarFieldEnum[]
+  }
+
+
+  /**
+   * Distribution.dispatches
+   */
+  export type Distribution$dispatchesArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatch
+     */
+    select?: DistributionDispatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchInclude<ExtArgs> | null
+    where?: DistributionDispatchWhereInput
+    orderBy?: DistributionDispatchOrderByWithRelationInput | DistributionDispatchOrderByWithRelationInput[]
+    cursor?: DistributionDispatchWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DistributionDispatchScalarFieldEnum | DistributionDispatchScalarFieldEnum[]
+  }
+
+
+  /**
+   * Distribution.invoiceItems
+   */
+  export type Distribution$invoiceItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceItem
+     */
+    select?: DistributionInvoiceItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceItemInclude<ExtArgs> | null
+    where?: DistributionInvoiceItemWhereInput
+    orderBy?: DistributionInvoiceItemOrderByWithRelationInput | DistributionInvoiceItemOrderByWithRelationInput[]
+    cursor?: DistributionInvoiceItemWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DistributionInvoiceItemScalarFieldEnum | DistributionInvoiceItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * Distribution without action
+   */
+  export type DistributionArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Distribution
+     */
+    select?: DistributionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInclude<ExtArgs> | null
+  }
+
+
+
+  /**
+   * Model DistributionItem
+   */
+
+
+  export type AggregateDistributionItem = {
+    _count: DistributionItemCountAggregateOutputType | null
+    _avg: DistributionItemAvgAggregateOutputType | null
+    _sum: DistributionItemSumAggregateOutputType | null
+    _min: DistributionItemMinAggregateOutputType | null
+    _max: DistributionItemMaxAggregateOutputType | null
+  }
+
+  export type DistributionItemAvgAggregateOutputType = {
+    position: number | null
+    quantity: number | null
+    shippedQuantity: number | null
+    invoicedQuantity: number | null
+    unitPrice: number | null
+    taxRate: number | null
+  }
+
+  export type DistributionItemSumAggregateOutputType = {
+    position: number | null
+    quantity: number | null
+    shippedQuantity: number | null
+    invoicedQuantity: number | null
+    unitPrice: number | null
+    taxRate: number | null
+  }
+
+  export type DistributionItemMinAggregateOutputType = {
+    id: string | null
+    distributionId: string | null
+    productId: string | null
+    position: number | null
+    productLabel: string | null
+    quantity: number | null
+    shippedQuantity: number | null
+    invoicedQuantity: number | null
+    unitPrice: number | null
+    taxRate: number | null
+    isCancelled: boolean | null
+  }
+
+  export type DistributionItemMaxAggregateOutputType = {
+    id: string | null
+    distributionId: string | null
+    productId: string | null
+    position: number | null
+    productLabel: string | null
+    quantity: number | null
+    shippedQuantity: number | null
+    invoicedQuantity: number | null
+    unitPrice: number | null
+    taxRate: number | null
+    isCancelled: boolean | null
+  }
+
+  export type DistributionItemCountAggregateOutputType = {
+    id: number
+    distributionId: number
+    productId: number
+    position: number
+    productLabel: number
+    quantity: number
+    shippedQuantity: number
+    invoicedQuantity: number
+    unitPrice: number
+    taxRate: number
+    isCancelled: number
+    _all: number
+  }
+
+
+  export type DistributionItemAvgAggregateInputType = {
+    position?: true
+    quantity?: true
+    shippedQuantity?: true
+    invoicedQuantity?: true
+    unitPrice?: true
+    taxRate?: true
+  }
+
+  export type DistributionItemSumAggregateInputType = {
+    position?: true
+    quantity?: true
+    shippedQuantity?: true
+    invoicedQuantity?: true
+    unitPrice?: true
+    taxRate?: true
+  }
+
+  export type DistributionItemMinAggregateInputType = {
+    id?: true
+    distributionId?: true
+    productId?: true
+    position?: true
+    productLabel?: true
+    quantity?: true
+    shippedQuantity?: true
+    invoicedQuantity?: true
+    unitPrice?: true
+    taxRate?: true
+    isCancelled?: true
+  }
+
+  export type DistributionItemMaxAggregateInputType = {
+    id?: true
+    distributionId?: true
+    productId?: true
+    position?: true
+    productLabel?: true
+    quantity?: true
+    shippedQuantity?: true
+    invoicedQuantity?: true
+    unitPrice?: true
+    taxRate?: true
+    isCancelled?: true
+  }
+
+  export type DistributionItemCountAggregateInputType = {
+    id?: true
+    distributionId?: true
+    productId?: true
+    position?: true
+    productLabel?: true
+    quantity?: true
+    shippedQuantity?: true
+    invoicedQuantity?: true
+    unitPrice?: true
+    taxRate?: true
+    isCancelled?: true
+    _all?: true
+  }
+
+  export type DistributionItemAggregateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DistributionItem to aggregate.
+     */
+    where?: DistributionItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionItems to fetch.
+     */
+    orderBy?: DistributionItemOrderByWithRelationInput | DistributionItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DistributionItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionItems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned DistributionItems
+    **/
+    _count?: true | DistributionItemCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: DistributionItemAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: DistributionItemSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DistributionItemMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DistributionItemMaxAggregateInputType
+  }
+
+  export type GetDistributionItemAggregateType<T extends DistributionItemAggregateArgs> = {
+        [P in keyof T & keyof AggregateDistributionItem]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDistributionItem[P]>
+      : GetScalarType<T[P], AggregateDistributionItem[P]>
+  }
+
+
+
+
+  export type DistributionItemGroupByArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionItemWhereInput
+    orderBy?: DistributionItemOrderByWithAggregationInput | DistributionItemOrderByWithAggregationInput[]
+    by: DistributionItemScalarFieldEnum[] | DistributionItemScalarFieldEnum
+    having?: DistributionItemScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DistributionItemCountAggregateInputType | true
+    _avg?: DistributionItemAvgAggregateInputType
+    _sum?: DistributionItemSumAggregateInputType
+    _min?: DistributionItemMinAggregateInputType
+    _max?: DistributionItemMaxAggregateInputType
+  }
+
+
+  export type DistributionItemGroupByOutputType = {
+    id: string
+    distributionId: string
+    productId: string
+    position: number
+    productLabel: string
+    quantity: number
+    shippedQuantity: number
+    invoicedQuantity: number
+    unitPrice: number
+    taxRate: number
+    isCancelled: boolean
+    _count: DistributionItemCountAggregateOutputType | null
+    _avg: DistributionItemAvgAggregateOutputType | null
+    _sum: DistributionItemSumAggregateOutputType | null
+    _min: DistributionItemMinAggregateOutputType | null
+    _max: DistributionItemMaxAggregateOutputType | null
+  }
+
+  type GetDistributionItemGroupByPayload<T extends DistributionItemGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DistributionItemGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DistributionItemGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DistributionItemGroupByOutputType[P]>
+            : GetScalarType<T[P], DistributionItemGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DistributionItemSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    distributionId?: boolean
+    productId?: boolean
+    position?: boolean
+    productLabel?: boolean
+    quantity?: boolean
+    shippedQuantity?: boolean
+    invoicedQuantity?: boolean
+    unitPrice?: boolean
+    taxRate?: boolean
+    isCancelled?: boolean
+    distribution?: boolean | DistributionArgs<ExtArgs>
+    product?: boolean | ProductArgs<ExtArgs>
+    dispatchItems?: boolean | DistributionItem$dispatchItemsArgs<ExtArgs>
+    invoiceItems?: boolean | DistributionItem$invoiceItemsArgs<ExtArgs>
+    _count?: boolean | DistributionItemCountOutputTypeArgs<ExtArgs>
+  }, ExtArgs["result"]["distributionItem"]>
+
+  export type DistributionItemSelectScalar = {
+    id?: boolean
+    distributionId?: boolean
+    productId?: boolean
+    position?: boolean
+    productLabel?: boolean
+    quantity?: boolean
+    shippedQuantity?: boolean
+    invoicedQuantity?: boolean
+    unitPrice?: boolean
+    taxRate?: boolean
+    isCancelled?: boolean
+  }
+
+  export type DistributionItemInclude<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    distribution?: boolean | DistributionArgs<ExtArgs>
+    product?: boolean | ProductArgs<ExtArgs>
+    dispatchItems?: boolean | DistributionItem$dispatchItemsArgs<ExtArgs>
+    invoiceItems?: boolean | DistributionItem$invoiceItemsArgs<ExtArgs>
+    _count?: boolean | DistributionItemCountOutputTypeArgs<ExtArgs>
+  }
+
+
+  type DistributionItemGetPayload<S extends boolean | null | undefined | DistributionItemArgs> = $Types.GetResult<DistributionItemPayload, S>
+
+  type DistributionItemCountArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = 
+    Omit<DistributionItemFindManyArgs, 'select' | 'include'> & {
+      select?: DistributionItemCountAggregateInputType | true
+    }
+
+  export interface DistributionItemDelegate<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DistributionItem'], meta: { name: 'DistributionItem' } }
+    /**
+     * Find zero or one DistributionItem that matches the filter.
+     * @param {DistributionItemFindUniqueArgs} args - Arguments to find a DistributionItem
+     * @example
+     * // Get one DistributionItem
+     * const distributionItem = await prisma.distributionItem.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUnique<T extends DistributionItemFindUniqueArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionItemFindUniqueArgs<ExtArgs>>
+    ): Prisma__DistributionItemClient<$Types.GetResult<DistributionItemPayload<ExtArgs>, T, 'findUnique'> | null, null, ExtArgs>
+
+    /**
+     * Find one DistributionItem that matches the filter or throw an error  with `error.code='P2025'` 
+     *     if no matches were found.
+     * @param {DistributionItemFindUniqueOrThrowArgs} args - Arguments to find a DistributionItem
+     * @example
+     * // Get one DistributionItem
+     * const distributionItem = await prisma.distributionItem.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUniqueOrThrow<T extends DistributionItemFindUniqueOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionItemFindUniqueOrThrowArgs<ExtArgs>>
+    ): Prisma__DistributionItemClient<$Types.GetResult<DistributionItemPayload<ExtArgs>, T, 'findUniqueOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find the first DistributionItem that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionItemFindFirstArgs} args - Arguments to find a DistributionItem
+     * @example
+     * // Get one DistributionItem
+     * const distributionItem = await prisma.distributionItem.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirst<T extends DistributionItemFindFirstArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionItemFindFirstArgs<ExtArgs>>
+    ): Prisma__DistributionItemClient<$Types.GetResult<DistributionItemPayload<ExtArgs>, T, 'findFirst'> | null, null, ExtArgs>
+
+    /**
+     * Find the first DistributionItem that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionItemFindFirstOrThrowArgs} args - Arguments to find a DistributionItem
+     * @example
+     * // Get one DistributionItem
+     * const distributionItem = await prisma.distributionItem.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirstOrThrow<T extends DistributionItemFindFirstOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionItemFindFirstOrThrowArgs<ExtArgs>>
+    ): Prisma__DistributionItemClient<$Types.GetResult<DistributionItemPayload<ExtArgs>, T, 'findFirstOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find zero or more DistributionItems that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionItemFindManyArgs=} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DistributionItems
+     * const distributionItems = await prisma.distributionItem.findMany()
+     * 
+     * // Get first 10 DistributionItems
+     * const distributionItems = await prisma.distributionItem.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const distributionItemWithIdOnly = await prisma.distributionItem.findMany({ select: { id: true } })
+     * 
+    **/
+    findMany<T extends DistributionItemFindManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionItemFindManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<$Types.GetResult<DistributionItemPayload<ExtArgs>, T, 'findMany'>>
+
+    /**
+     * Create a DistributionItem.
+     * @param {DistributionItemCreateArgs} args - Arguments to create a DistributionItem.
+     * @example
+     * // Create one DistributionItem
+     * const DistributionItem = await prisma.distributionItem.create({
+     *   data: {
+     *     // ... data to create a DistributionItem
+     *   }
+     * })
+     * 
+    **/
+    create<T extends DistributionItemCreateArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionItemCreateArgs<ExtArgs>>
+    ): Prisma__DistributionItemClient<$Types.GetResult<DistributionItemPayload<ExtArgs>, T, 'create'>, never, ExtArgs>
+
+    /**
+     * Delete a DistributionItem.
+     * @param {DistributionItemDeleteArgs} args - Arguments to delete one DistributionItem.
+     * @example
+     * // Delete one DistributionItem
+     * const DistributionItem = await prisma.distributionItem.delete({
+     *   where: {
+     *     // ... filter to delete one DistributionItem
+     *   }
+     * })
+     * 
+    **/
+    delete<T extends DistributionItemDeleteArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionItemDeleteArgs<ExtArgs>>
+    ): Prisma__DistributionItemClient<$Types.GetResult<DistributionItemPayload<ExtArgs>, T, 'delete'>, never, ExtArgs>
+
+    /**
+     * Update one DistributionItem.
+     * @param {DistributionItemUpdateArgs} args - Arguments to update one DistributionItem.
+     * @example
+     * // Update one DistributionItem
+     * const distributionItem = await prisma.distributionItem.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    update<T extends DistributionItemUpdateArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionItemUpdateArgs<ExtArgs>>
+    ): Prisma__DistributionItemClient<$Types.GetResult<DistributionItemPayload<ExtArgs>, T, 'update'>, never, ExtArgs>
+
+    /**
+     * Delete zero or more DistributionItems.
+     * @param {DistributionItemDeleteManyArgs} args - Arguments to filter DistributionItems to delete.
+     * @example
+     * // Delete a few DistributionItems
+     * const { count } = await prisma.distributionItem.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+    **/
+    deleteMany<T extends DistributionItemDeleteManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionItemDeleteManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DistributionItems.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionItemUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DistributionItems
+     * const distributionItem = await prisma.distributionItem.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    updateMany<T extends DistributionItemUpdateManyArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionItemUpdateManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one DistributionItem.
+     * @param {DistributionItemUpsertArgs} args - Arguments to update or create a DistributionItem.
+     * @example
+     * // Update or create a DistributionItem
+     * const distributionItem = await prisma.distributionItem.upsert({
+     *   create: {
+     *     // ... data to create a DistributionItem
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DistributionItem we want to update
+     *   }
+     * })
+    **/
+    upsert<T extends DistributionItemUpsertArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionItemUpsertArgs<ExtArgs>>
+    ): Prisma__DistributionItemClient<$Types.GetResult<DistributionItemPayload<ExtArgs>, T, 'upsert'>, never, ExtArgs>
+
+    /**
+     * Count the number of DistributionItems.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionItemCountArgs} args - Arguments to filter DistributionItems to count.
+     * @example
+     * // Count the number of DistributionItems
+     * const count = await prisma.distributionItem.count({
+     *   where: {
+     *     // ... the filter for the DistributionItems we want to count
+     *   }
+     * })
+    **/
+    count<T extends DistributionItemCountArgs>(
+      args?: Subset<T, DistributionItemCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DistributionItemCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a DistributionItem.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionItemAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DistributionItemAggregateArgs>(args: Subset<T, DistributionItemAggregateArgs>): Prisma.PrismaPromise<GetDistributionItemAggregateType<T>>
+
+    /**
+     * Group by DistributionItem.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionItemGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DistributionItemGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DistributionItemGroupByArgs['orderBy'] }
+        : { orderBy?: DistributionItemGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DistributionItemGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDistributionItemGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the DistributionItem model
+   */
+  readonly fields: DistributionItemFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DistributionItem.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export class Prisma__DistributionItemClient<T, Null = never, ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> implements Prisma.PrismaPromise<T> {
+    private readonly _dmmf;
+    private readonly _queryType;
+    private readonly _rootField;
+    private readonly _clientMethod;
+    private readonly _args;
+    private readonly _dataPath;
+    private readonly _errorFormat;
+    private readonly _measurePerformance?;
+    private _isList;
+    private _callsite;
+    private _requestPromise?;
+    readonly [Symbol.toStringTag]: 'PrismaPromise';
+    constructor(_dmmf: runtime.DMMFClass, _queryType: 'query' | 'mutation', _rootField: string, _clientMethod: string, _args: any, _dataPath: string[], _errorFormat: ErrorFormat, _measurePerformance?: boolean | undefined, _isList?: boolean);
+
+    distribution<T extends DistributionArgs<ExtArgs> = {}>(args?: Subset<T, DistributionArgs<ExtArgs>>): Prisma__DistributionClient<$Types.GetResult<DistributionPayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
+
+    product<T extends ProductArgs<ExtArgs> = {}>(args?: Subset<T, ProductArgs<ExtArgs>>): Prisma__ProductClient<$Types.GetResult<ProductPayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
+
+    dispatchItems<T extends DistributionItem$dispatchItemsArgs<ExtArgs> = {}>(args?: Subset<T, DistributionItem$dispatchItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<DistributionDispatchItemPayload<ExtArgs>, T, 'findMany'>| Null>;
+
+    invoiceItems<T extends DistributionItem$invoiceItemsArgs<ExtArgs> = {}>(args?: Subset<T, DistributionItem$invoiceItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<DistributionInvoiceItemPayload<ExtArgs>, T, 'findMany'>| Null>;
+
+    private get _document();
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult>;
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+  }
+
+
+
+  /**
+   * Fields of the DistributionItem model
+   */ 
+  interface DistributionItemFieldRefs {
+    readonly id: FieldRef<"DistributionItem", 'String'>
+    readonly distributionId: FieldRef<"DistributionItem", 'String'>
+    readonly productId: FieldRef<"DistributionItem", 'String'>
+    readonly position: FieldRef<"DistributionItem", 'Int'>
+    readonly productLabel: FieldRef<"DistributionItem", 'String'>
+    readonly quantity: FieldRef<"DistributionItem", 'Int'>
+    readonly shippedQuantity: FieldRef<"DistributionItem", 'Int'>
+    readonly invoicedQuantity: FieldRef<"DistributionItem", 'Int'>
+    readonly unitPrice: FieldRef<"DistributionItem", 'Float'>
+    readonly taxRate: FieldRef<"DistributionItem", 'Float'>
+    readonly isCancelled: FieldRef<"DistributionItem", 'Boolean'>
+  }
+    
+
+  // Custom InputTypes
+
+  /**
+   * DistributionItem findUnique
+   */
+  export type DistributionItemFindUniqueArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionItem
+     */
+    select?: DistributionItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionItem to fetch.
+     */
+    where: DistributionItemWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionItem findUniqueOrThrow
+   */
+  export type DistributionItemFindUniqueOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionItem
+     */
+    select?: DistributionItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionItem to fetch.
+     */
+    where: DistributionItemWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionItem findFirst
+   */
+  export type DistributionItemFindFirstArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionItem
+     */
+    select?: DistributionItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionItem to fetch.
+     */
+    where?: DistributionItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionItems to fetch.
+     */
+    orderBy?: DistributionItemOrderByWithRelationInput | DistributionItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DistributionItems.
+     */
+    cursor?: DistributionItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionItems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DistributionItems.
+     */
+    distinct?: DistributionItemScalarFieldEnum | DistributionItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionItem findFirstOrThrow
+   */
+  export type DistributionItemFindFirstOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionItem
+     */
+    select?: DistributionItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionItem to fetch.
+     */
+    where?: DistributionItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionItems to fetch.
+     */
+    orderBy?: DistributionItemOrderByWithRelationInput | DistributionItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DistributionItems.
+     */
+    cursor?: DistributionItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionItems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DistributionItems.
+     */
+    distinct?: DistributionItemScalarFieldEnum | DistributionItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionItem findMany
+   */
+  export type DistributionItemFindManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionItem
+     */
+    select?: DistributionItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionItems to fetch.
+     */
+    where?: DistributionItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionItems to fetch.
+     */
+    orderBy?: DistributionItemOrderByWithRelationInput | DistributionItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing DistributionItems.
+     */
+    cursor?: DistributionItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionItems.
+     */
+    skip?: number
+    distinct?: DistributionItemScalarFieldEnum | DistributionItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionItem create
+   */
+  export type DistributionItemCreateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionItem
+     */
+    select?: DistributionItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionItemInclude<ExtArgs> | null
+    /**
+     * The data needed to create a DistributionItem.
+     */
+    data: XOR<DistributionItemCreateInput, DistributionItemUncheckedCreateInput>
+  }
+
+
+  /**
+   * DistributionItem update
+   */
+  export type DistributionItemUpdateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionItem
+     */
+    select?: DistributionItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionItemInclude<ExtArgs> | null
+    /**
+     * The data needed to update a DistributionItem.
+     */
+    data: XOR<DistributionItemUpdateInput, DistributionItemUncheckedUpdateInput>
+    /**
+     * Choose, which DistributionItem to update.
+     */
+    where: DistributionItemWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionItem updateMany
+   */
+  export type DistributionItemUpdateManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DistributionItems.
+     */
+    data: XOR<DistributionItemUpdateManyMutationInput, DistributionItemUncheckedUpdateManyInput>
+    /**
+     * Filter which DistributionItems to update
+     */
+    where?: DistributionItemWhereInput
+  }
+
+
+  /**
+   * DistributionItem upsert
+   */
+  export type DistributionItemUpsertArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionItem
+     */
+    select?: DistributionItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionItemInclude<ExtArgs> | null
+    /**
+     * The filter to search for the DistributionItem to update in case it exists.
+     */
+    where: DistributionItemWhereUniqueInput
+    /**
+     * In case the DistributionItem found by the `where` argument doesn't exist, create a new DistributionItem with this data.
+     */
+    create: XOR<DistributionItemCreateInput, DistributionItemUncheckedCreateInput>
+    /**
+     * In case the DistributionItem was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DistributionItemUpdateInput, DistributionItemUncheckedUpdateInput>
+  }
+
+
+  /**
+   * DistributionItem delete
+   */
+  export type DistributionItemDeleteArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionItem
+     */
+    select?: DistributionItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionItemInclude<ExtArgs> | null
+    /**
+     * Filter which DistributionItem to delete.
+     */
+    where: DistributionItemWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionItem deleteMany
+   */
+  export type DistributionItemDeleteManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DistributionItems to delete
+     */
+    where?: DistributionItemWhereInput
+  }
+
+
+  /**
+   * DistributionItem.dispatchItems
+   */
+  export type DistributionItem$dispatchItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatchItem
+     */
+    select?: DistributionDispatchItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchItemInclude<ExtArgs> | null
+    where?: DistributionDispatchItemWhereInput
+    orderBy?: DistributionDispatchItemOrderByWithRelationInput | DistributionDispatchItemOrderByWithRelationInput[]
+    cursor?: DistributionDispatchItemWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DistributionDispatchItemScalarFieldEnum | DistributionDispatchItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionItem.invoiceItems
+   */
+  export type DistributionItem$invoiceItemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceItem
+     */
+    select?: DistributionInvoiceItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceItemInclude<ExtArgs> | null
+    where?: DistributionInvoiceItemWhereInput
+    orderBy?: DistributionInvoiceItemOrderByWithRelationInput | DistributionInvoiceItemOrderByWithRelationInput[]
+    cursor?: DistributionInvoiceItemWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DistributionInvoiceItemScalarFieldEnum | DistributionInvoiceItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionItem without action
+   */
+  export type DistributionItemArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionItem
+     */
+    select?: DistributionItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionItemInclude<ExtArgs> | null
+  }
+
+
+
+  /**
+   * Model DistributionRevision
+   */
+
+
+  export type AggregateDistributionRevision = {
+    _count: DistributionRevisionCountAggregateOutputType | null
+    _avg: DistributionRevisionAvgAggregateOutputType | null
+    _sum: DistributionRevisionSumAggregateOutputType | null
+    _min: DistributionRevisionMinAggregateOutputType | null
+    _max: DistributionRevisionMaxAggregateOutputType | null
+  }
+
+  export type DistributionRevisionAvgAggregateOutputType = {
+    revision: number | null
+  }
+
+  export type DistributionRevisionSumAggregateOutputType = {
+    revision: number | null
+  }
+
+  export type DistributionRevisionMinAggregateOutputType = {
+    id: string | null
+    distributionId: string | null
+    revision: number | null
+    action: string | null
+    performedBy: string | null
+    beforeSnapshot: string | null
+    afterSnapshot: string | null
+    createdAt: Date | null
+  }
+
+  export type DistributionRevisionMaxAggregateOutputType = {
+    id: string | null
+    distributionId: string | null
+    revision: number | null
+    action: string | null
+    performedBy: string | null
+    beforeSnapshot: string | null
+    afterSnapshot: string | null
+    createdAt: Date | null
+  }
+
+  export type DistributionRevisionCountAggregateOutputType = {
+    id: number
+    distributionId: number
+    revision: number
+    action: number
+    performedBy: number
+    beforeSnapshot: number
+    afterSnapshot: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type DistributionRevisionAvgAggregateInputType = {
+    revision?: true
+  }
+
+  export type DistributionRevisionSumAggregateInputType = {
+    revision?: true
+  }
+
+  export type DistributionRevisionMinAggregateInputType = {
+    id?: true
+    distributionId?: true
+    revision?: true
+    action?: true
+    performedBy?: true
+    beforeSnapshot?: true
+    afterSnapshot?: true
+    createdAt?: true
+  }
+
+  export type DistributionRevisionMaxAggregateInputType = {
+    id?: true
+    distributionId?: true
+    revision?: true
+    action?: true
+    performedBy?: true
+    beforeSnapshot?: true
+    afterSnapshot?: true
+    createdAt?: true
+  }
+
+  export type DistributionRevisionCountAggregateInputType = {
+    id?: true
+    distributionId?: true
+    revision?: true
+    action?: true
+    performedBy?: true
+    beforeSnapshot?: true
+    afterSnapshot?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type DistributionRevisionAggregateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DistributionRevision to aggregate.
+     */
+    where?: DistributionRevisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionRevisions to fetch.
+     */
+    orderBy?: DistributionRevisionOrderByWithRelationInput | DistributionRevisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DistributionRevisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionRevisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionRevisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned DistributionRevisions
+    **/
+    _count?: true | DistributionRevisionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: DistributionRevisionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: DistributionRevisionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DistributionRevisionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DistributionRevisionMaxAggregateInputType
+  }
+
+  export type GetDistributionRevisionAggregateType<T extends DistributionRevisionAggregateArgs> = {
+        [P in keyof T & keyof AggregateDistributionRevision]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDistributionRevision[P]>
+      : GetScalarType<T[P], AggregateDistributionRevision[P]>
+  }
+
+
+
+
+  export type DistributionRevisionGroupByArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionRevisionWhereInput
+    orderBy?: DistributionRevisionOrderByWithAggregationInput | DistributionRevisionOrderByWithAggregationInput[]
+    by: DistributionRevisionScalarFieldEnum[] | DistributionRevisionScalarFieldEnum
+    having?: DistributionRevisionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DistributionRevisionCountAggregateInputType | true
+    _avg?: DistributionRevisionAvgAggregateInputType
+    _sum?: DistributionRevisionSumAggregateInputType
+    _min?: DistributionRevisionMinAggregateInputType
+    _max?: DistributionRevisionMaxAggregateInputType
+  }
+
+
+  export type DistributionRevisionGroupByOutputType = {
+    id: string
+    distributionId: string
+    revision: number
+    action: string
+    performedBy: string
+    beforeSnapshot: string | null
+    afterSnapshot: string
+    createdAt: Date
+    _count: DistributionRevisionCountAggregateOutputType | null
+    _avg: DistributionRevisionAvgAggregateOutputType | null
+    _sum: DistributionRevisionSumAggregateOutputType | null
+    _min: DistributionRevisionMinAggregateOutputType | null
+    _max: DistributionRevisionMaxAggregateOutputType | null
+  }
+
+  type GetDistributionRevisionGroupByPayload<T extends DistributionRevisionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DistributionRevisionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DistributionRevisionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DistributionRevisionGroupByOutputType[P]>
+            : GetScalarType<T[P], DistributionRevisionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DistributionRevisionSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    distributionId?: boolean
+    revision?: boolean
+    action?: boolean
+    performedBy?: boolean
+    beforeSnapshot?: boolean
+    afterSnapshot?: boolean
+    createdAt?: boolean
+    distribution?: boolean | DistributionArgs<ExtArgs>
+  }, ExtArgs["result"]["distributionRevision"]>
+
+  export type DistributionRevisionSelectScalar = {
+    id?: boolean
+    distributionId?: boolean
+    revision?: boolean
+    action?: boolean
+    performedBy?: boolean
+    beforeSnapshot?: boolean
+    afterSnapshot?: boolean
+    createdAt?: boolean
+  }
+
+  export type DistributionRevisionInclude<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    distribution?: boolean | DistributionArgs<ExtArgs>
+  }
+
+
+  type DistributionRevisionGetPayload<S extends boolean | null | undefined | DistributionRevisionArgs> = $Types.GetResult<DistributionRevisionPayload, S>
+
+  type DistributionRevisionCountArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = 
+    Omit<DistributionRevisionFindManyArgs, 'select' | 'include'> & {
+      select?: DistributionRevisionCountAggregateInputType | true
+    }
+
+  export interface DistributionRevisionDelegate<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DistributionRevision'], meta: { name: 'DistributionRevision' } }
+    /**
+     * Find zero or one DistributionRevision that matches the filter.
+     * @param {DistributionRevisionFindUniqueArgs} args - Arguments to find a DistributionRevision
+     * @example
+     * // Get one DistributionRevision
+     * const distributionRevision = await prisma.distributionRevision.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUnique<T extends DistributionRevisionFindUniqueArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionRevisionFindUniqueArgs<ExtArgs>>
+    ): Prisma__DistributionRevisionClient<$Types.GetResult<DistributionRevisionPayload<ExtArgs>, T, 'findUnique'> | null, null, ExtArgs>
+
+    /**
+     * Find one DistributionRevision that matches the filter or throw an error  with `error.code='P2025'` 
+     *     if no matches were found.
+     * @param {DistributionRevisionFindUniqueOrThrowArgs} args - Arguments to find a DistributionRevision
+     * @example
+     * // Get one DistributionRevision
+     * const distributionRevision = await prisma.distributionRevision.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUniqueOrThrow<T extends DistributionRevisionFindUniqueOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionRevisionFindUniqueOrThrowArgs<ExtArgs>>
+    ): Prisma__DistributionRevisionClient<$Types.GetResult<DistributionRevisionPayload<ExtArgs>, T, 'findUniqueOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find the first DistributionRevision that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionRevisionFindFirstArgs} args - Arguments to find a DistributionRevision
+     * @example
+     * // Get one DistributionRevision
+     * const distributionRevision = await prisma.distributionRevision.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirst<T extends DistributionRevisionFindFirstArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionRevisionFindFirstArgs<ExtArgs>>
+    ): Prisma__DistributionRevisionClient<$Types.GetResult<DistributionRevisionPayload<ExtArgs>, T, 'findFirst'> | null, null, ExtArgs>
+
+    /**
+     * Find the first DistributionRevision that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionRevisionFindFirstOrThrowArgs} args - Arguments to find a DistributionRevision
+     * @example
+     * // Get one DistributionRevision
+     * const distributionRevision = await prisma.distributionRevision.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirstOrThrow<T extends DistributionRevisionFindFirstOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionRevisionFindFirstOrThrowArgs<ExtArgs>>
+    ): Prisma__DistributionRevisionClient<$Types.GetResult<DistributionRevisionPayload<ExtArgs>, T, 'findFirstOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find zero or more DistributionRevisions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionRevisionFindManyArgs=} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DistributionRevisions
+     * const distributionRevisions = await prisma.distributionRevision.findMany()
+     * 
+     * // Get first 10 DistributionRevisions
+     * const distributionRevisions = await prisma.distributionRevision.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const distributionRevisionWithIdOnly = await prisma.distributionRevision.findMany({ select: { id: true } })
+     * 
+    **/
+    findMany<T extends DistributionRevisionFindManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionRevisionFindManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<$Types.GetResult<DistributionRevisionPayload<ExtArgs>, T, 'findMany'>>
+
+    /**
+     * Create a DistributionRevision.
+     * @param {DistributionRevisionCreateArgs} args - Arguments to create a DistributionRevision.
+     * @example
+     * // Create one DistributionRevision
+     * const DistributionRevision = await prisma.distributionRevision.create({
+     *   data: {
+     *     // ... data to create a DistributionRevision
+     *   }
+     * })
+     * 
+    **/
+    create<T extends DistributionRevisionCreateArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionRevisionCreateArgs<ExtArgs>>
+    ): Prisma__DistributionRevisionClient<$Types.GetResult<DistributionRevisionPayload<ExtArgs>, T, 'create'>, never, ExtArgs>
+
+    /**
+     * Delete a DistributionRevision.
+     * @param {DistributionRevisionDeleteArgs} args - Arguments to delete one DistributionRevision.
+     * @example
+     * // Delete one DistributionRevision
+     * const DistributionRevision = await prisma.distributionRevision.delete({
+     *   where: {
+     *     // ... filter to delete one DistributionRevision
+     *   }
+     * })
+     * 
+    **/
+    delete<T extends DistributionRevisionDeleteArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionRevisionDeleteArgs<ExtArgs>>
+    ): Prisma__DistributionRevisionClient<$Types.GetResult<DistributionRevisionPayload<ExtArgs>, T, 'delete'>, never, ExtArgs>
+
+    /**
+     * Update one DistributionRevision.
+     * @param {DistributionRevisionUpdateArgs} args - Arguments to update one DistributionRevision.
+     * @example
+     * // Update one DistributionRevision
+     * const distributionRevision = await prisma.distributionRevision.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    update<T extends DistributionRevisionUpdateArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionRevisionUpdateArgs<ExtArgs>>
+    ): Prisma__DistributionRevisionClient<$Types.GetResult<DistributionRevisionPayload<ExtArgs>, T, 'update'>, never, ExtArgs>
+
+    /**
+     * Delete zero or more DistributionRevisions.
+     * @param {DistributionRevisionDeleteManyArgs} args - Arguments to filter DistributionRevisions to delete.
+     * @example
+     * // Delete a few DistributionRevisions
+     * const { count } = await prisma.distributionRevision.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+    **/
+    deleteMany<T extends DistributionRevisionDeleteManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionRevisionDeleteManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DistributionRevisions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionRevisionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DistributionRevisions
+     * const distributionRevision = await prisma.distributionRevision.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    updateMany<T extends DistributionRevisionUpdateManyArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionRevisionUpdateManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one DistributionRevision.
+     * @param {DistributionRevisionUpsertArgs} args - Arguments to update or create a DistributionRevision.
+     * @example
+     * // Update or create a DistributionRevision
+     * const distributionRevision = await prisma.distributionRevision.upsert({
+     *   create: {
+     *     // ... data to create a DistributionRevision
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DistributionRevision we want to update
+     *   }
+     * })
+    **/
+    upsert<T extends DistributionRevisionUpsertArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionRevisionUpsertArgs<ExtArgs>>
+    ): Prisma__DistributionRevisionClient<$Types.GetResult<DistributionRevisionPayload<ExtArgs>, T, 'upsert'>, never, ExtArgs>
+
+    /**
+     * Count the number of DistributionRevisions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionRevisionCountArgs} args - Arguments to filter DistributionRevisions to count.
+     * @example
+     * // Count the number of DistributionRevisions
+     * const count = await prisma.distributionRevision.count({
+     *   where: {
+     *     // ... the filter for the DistributionRevisions we want to count
+     *   }
+     * })
+    **/
+    count<T extends DistributionRevisionCountArgs>(
+      args?: Subset<T, DistributionRevisionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DistributionRevisionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a DistributionRevision.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionRevisionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DistributionRevisionAggregateArgs>(args: Subset<T, DistributionRevisionAggregateArgs>): Prisma.PrismaPromise<GetDistributionRevisionAggregateType<T>>
+
+    /**
+     * Group by DistributionRevision.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionRevisionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DistributionRevisionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DistributionRevisionGroupByArgs['orderBy'] }
+        : { orderBy?: DistributionRevisionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DistributionRevisionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDistributionRevisionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the DistributionRevision model
+   */
+  readonly fields: DistributionRevisionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DistributionRevision.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export class Prisma__DistributionRevisionClient<T, Null = never, ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> implements Prisma.PrismaPromise<T> {
+    private readonly _dmmf;
+    private readonly _queryType;
+    private readonly _rootField;
+    private readonly _clientMethod;
+    private readonly _args;
+    private readonly _dataPath;
+    private readonly _errorFormat;
+    private readonly _measurePerformance?;
+    private _isList;
+    private _callsite;
+    private _requestPromise?;
+    readonly [Symbol.toStringTag]: 'PrismaPromise';
+    constructor(_dmmf: runtime.DMMFClass, _queryType: 'query' | 'mutation', _rootField: string, _clientMethod: string, _args: any, _dataPath: string[], _errorFormat: ErrorFormat, _measurePerformance?: boolean | undefined, _isList?: boolean);
+
+    distribution<T extends DistributionArgs<ExtArgs> = {}>(args?: Subset<T, DistributionArgs<ExtArgs>>): Prisma__DistributionClient<$Types.GetResult<DistributionPayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
+
+    private get _document();
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult>;
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+  }
+
+
+
+  /**
+   * Fields of the DistributionRevision model
+   */ 
+  interface DistributionRevisionFieldRefs {
+    readonly id: FieldRef<"DistributionRevision", 'String'>
+    readonly distributionId: FieldRef<"DistributionRevision", 'String'>
+    readonly revision: FieldRef<"DistributionRevision", 'Int'>
+    readonly action: FieldRef<"DistributionRevision", 'String'>
+    readonly performedBy: FieldRef<"DistributionRevision", 'String'>
+    readonly beforeSnapshot: FieldRef<"DistributionRevision", 'String'>
+    readonly afterSnapshot: FieldRef<"DistributionRevision", 'String'>
+    readonly createdAt: FieldRef<"DistributionRevision", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+
+  /**
+   * DistributionRevision findUnique
+   */
+  export type DistributionRevisionFindUniqueArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionRevision
+     */
+    select?: DistributionRevisionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionRevisionInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionRevision to fetch.
+     */
+    where: DistributionRevisionWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionRevision findUniqueOrThrow
+   */
+  export type DistributionRevisionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionRevision
+     */
+    select?: DistributionRevisionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionRevisionInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionRevision to fetch.
+     */
+    where: DistributionRevisionWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionRevision findFirst
+   */
+  export type DistributionRevisionFindFirstArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionRevision
+     */
+    select?: DistributionRevisionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionRevisionInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionRevision to fetch.
+     */
+    where?: DistributionRevisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionRevisions to fetch.
+     */
+    orderBy?: DistributionRevisionOrderByWithRelationInput | DistributionRevisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DistributionRevisions.
+     */
+    cursor?: DistributionRevisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionRevisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionRevisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DistributionRevisions.
+     */
+    distinct?: DistributionRevisionScalarFieldEnum | DistributionRevisionScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionRevision findFirstOrThrow
+   */
+  export type DistributionRevisionFindFirstOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionRevision
+     */
+    select?: DistributionRevisionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionRevisionInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionRevision to fetch.
+     */
+    where?: DistributionRevisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionRevisions to fetch.
+     */
+    orderBy?: DistributionRevisionOrderByWithRelationInput | DistributionRevisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DistributionRevisions.
+     */
+    cursor?: DistributionRevisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionRevisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionRevisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DistributionRevisions.
+     */
+    distinct?: DistributionRevisionScalarFieldEnum | DistributionRevisionScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionRevision findMany
+   */
+  export type DistributionRevisionFindManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionRevision
+     */
+    select?: DistributionRevisionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionRevisionInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionRevisions to fetch.
+     */
+    where?: DistributionRevisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionRevisions to fetch.
+     */
+    orderBy?: DistributionRevisionOrderByWithRelationInput | DistributionRevisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing DistributionRevisions.
+     */
+    cursor?: DistributionRevisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionRevisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionRevisions.
+     */
+    skip?: number
+    distinct?: DistributionRevisionScalarFieldEnum | DistributionRevisionScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionRevision create
+   */
+  export type DistributionRevisionCreateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionRevision
+     */
+    select?: DistributionRevisionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionRevisionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a DistributionRevision.
+     */
+    data: XOR<DistributionRevisionCreateInput, DistributionRevisionUncheckedCreateInput>
+  }
+
+
+  /**
+   * DistributionRevision update
+   */
+  export type DistributionRevisionUpdateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionRevision
+     */
+    select?: DistributionRevisionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionRevisionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a DistributionRevision.
+     */
+    data: XOR<DistributionRevisionUpdateInput, DistributionRevisionUncheckedUpdateInput>
+    /**
+     * Choose, which DistributionRevision to update.
+     */
+    where: DistributionRevisionWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionRevision updateMany
+   */
+  export type DistributionRevisionUpdateManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DistributionRevisions.
+     */
+    data: XOR<DistributionRevisionUpdateManyMutationInput, DistributionRevisionUncheckedUpdateManyInput>
+    /**
+     * Filter which DistributionRevisions to update
+     */
+    where?: DistributionRevisionWhereInput
+  }
+
+
+  /**
+   * DistributionRevision upsert
+   */
+  export type DistributionRevisionUpsertArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionRevision
+     */
+    select?: DistributionRevisionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionRevisionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the DistributionRevision to update in case it exists.
+     */
+    where: DistributionRevisionWhereUniqueInput
+    /**
+     * In case the DistributionRevision found by the `where` argument doesn't exist, create a new DistributionRevision with this data.
+     */
+    create: XOR<DistributionRevisionCreateInput, DistributionRevisionUncheckedCreateInput>
+    /**
+     * In case the DistributionRevision was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DistributionRevisionUpdateInput, DistributionRevisionUncheckedUpdateInput>
+  }
+
+
+  /**
+   * DistributionRevision delete
+   */
+  export type DistributionRevisionDeleteArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionRevision
+     */
+    select?: DistributionRevisionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionRevisionInclude<ExtArgs> | null
+    /**
+     * Filter which DistributionRevision to delete.
+     */
+    where: DistributionRevisionWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionRevision deleteMany
+   */
+  export type DistributionRevisionDeleteManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DistributionRevisions to delete
+     */
+    where?: DistributionRevisionWhereInput
+  }
+
+
+  /**
+   * DistributionRevision without action
+   */
+  export type DistributionRevisionArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionRevision
+     */
+    select?: DistributionRevisionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionRevisionInclude<ExtArgs> | null
+  }
+
+
+
+  /**
+   * Model DistributionDispatch
+   */
+
+
+  export type AggregateDistributionDispatch = {
+    _count: DistributionDispatchCountAggregateOutputType | null
+    _min: DistributionDispatchMinAggregateOutputType | null
+    _max: DistributionDispatchMaxAggregateOutputType | null
+  }
+
+  export type DistributionDispatchMinAggregateOutputType = {
+    id: string | null
+    dispatchNumber: string | null
+    distributionId: string | null
+    notes: string | null
+    createdBy: string | null
+    dispatchedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type DistributionDispatchMaxAggregateOutputType = {
+    id: string | null
+    dispatchNumber: string | null
+    distributionId: string | null
+    notes: string | null
+    createdBy: string | null
+    dispatchedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type DistributionDispatchCountAggregateOutputType = {
+    id: number
+    dispatchNumber: number
+    distributionId: number
+    notes: number
+    createdBy: number
+    dispatchedAt: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type DistributionDispatchMinAggregateInputType = {
+    id?: true
+    dispatchNumber?: true
+    distributionId?: true
+    notes?: true
+    createdBy?: true
+    dispatchedAt?: true
+    createdAt?: true
+  }
+
+  export type DistributionDispatchMaxAggregateInputType = {
+    id?: true
+    dispatchNumber?: true
+    distributionId?: true
+    notes?: true
+    createdBy?: true
+    dispatchedAt?: true
+    createdAt?: true
+  }
+
+  export type DistributionDispatchCountAggregateInputType = {
+    id?: true
+    dispatchNumber?: true
+    distributionId?: true
+    notes?: true
+    createdBy?: true
+    dispatchedAt?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type DistributionDispatchAggregateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DistributionDispatch to aggregate.
+     */
+    where?: DistributionDispatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionDispatches to fetch.
+     */
+    orderBy?: DistributionDispatchOrderByWithRelationInput | DistributionDispatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DistributionDispatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionDispatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionDispatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned DistributionDispatches
+    **/
+    _count?: true | DistributionDispatchCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DistributionDispatchMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DistributionDispatchMaxAggregateInputType
+  }
+
+  export type GetDistributionDispatchAggregateType<T extends DistributionDispatchAggregateArgs> = {
+        [P in keyof T & keyof AggregateDistributionDispatch]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDistributionDispatch[P]>
+      : GetScalarType<T[P], AggregateDistributionDispatch[P]>
+  }
+
+
+
+
+  export type DistributionDispatchGroupByArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionDispatchWhereInput
+    orderBy?: DistributionDispatchOrderByWithAggregationInput | DistributionDispatchOrderByWithAggregationInput[]
+    by: DistributionDispatchScalarFieldEnum[] | DistributionDispatchScalarFieldEnum
+    having?: DistributionDispatchScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DistributionDispatchCountAggregateInputType | true
+    _min?: DistributionDispatchMinAggregateInputType
+    _max?: DistributionDispatchMaxAggregateInputType
+  }
+
+
+  export type DistributionDispatchGroupByOutputType = {
+    id: string
+    dispatchNumber: string
+    distributionId: string
+    notes: string | null
+    createdBy: string
+    dispatchedAt: Date
+    createdAt: Date
+    _count: DistributionDispatchCountAggregateOutputType | null
+    _min: DistributionDispatchMinAggregateOutputType | null
+    _max: DistributionDispatchMaxAggregateOutputType | null
+  }
+
+  type GetDistributionDispatchGroupByPayload<T extends DistributionDispatchGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DistributionDispatchGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DistributionDispatchGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DistributionDispatchGroupByOutputType[P]>
+            : GetScalarType<T[P], DistributionDispatchGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DistributionDispatchSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    dispatchNumber?: boolean
+    distributionId?: boolean
+    notes?: boolean
+    createdBy?: boolean
+    dispatchedAt?: boolean
+    createdAt?: boolean
+    distribution?: boolean | DistributionArgs<ExtArgs>
+    items?: boolean | DistributionDispatch$itemsArgs<ExtArgs>
+    _count?: boolean | DistributionDispatchCountOutputTypeArgs<ExtArgs>
+  }, ExtArgs["result"]["distributionDispatch"]>
+
+  export type DistributionDispatchSelectScalar = {
+    id?: boolean
+    dispatchNumber?: boolean
+    distributionId?: boolean
+    notes?: boolean
+    createdBy?: boolean
+    dispatchedAt?: boolean
+    createdAt?: boolean
+  }
+
+  export type DistributionDispatchInclude<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    distribution?: boolean | DistributionArgs<ExtArgs>
+    items?: boolean | DistributionDispatch$itemsArgs<ExtArgs>
+    _count?: boolean | DistributionDispatchCountOutputTypeArgs<ExtArgs>
+  }
+
+
+  type DistributionDispatchGetPayload<S extends boolean | null | undefined | DistributionDispatchArgs> = $Types.GetResult<DistributionDispatchPayload, S>
+
+  type DistributionDispatchCountArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = 
+    Omit<DistributionDispatchFindManyArgs, 'select' | 'include'> & {
+      select?: DistributionDispatchCountAggregateInputType | true
+    }
+
+  export interface DistributionDispatchDelegate<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DistributionDispatch'], meta: { name: 'DistributionDispatch' } }
+    /**
+     * Find zero or one DistributionDispatch that matches the filter.
+     * @param {DistributionDispatchFindUniqueArgs} args - Arguments to find a DistributionDispatch
+     * @example
+     * // Get one DistributionDispatch
+     * const distributionDispatch = await prisma.distributionDispatch.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUnique<T extends DistributionDispatchFindUniqueArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionDispatchFindUniqueArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchClient<$Types.GetResult<DistributionDispatchPayload<ExtArgs>, T, 'findUnique'> | null, null, ExtArgs>
+
+    /**
+     * Find one DistributionDispatch that matches the filter or throw an error  with `error.code='P2025'` 
+     *     if no matches were found.
+     * @param {DistributionDispatchFindUniqueOrThrowArgs} args - Arguments to find a DistributionDispatch
+     * @example
+     * // Get one DistributionDispatch
+     * const distributionDispatch = await prisma.distributionDispatch.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUniqueOrThrow<T extends DistributionDispatchFindUniqueOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionDispatchFindUniqueOrThrowArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchClient<$Types.GetResult<DistributionDispatchPayload<ExtArgs>, T, 'findUniqueOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find the first DistributionDispatch that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionDispatchFindFirstArgs} args - Arguments to find a DistributionDispatch
+     * @example
+     * // Get one DistributionDispatch
+     * const distributionDispatch = await prisma.distributionDispatch.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirst<T extends DistributionDispatchFindFirstArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionDispatchFindFirstArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchClient<$Types.GetResult<DistributionDispatchPayload<ExtArgs>, T, 'findFirst'> | null, null, ExtArgs>
+
+    /**
+     * Find the first DistributionDispatch that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionDispatchFindFirstOrThrowArgs} args - Arguments to find a DistributionDispatch
+     * @example
+     * // Get one DistributionDispatch
+     * const distributionDispatch = await prisma.distributionDispatch.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirstOrThrow<T extends DistributionDispatchFindFirstOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionDispatchFindFirstOrThrowArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchClient<$Types.GetResult<DistributionDispatchPayload<ExtArgs>, T, 'findFirstOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find zero or more DistributionDispatches that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionDispatchFindManyArgs=} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DistributionDispatches
+     * const distributionDispatches = await prisma.distributionDispatch.findMany()
+     * 
+     * // Get first 10 DistributionDispatches
+     * const distributionDispatches = await prisma.distributionDispatch.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const distributionDispatchWithIdOnly = await prisma.distributionDispatch.findMany({ select: { id: true } })
+     * 
+    **/
+    findMany<T extends DistributionDispatchFindManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionDispatchFindManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<$Types.GetResult<DistributionDispatchPayload<ExtArgs>, T, 'findMany'>>
+
+    /**
+     * Create a DistributionDispatch.
+     * @param {DistributionDispatchCreateArgs} args - Arguments to create a DistributionDispatch.
+     * @example
+     * // Create one DistributionDispatch
+     * const DistributionDispatch = await prisma.distributionDispatch.create({
+     *   data: {
+     *     // ... data to create a DistributionDispatch
+     *   }
+     * })
+     * 
+    **/
+    create<T extends DistributionDispatchCreateArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionDispatchCreateArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchClient<$Types.GetResult<DistributionDispatchPayload<ExtArgs>, T, 'create'>, never, ExtArgs>
+
+    /**
+     * Delete a DistributionDispatch.
+     * @param {DistributionDispatchDeleteArgs} args - Arguments to delete one DistributionDispatch.
+     * @example
+     * // Delete one DistributionDispatch
+     * const DistributionDispatch = await prisma.distributionDispatch.delete({
+     *   where: {
+     *     // ... filter to delete one DistributionDispatch
+     *   }
+     * })
+     * 
+    **/
+    delete<T extends DistributionDispatchDeleteArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionDispatchDeleteArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchClient<$Types.GetResult<DistributionDispatchPayload<ExtArgs>, T, 'delete'>, never, ExtArgs>
+
+    /**
+     * Update one DistributionDispatch.
+     * @param {DistributionDispatchUpdateArgs} args - Arguments to update one DistributionDispatch.
+     * @example
+     * // Update one DistributionDispatch
+     * const distributionDispatch = await prisma.distributionDispatch.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    update<T extends DistributionDispatchUpdateArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionDispatchUpdateArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchClient<$Types.GetResult<DistributionDispatchPayload<ExtArgs>, T, 'update'>, never, ExtArgs>
+
+    /**
+     * Delete zero or more DistributionDispatches.
+     * @param {DistributionDispatchDeleteManyArgs} args - Arguments to filter DistributionDispatches to delete.
+     * @example
+     * // Delete a few DistributionDispatches
+     * const { count } = await prisma.distributionDispatch.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+    **/
+    deleteMany<T extends DistributionDispatchDeleteManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionDispatchDeleteManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DistributionDispatches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionDispatchUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DistributionDispatches
+     * const distributionDispatch = await prisma.distributionDispatch.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    updateMany<T extends DistributionDispatchUpdateManyArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionDispatchUpdateManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one DistributionDispatch.
+     * @param {DistributionDispatchUpsertArgs} args - Arguments to update or create a DistributionDispatch.
+     * @example
+     * // Update or create a DistributionDispatch
+     * const distributionDispatch = await prisma.distributionDispatch.upsert({
+     *   create: {
+     *     // ... data to create a DistributionDispatch
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DistributionDispatch we want to update
+     *   }
+     * })
+    **/
+    upsert<T extends DistributionDispatchUpsertArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionDispatchUpsertArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchClient<$Types.GetResult<DistributionDispatchPayload<ExtArgs>, T, 'upsert'>, never, ExtArgs>
+
+    /**
+     * Count the number of DistributionDispatches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionDispatchCountArgs} args - Arguments to filter DistributionDispatches to count.
+     * @example
+     * // Count the number of DistributionDispatches
+     * const count = await prisma.distributionDispatch.count({
+     *   where: {
+     *     // ... the filter for the DistributionDispatches we want to count
+     *   }
+     * })
+    **/
+    count<T extends DistributionDispatchCountArgs>(
+      args?: Subset<T, DistributionDispatchCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DistributionDispatchCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a DistributionDispatch.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionDispatchAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DistributionDispatchAggregateArgs>(args: Subset<T, DistributionDispatchAggregateArgs>): Prisma.PrismaPromise<GetDistributionDispatchAggregateType<T>>
+
+    /**
+     * Group by DistributionDispatch.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionDispatchGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DistributionDispatchGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DistributionDispatchGroupByArgs['orderBy'] }
+        : { orderBy?: DistributionDispatchGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DistributionDispatchGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDistributionDispatchGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the DistributionDispatch model
+   */
+  readonly fields: DistributionDispatchFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DistributionDispatch.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export class Prisma__DistributionDispatchClient<T, Null = never, ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> implements Prisma.PrismaPromise<T> {
+    private readonly _dmmf;
+    private readonly _queryType;
+    private readonly _rootField;
+    private readonly _clientMethod;
+    private readonly _args;
+    private readonly _dataPath;
+    private readonly _errorFormat;
+    private readonly _measurePerformance?;
+    private _isList;
+    private _callsite;
+    private _requestPromise?;
+    readonly [Symbol.toStringTag]: 'PrismaPromise';
+    constructor(_dmmf: runtime.DMMFClass, _queryType: 'query' | 'mutation', _rootField: string, _clientMethod: string, _args: any, _dataPath: string[], _errorFormat: ErrorFormat, _measurePerformance?: boolean | undefined, _isList?: boolean);
+
+    distribution<T extends DistributionArgs<ExtArgs> = {}>(args?: Subset<T, DistributionArgs<ExtArgs>>): Prisma__DistributionClient<$Types.GetResult<DistributionPayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
+
+    items<T extends DistributionDispatch$itemsArgs<ExtArgs> = {}>(args?: Subset<T, DistributionDispatch$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<DistributionDispatchItemPayload<ExtArgs>, T, 'findMany'>| Null>;
+
+    private get _document();
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult>;
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+  }
+
+
+
+  /**
+   * Fields of the DistributionDispatch model
+   */ 
+  interface DistributionDispatchFieldRefs {
+    readonly id: FieldRef<"DistributionDispatch", 'String'>
+    readonly dispatchNumber: FieldRef<"DistributionDispatch", 'String'>
+    readonly distributionId: FieldRef<"DistributionDispatch", 'String'>
+    readonly notes: FieldRef<"DistributionDispatch", 'String'>
+    readonly createdBy: FieldRef<"DistributionDispatch", 'String'>
+    readonly dispatchedAt: FieldRef<"DistributionDispatch", 'DateTime'>
+    readonly createdAt: FieldRef<"DistributionDispatch", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+
+  /**
+   * DistributionDispatch findUnique
+   */
+  export type DistributionDispatchFindUniqueArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatch
+     */
+    select?: DistributionDispatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionDispatch to fetch.
+     */
+    where: DistributionDispatchWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionDispatch findUniqueOrThrow
+   */
+  export type DistributionDispatchFindUniqueOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatch
+     */
+    select?: DistributionDispatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionDispatch to fetch.
+     */
+    where: DistributionDispatchWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionDispatch findFirst
+   */
+  export type DistributionDispatchFindFirstArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatch
+     */
+    select?: DistributionDispatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionDispatch to fetch.
+     */
+    where?: DistributionDispatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionDispatches to fetch.
+     */
+    orderBy?: DistributionDispatchOrderByWithRelationInput | DistributionDispatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DistributionDispatches.
+     */
+    cursor?: DistributionDispatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionDispatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionDispatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DistributionDispatches.
+     */
+    distinct?: DistributionDispatchScalarFieldEnum | DistributionDispatchScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionDispatch findFirstOrThrow
+   */
+  export type DistributionDispatchFindFirstOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatch
+     */
+    select?: DistributionDispatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionDispatch to fetch.
+     */
+    where?: DistributionDispatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionDispatches to fetch.
+     */
+    orderBy?: DistributionDispatchOrderByWithRelationInput | DistributionDispatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DistributionDispatches.
+     */
+    cursor?: DistributionDispatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionDispatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionDispatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DistributionDispatches.
+     */
+    distinct?: DistributionDispatchScalarFieldEnum | DistributionDispatchScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionDispatch findMany
+   */
+  export type DistributionDispatchFindManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatch
+     */
+    select?: DistributionDispatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionDispatches to fetch.
+     */
+    where?: DistributionDispatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionDispatches to fetch.
+     */
+    orderBy?: DistributionDispatchOrderByWithRelationInput | DistributionDispatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing DistributionDispatches.
+     */
+    cursor?: DistributionDispatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionDispatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionDispatches.
+     */
+    skip?: number
+    distinct?: DistributionDispatchScalarFieldEnum | DistributionDispatchScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionDispatch create
+   */
+  export type DistributionDispatchCreateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatch
+     */
+    select?: DistributionDispatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchInclude<ExtArgs> | null
+    /**
+     * The data needed to create a DistributionDispatch.
+     */
+    data: XOR<DistributionDispatchCreateInput, DistributionDispatchUncheckedCreateInput>
+  }
+
+
+  /**
+   * DistributionDispatch update
+   */
+  export type DistributionDispatchUpdateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatch
+     */
+    select?: DistributionDispatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchInclude<ExtArgs> | null
+    /**
+     * The data needed to update a DistributionDispatch.
+     */
+    data: XOR<DistributionDispatchUpdateInput, DistributionDispatchUncheckedUpdateInput>
+    /**
+     * Choose, which DistributionDispatch to update.
+     */
+    where: DistributionDispatchWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionDispatch updateMany
+   */
+  export type DistributionDispatchUpdateManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DistributionDispatches.
+     */
+    data: XOR<DistributionDispatchUpdateManyMutationInput, DistributionDispatchUncheckedUpdateManyInput>
+    /**
+     * Filter which DistributionDispatches to update
+     */
+    where?: DistributionDispatchWhereInput
+  }
+
+
+  /**
+   * DistributionDispatch upsert
+   */
+  export type DistributionDispatchUpsertArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatch
+     */
+    select?: DistributionDispatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchInclude<ExtArgs> | null
+    /**
+     * The filter to search for the DistributionDispatch to update in case it exists.
+     */
+    where: DistributionDispatchWhereUniqueInput
+    /**
+     * In case the DistributionDispatch found by the `where` argument doesn't exist, create a new DistributionDispatch with this data.
+     */
+    create: XOR<DistributionDispatchCreateInput, DistributionDispatchUncheckedCreateInput>
+    /**
+     * In case the DistributionDispatch was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DistributionDispatchUpdateInput, DistributionDispatchUncheckedUpdateInput>
+  }
+
+
+  /**
+   * DistributionDispatch delete
+   */
+  export type DistributionDispatchDeleteArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatch
+     */
+    select?: DistributionDispatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchInclude<ExtArgs> | null
+    /**
+     * Filter which DistributionDispatch to delete.
+     */
+    where: DistributionDispatchWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionDispatch deleteMany
+   */
+  export type DistributionDispatchDeleteManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DistributionDispatches to delete
+     */
+    where?: DistributionDispatchWhereInput
+  }
+
+
+  /**
+   * DistributionDispatch.items
+   */
+  export type DistributionDispatch$itemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatchItem
+     */
+    select?: DistributionDispatchItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchItemInclude<ExtArgs> | null
+    where?: DistributionDispatchItemWhereInput
+    orderBy?: DistributionDispatchItemOrderByWithRelationInput | DistributionDispatchItemOrderByWithRelationInput[]
+    cursor?: DistributionDispatchItemWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DistributionDispatchItemScalarFieldEnum | DistributionDispatchItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionDispatch without action
+   */
+  export type DistributionDispatchArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatch
+     */
+    select?: DistributionDispatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchInclude<ExtArgs> | null
+  }
+
+
+
+  /**
+   * Model DistributionDispatchItem
+   */
+
+
+  export type AggregateDistributionDispatchItem = {
+    _count: DistributionDispatchItemCountAggregateOutputType | null
+    _avg: DistributionDispatchItemAvgAggregateOutputType | null
+    _sum: DistributionDispatchItemSumAggregateOutputType | null
+    _min: DistributionDispatchItemMinAggregateOutputType | null
+    _max: DistributionDispatchItemMaxAggregateOutputType | null
+  }
+
+  export type DistributionDispatchItemAvgAggregateOutputType = {
+    quantity: number | null
+  }
+
+  export type DistributionDispatchItemSumAggregateOutputType = {
+    quantity: number | null
+  }
+
+  export type DistributionDispatchItemMinAggregateOutputType = {
+    id: string | null
+    dispatchId: string | null
+    distributionItemId: string | null
+    quantity: number | null
+  }
+
+  export type DistributionDispatchItemMaxAggregateOutputType = {
+    id: string | null
+    dispatchId: string | null
+    distributionItemId: string | null
+    quantity: number | null
+  }
+
+  export type DistributionDispatchItemCountAggregateOutputType = {
+    id: number
+    dispatchId: number
+    distributionItemId: number
+    quantity: number
+    _all: number
+  }
+
+
+  export type DistributionDispatchItemAvgAggregateInputType = {
+    quantity?: true
+  }
+
+  export type DistributionDispatchItemSumAggregateInputType = {
+    quantity?: true
+  }
+
+  export type DistributionDispatchItemMinAggregateInputType = {
+    id?: true
+    dispatchId?: true
+    distributionItemId?: true
+    quantity?: true
+  }
+
+  export type DistributionDispatchItemMaxAggregateInputType = {
+    id?: true
+    dispatchId?: true
+    distributionItemId?: true
+    quantity?: true
+  }
+
+  export type DistributionDispatchItemCountAggregateInputType = {
+    id?: true
+    dispatchId?: true
+    distributionItemId?: true
+    quantity?: true
+    _all?: true
+  }
+
+  export type DistributionDispatchItemAggregateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DistributionDispatchItem to aggregate.
+     */
+    where?: DistributionDispatchItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionDispatchItems to fetch.
+     */
+    orderBy?: DistributionDispatchItemOrderByWithRelationInput | DistributionDispatchItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DistributionDispatchItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionDispatchItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionDispatchItems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned DistributionDispatchItems
+    **/
+    _count?: true | DistributionDispatchItemCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: DistributionDispatchItemAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: DistributionDispatchItemSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DistributionDispatchItemMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DistributionDispatchItemMaxAggregateInputType
+  }
+
+  export type GetDistributionDispatchItemAggregateType<T extends DistributionDispatchItemAggregateArgs> = {
+        [P in keyof T & keyof AggregateDistributionDispatchItem]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDistributionDispatchItem[P]>
+      : GetScalarType<T[P], AggregateDistributionDispatchItem[P]>
+  }
+
+
+
+
+  export type DistributionDispatchItemGroupByArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionDispatchItemWhereInput
+    orderBy?: DistributionDispatchItemOrderByWithAggregationInput | DistributionDispatchItemOrderByWithAggregationInput[]
+    by: DistributionDispatchItemScalarFieldEnum[] | DistributionDispatchItemScalarFieldEnum
+    having?: DistributionDispatchItemScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DistributionDispatchItemCountAggregateInputType | true
+    _avg?: DistributionDispatchItemAvgAggregateInputType
+    _sum?: DistributionDispatchItemSumAggregateInputType
+    _min?: DistributionDispatchItemMinAggregateInputType
+    _max?: DistributionDispatchItemMaxAggregateInputType
+  }
+
+
+  export type DistributionDispatchItemGroupByOutputType = {
+    id: string
+    dispatchId: string
+    distributionItemId: string
+    quantity: number
+    _count: DistributionDispatchItemCountAggregateOutputType | null
+    _avg: DistributionDispatchItemAvgAggregateOutputType | null
+    _sum: DistributionDispatchItemSumAggregateOutputType | null
+    _min: DistributionDispatchItemMinAggregateOutputType | null
+    _max: DistributionDispatchItemMaxAggregateOutputType | null
+  }
+
+  type GetDistributionDispatchItemGroupByPayload<T extends DistributionDispatchItemGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DistributionDispatchItemGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DistributionDispatchItemGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DistributionDispatchItemGroupByOutputType[P]>
+            : GetScalarType<T[P], DistributionDispatchItemGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DistributionDispatchItemSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    dispatchId?: boolean
+    distributionItemId?: boolean
+    quantity?: boolean
+    dispatch?: boolean | DistributionDispatchArgs<ExtArgs>
+    distributionItem?: boolean | DistributionItemArgs<ExtArgs>
+  }, ExtArgs["result"]["distributionDispatchItem"]>
+
+  export type DistributionDispatchItemSelectScalar = {
+    id?: boolean
+    dispatchId?: boolean
+    distributionItemId?: boolean
+    quantity?: boolean
+  }
+
+  export type DistributionDispatchItemInclude<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    dispatch?: boolean | DistributionDispatchArgs<ExtArgs>
+    distributionItem?: boolean | DistributionItemArgs<ExtArgs>
+  }
+
+
+  type DistributionDispatchItemGetPayload<S extends boolean | null | undefined | DistributionDispatchItemArgs> = $Types.GetResult<DistributionDispatchItemPayload, S>
+
+  type DistributionDispatchItemCountArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = 
+    Omit<DistributionDispatchItemFindManyArgs, 'select' | 'include'> & {
+      select?: DistributionDispatchItemCountAggregateInputType | true
+    }
+
+  export interface DistributionDispatchItemDelegate<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DistributionDispatchItem'], meta: { name: 'DistributionDispatchItem' } }
+    /**
+     * Find zero or one DistributionDispatchItem that matches the filter.
+     * @param {DistributionDispatchItemFindUniqueArgs} args - Arguments to find a DistributionDispatchItem
+     * @example
+     * // Get one DistributionDispatchItem
+     * const distributionDispatchItem = await prisma.distributionDispatchItem.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUnique<T extends DistributionDispatchItemFindUniqueArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionDispatchItemFindUniqueArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchItemClient<$Types.GetResult<DistributionDispatchItemPayload<ExtArgs>, T, 'findUnique'> | null, null, ExtArgs>
+
+    /**
+     * Find one DistributionDispatchItem that matches the filter or throw an error  with `error.code='P2025'` 
+     *     if no matches were found.
+     * @param {DistributionDispatchItemFindUniqueOrThrowArgs} args - Arguments to find a DistributionDispatchItem
+     * @example
+     * // Get one DistributionDispatchItem
+     * const distributionDispatchItem = await prisma.distributionDispatchItem.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUniqueOrThrow<T extends DistributionDispatchItemFindUniqueOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionDispatchItemFindUniqueOrThrowArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchItemClient<$Types.GetResult<DistributionDispatchItemPayload<ExtArgs>, T, 'findUniqueOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find the first DistributionDispatchItem that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionDispatchItemFindFirstArgs} args - Arguments to find a DistributionDispatchItem
+     * @example
+     * // Get one DistributionDispatchItem
+     * const distributionDispatchItem = await prisma.distributionDispatchItem.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirst<T extends DistributionDispatchItemFindFirstArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionDispatchItemFindFirstArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchItemClient<$Types.GetResult<DistributionDispatchItemPayload<ExtArgs>, T, 'findFirst'> | null, null, ExtArgs>
+
+    /**
+     * Find the first DistributionDispatchItem that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionDispatchItemFindFirstOrThrowArgs} args - Arguments to find a DistributionDispatchItem
+     * @example
+     * // Get one DistributionDispatchItem
+     * const distributionDispatchItem = await prisma.distributionDispatchItem.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirstOrThrow<T extends DistributionDispatchItemFindFirstOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionDispatchItemFindFirstOrThrowArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchItemClient<$Types.GetResult<DistributionDispatchItemPayload<ExtArgs>, T, 'findFirstOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find zero or more DistributionDispatchItems that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionDispatchItemFindManyArgs=} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DistributionDispatchItems
+     * const distributionDispatchItems = await prisma.distributionDispatchItem.findMany()
+     * 
+     * // Get first 10 DistributionDispatchItems
+     * const distributionDispatchItems = await prisma.distributionDispatchItem.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const distributionDispatchItemWithIdOnly = await prisma.distributionDispatchItem.findMany({ select: { id: true } })
+     * 
+    **/
+    findMany<T extends DistributionDispatchItemFindManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionDispatchItemFindManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<$Types.GetResult<DistributionDispatchItemPayload<ExtArgs>, T, 'findMany'>>
+
+    /**
+     * Create a DistributionDispatchItem.
+     * @param {DistributionDispatchItemCreateArgs} args - Arguments to create a DistributionDispatchItem.
+     * @example
+     * // Create one DistributionDispatchItem
+     * const DistributionDispatchItem = await prisma.distributionDispatchItem.create({
+     *   data: {
+     *     // ... data to create a DistributionDispatchItem
+     *   }
+     * })
+     * 
+    **/
+    create<T extends DistributionDispatchItemCreateArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionDispatchItemCreateArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchItemClient<$Types.GetResult<DistributionDispatchItemPayload<ExtArgs>, T, 'create'>, never, ExtArgs>
+
+    /**
+     * Delete a DistributionDispatchItem.
+     * @param {DistributionDispatchItemDeleteArgs} args - Arguments to delete one DistributionDispatchItem.
+     * @example
+     * // Delete one DistributionDispatchItem
+     * const DistributionDispatchItem = await prisma.distributionDispatchItem.delete({
+     *   where: {
+     *     // ... filter to delete one DistributionDispatchItem
+     *   }
+     * })
+     * 
+    **/
+    delete<T extends DistributionDispatchItemDeleteArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionDispatchItemDeleteArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchItemClient<$Types.GetResult<DistributionDispatchItemPayload<ExtArgs>, T, 'delete'>, never, ExtArgs>
+
+    /**
+     * Update one DistributionDispatchItem.
+     * @param {DistributionDispatchItemUpdateArgs} args - Arguments to update one DistributionDispatchItem.
+     * @example
+     * // Update one DistributionDispatchItem
+     * const distributionDispatchItem = await prisma.distributionDispatchItem.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    update<T extends DistributionDispatchItemUpdateArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionDispatchItemUpdateArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchItemClient<$Types.GetResult<DistributionDispatchItemPayload<ExtArgs>, T, 'update'>, never, ExtArgs>
+
+    /**
+     * Delete zero or more DistributionDispatchItems.
+     * @param {DistributionDispatchItemDeleteManyArgs} args - Arguments to filter DistributionDispatchItems to delete.
+     * @example
+     * // Delete a few DistributionDispatchItems
+     * const { count } = await prisma.distributionDispatchItem.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+    **/
+    deleteMany<T extends DistributionDispatchItemDeleteManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionDispatchItemDeleteManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DistributionDispatchItems.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionDispatchItemUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DistributionDispatchItems
+     * const distributionDispatchItem = await prisma.distributionDispatchItem.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    updateMany<T extends DistributionDispatchItemUpdateManyArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionDispatchItemUpdateManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one DistributionDispatchItem.
+     * @param {DistributionDispatchItemUpsertArgs} args - Arguments to update or create a DistributionDispatchItem.
+     * @example
+     * // Update or create a DistributionDispatchItem
+     * const distributionDispatchItem = await prisma.distributionDispatchItem.upsert({
+     *   create: {
+     *     // ... data to create a DistributionDispatchItem
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DistributionDispatchItem we want to update
+     *   }
+     * })
+    **/
+    upsert<T extends DistributionDispatchItemUpsertArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionDispatchItemUpsertArgs<ExtArgs>>
+    ): Prisma__DistributionDispatchItemClient<$Types.GetResult<DistributionDispatchItemPayload<ExtArgs>, T, 'upsert'>, never, ExtArgs>
+
+    /**
+     * Count the number of DistributionDispatchItems.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionDispatchItemCountArgs} args - Arguments to filter DistributionDispatchItems to count.
+     * @example
+     * // Count the number of DistributionDispatchItems
+     * const count = await prisma.distributionDispatchItem.count({
+     *   where: {
+     *     // ... the filter for the DistributionDispatchItems we want to count
+     *   }
+     * })
+    **/
+    count<T extends DistributionDispatchItemCountArgs>(
+      args?: Subset<T, DistributionDispatchItemCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DistributionDispatchItemCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a DistributionDispatchItem.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionDispatchItemAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DistributionDispatchItemAggregateArgs>(args: Subset<T, DistributionDispatchItemAggregateArgs>): Prisma.PrismaPromise<GetDistributionDispatchItemAggregateType<T>>
+
+    /**
+     * Group by DistributionDispatchItem.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionDispatchItemGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DistributionDispatchItemGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DistributionDispatchItemGroupByArgs['orderBy'] }
+        : { orderBy?: DistributionDispatchItemGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DistributionDispatchItemGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDistributionDispatchItemGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the DistributionDispatchItem model
+   */
+  readonly fields: DistributionDispatchItemFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DistributionDispatchItem.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export class Prisma__DistributionDispatchItemClient<T, Null = never, ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> implements Prisma.PrismaPromise<T> {
+    private readonly _dmmf;
+    private readonly _queryType;
+    private readonly _rootField;
+    private readonly _clientMethod;
+    private readonly _args;
+    private readonly _dataPath;
+    private readonly _errorFormat;
+    private readonly _measurePerformance?;
+    private _isList;
+    private _callsite;
+    private _requestPromise?;
+    readonly [Symbol.toStringTag]: 'PrismaPromise';
+    constructor(_dmmf: runtime.DMMFClass, _queryType: 'query' | 'mutation', _rootField: string, _clientMethod: string, _args: any, _dataPath: string[], _errorFormat: ErrorFormat, _measurePerformance?: boolean | undefined, _isList?: boolean);
+
+    dispatch<T extends DistributionDispatchArgs<ExtArgs> = {}>(args?: Subset<T, DistributionDispatchArgs<ExtArgs>>): Prisma__DistributionDispatchClient<$Types.GetResult<DistributionDispatchPayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
+
+    distributionItem<T extends DistributionItemArgs<ExtArgs> = {}>(args?: Subset<T, DistributionItemArgs<ExtArgs>>): Prisma__DistributionItemClient<$Types.GetResult<DistributionItemPayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
+
+    private get _document();
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult>;
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+  }
+
+
+
+  /**
+   * Fields of the DistributionDispatchItem model
+   */ 
+  interface DistributionDispatchItemFieldRefs {
+    readonly id: FieldRef<"DistributionDispatchItem", 'String'>
+    readonly dispatchId: FieldRef<"DistributionDispatchItem", 'String'>
+    readonly distributionItemId: FieldRef<"DistributionDispatchItem", 'String'>
+    readonly quantity: FieldRef<"DistributionDispatchItem", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+
+  /**
+   * DistributionDispatchItem findUnique
+   */
+  export type DistributionDispatchItemFindUniqueArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatchItem
+     */
+    select?: DistributionDispatchItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionDispatchItem to fetch.
+     */
+    where: DistributionDispatchItemWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionDispatchItem findUniqueOrThrow
+   */
+  export type DistributionDispatchItemFindUniqueOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatchItem
+     */
+    select?: DistributionDispatchItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionDispatchItem to fetch.
+     */
+    where: DistributionDispatchItemWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionDispatchItem findFirst
+   */
+  export type DistributionDispatchItemFindFirstArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatchItem
+     */
+    select?: DistributionDispatchItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionDispatchItem to fetch.
+     */
+    where?: DistributionDispatchItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionDispatchItems to fetch.
+     */
+    orderBy?: DistributionDispatchItemOrderByWithRelationInput | DistributionDispatchItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DistributionDispatchItems.
+     */
+    cursor?: DistributionDispatchItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionDispatchItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionDispatchItems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DistributionDispatchItems.
+     */
+    distinct?: DistributionDispatchItemScalarFieldEnum | DistributionDispatchItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionDispatchItem findFirstOrThrow
+   */
+  export type DistributionDispatchItemFindFirstOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatchItem
+     */
+    select?: DistributionDispatchItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionDispatchItem to fetch.
+     */
+    where?: DistributionDispatchItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionDispatchItems to fetch.
+     */
+    orderBy?: DistributionDispatchItemOrderByWithRelationInput | DistributionDispatchItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DistributionDispatchItems.
+     */
+    cursor?: DistributionDispatchItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionDispatchItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionDispatchItems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DistributionDispatchItems.
+     */
+    distinct?: DistributionDispatchItemScalarFieldEnum | DistributionDispatchItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionDispatchItem findMany
+   */
+  export type DistributionDispatchItemFindManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatchItem
+     */
+    select?: DistributionDispatchItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionDispatchItems to fetch.
+     */
+    where?: DistributionDispatchItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionDispatchItems to fetch.
+     */
+    orderBy?: DistributionDispatchItemOrderByWithRelationInput | DistributionDispatchItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing DistributionDispatchItems.
+     */
+    cursor?: DistributionDispatchItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionDispatchItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionDispatchItems.
+     */
+    skip?: number
+    distinct?: DistributionDispatchItemScalarFieldEnum | DistributionDispatchItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionDispatchItem create
+   */
+  export type DistributionDispatchItemCreateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatchItem
+     */
+    select?: DistributionDispatchItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchItemInclude<ExtArgs> | null
+    /**
+     * The data needed to create a DistributionDispatchItem.
+     */
+    data: XOR<DistributionDispatchItemCreateInput, DistributionDispatchItemUncheckedCreateInput>
+  }
+
+
+  /**
+   * DistributionDispatchItem update
+   */
+  export type DistributionDispatchItemUpdateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatchItem
+     */
+    select?: DistributionDispatchItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchItemInclude<ExtArgs> | null
+    /**
+     * The data needed to update a DistributionDispatchItem.
+     */
+    data: XOR<DistributionDispatchItemUpdateInput, DistributionDispatchItemUncheckedUpdateInput>
+    /**
+     * Choose, which DistributionDispatchItem to update.
+     */
+    where: DistributionDispatchItemWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionDispatchItem updateMany
+   */
+  export type DistributionDispatchItemUpdateManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DistributionDispatchItems.
+     */
+    data: XOR<DistributionDispatchItemUpdateManyMutationInput, DistributionDispatchItemUncheckedUpdateManyInput>
+    /**
+     * Filter which DistributionDispatchItems to update
+     */
+    where?: DistributionDispatchItemWhereInput
+  }
+
+
+  /**
+   * DistributionDispatchItem upsert
+   */
+  export type DistributionDispatchItemUpsertArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatchItem
+     */
+    select?: DistributionDispatchItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchItemInclude<ExtArgs> | null
+    /**
+     * The filter to search for the DistributionDispatchItem to update in case it exists.
+     */
+    where: DistributionDispatchItemWhereUniqueInput
+    /**
+     * In case the DistributionDispatchItem found by the `where` argument doesn't exist, create a new DistributionDispatchItem with this data.
+     */
+    create: XOR<DistributionDispatchItemCreateInput, DistributionDispatchItemUncheckedCreateInput>
+    /**
+     * In case the DistributionDispatchItem was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DistributionDispatchItemUpdateInput, DistributionDispatchItemUncheckedUpdateInput>
+  }
+
+
+  /**
+   * DistributionDispatchItem delete
+   */
+  export type DistributionDispatchItemDeleteArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatchItem
+     */
+    select?: DistributionDispatchItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchItemInclude<ExtArgs> | null
+    /**
+     * Filter which DistributionDispatchItem to delete.
+     */
+    where: DistributionDispatchItemWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionDispatchItem deleteMany
+   */
+  export type DistributionDispatchItemDeleteManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DistributionDispatchItems to delete
+     */
+    where?: DistributionDispatchItemWhereInput
+  }
+
+
+  /**
+   * DistributionDispatchItem without action
+   */
+  export type DistributionDispatchItemArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionDispatchItem
+     */
+    select?: DistributionDispatchItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionDispatchItemInclude<ExtArgs> | null
+  }
+
+
+
+  /**
+   * Model DistributionInvoice
+   */
+
+
+  export type AggregateDistributionInvoice = {
+    _count: DistributionInvoiceCountAggregateOutputType | null
+    _min: DistributionInvoiceMinAggregateOutputType | null
+    _max: DistributionInvoiceMaxAggregateOutputType | null
+  }
+
+  export type DistributionInvoiceMinAggregateOutputType = {
+    id: string | null
+    requestId: string | null
+    requestSnapshot: string | null
+    orderId: string | null
+    customerId: string | null
+    customerName: string | null
+    createdBy: string | null
+    createdAt: Date | null
+  }
+
+  export type DistributionInvoiceMaxAggregateOutputType = {
+    id: string | null
+    requestId: string | null
+    requestSnapshot: string | null
+    orderId: string | null
+    customerId: string | null
+    customerName: string | null
+    createdBy: string | null
+    createdAt: Date | null
+  }
+
+  export type DistributionInvoiceCountAggregateOutputType = {
+    id: number
+    requestId: number
+    requestSnapshot: number
+    orderId: number
+    customerId: number
+    customerName: number
+    createdBy: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type DistributionInvoiceMinAggregateInputType = {
+    id?: true
+    requestId?: true
+    requestSnapshot?: true
+    orderId?: true
+    customerId?: true
+    customerName?: true
+    createdBy?: true
+    createdAt?: true
+  }
+
+  export type DistributionInvoiceMaxAggregateInputType = {
+    id?: true
+    requestId?: true
+    requestSnapshot?: true
+    orderId?: true
+    customerId?: true
+    customerName?: true
+    createdBy?: true
+    createdAt?: true
+  }
+
+  export type DistributionInvoiceCountAggregateInputType = {
+    id?: true
+    requestId?: true
+    requestSnapshot?: true
+    orderId?: true
+    customerId?: true
+    customerName?: true
+    createdBy?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type DistributionInvoiceAggregateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DistributionInvoice to aggregate.
+     */
+    where?: DistributionInvoiceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionInvoices to fetch.
+     */
+    orderBy?: DistributionInvoiceOrderByWithRelationInput | DistributionInvoiceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DistributionInvoiceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionInvoices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionInvoices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned DistributionInvoices
+    **/
+    _count?: true | DistributionInvoiceCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DistributionInvoiceMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DistributionInvoiceMaxAggregateInputType
+  }
+
+  export type GetDistributionInvoiceAggregateType<T extends DistributionInvoiceAggregateArgs> = {
+        [P in keyof T & keyof AggregateDistributionInvoice]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDistributionInvoice[P]>
+      : GetScalarType<T[P], AggregateDistributionInvoice[P]>
+  }
+
+
+
+
+  export type DistributionInvoiceGroupByArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionInvoiceWhereInput
+    orderBy?: DistributionInvoiceOrderByWithAggregationInput | DistributionInvoiceOrderByWithAggregationInput[]
+    by: DistributionInvoiceScalarFieldEnum[] | DistributionInvoiceScalarFieldEnum
+    having?: DistributionInvoiceScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DistributionInvoiceCountAggregateInputType | true
+    _min?: DistributionInvoiceMinAggregateInputType
+    _max?: DistributionInvoiceMaxAggregateInputType
+  }
+
+
+  export type DistributionInvoiceGroupByOutputType = {
+    id: string
+    requestId: string
+    requestSnapshot: string
+    orderId: string
+    customerId: string
+    customerName: string
+    createdBy: string
+    createdAt: Date
+    _count: DistributionInvoiceCountAggregateOutputType | null
+    _min: DistributionInvoiceMinAggregateOutputType | null
+    _max: DistributionInvoiceMaxAggregateOutputType | null
+  }
+
+  type GetDistributionInvoiceGroupByPayload<T extends DistributionInvoiceGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DistributionInvoiceGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DistributionInvoiceGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DistributionInvoiceGroupByOutputType[P]>
+            : GetScalarType<T[P], DistributionInvoiceGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DistributionInvoiceSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    requestId?: boolean
+    requestSnapshot?: boolean
+    orderId?: boolean
+    customerId?: boolean
+    customerName?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    order?: boolean | OrderArgs<ExtArgs>
+    items?: boolean | DistributionInvoice$itemsArgs<ExtArgs>
+    _count?: boolean | DistributionInvoiceCountOutputTypeArgs<ExtArgs>
+  }, ExtArgs["result"]["distributionInvoice"]>
+
+  export type DistributionInvoiceSelectScalar = {
+    id?: boolean
+    requestId?: boolean
+    requestSnapshot?: boolean
+    orderId?: boolean
+    customerId?: boolean
+    customerName?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+  }
+
+  export type DistributionInvoiceInclude<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    order?: boolean | OrderArgs<ExtArgs>
+    items?: boolean | DistributionInvoice$itemsArgs<ExtArgs>
+    _count?: boolean | DistributionInvoiceCountOutputTypeArgs<ExtArgs>
+  }
+
+
+  type DistributionInvoiceGetPayload<S extends boolean | null | undefined | DistributionInvoiceArgs> = $Types.GetResult<DistributionInvoicePayload, S>
+
+  type DistributionInvoiceCountArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = 
+    Omit<DistributionInvoiceFindManyArgs, 'select' | 'include'> & {
+      select?: DistributionInvoiceCountAggregateInputType | true
+    }
+
+  export interface DistributionInvoiceDelegate<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DistributionInvoice'], meta: { name: 'DistributionInvoice' } }
+    /**
+     * Find zero or one DistributionInvoice that matches the filter.
+     * @param {DistributionInvoiceFindUniqueArgs} args - Arguments to find a DistributionInvoice
+     * @example
+     * // Get one DistributionInvoice
+     * const distributionInvoice = await prisma.distributionInvoice.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUnique<T extends DistributionInvoiceFindUniqueArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionInvoiceFindUniqueArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceClient<$Types.GetResult<DistributionInvoicePayload<ExtArgs>, T, 'findUnique'> | null, null, ExtArgs>
+
+    /**
+     * Find one DistributionInvoice that matches the filter or throw an error  with `error.code='P2025'` 
+     *     if no matches were found.
+     * @param {DistributionInvoiceFindUniqueOrThrowArgs} args - Arguments to find a DistributionInvoice
+     * @example
+     * // Get one DistributionInvoice
+     * const distributionInvoice = await prisma.distributionInvoice.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUniqueOrThrow<T extends DistributionInvoiceFindUniqueOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionInvoiceFindUniqueOrThrowArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceClient<$Types.GetResult<DistributionInvoicePayload<ExtArgs>, T, 'findUniqueOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find the first DistributionInvoice that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionInvoiceFindFirstArgs} args - Arguments to find a DistributionInvoice
+     * @example
+     * // Get one DistributionInvoice
+     * const distributionInvoice = await prisma.distributionInvoice.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirst<T extends DistributionInvoiceFindFirstArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionInvoiceFindFirstArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceClient<$Types.GetResult<DistributionInvoicePayload<ExtArgs>, T, 'findFirst'> | null, null, ExtArgs>
+
+    /**
+     * Find the first DistributionInvoice that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionInvoiceFindFirstOrThrowArgs} args - Arguments to find a DistributionInvoice
+     * @example
+     * // Get one DistributionInvoice
+     * const distributionInvoice = await prisma.distributionInvoice.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirstOrThrow<T extends DistributionInvoiceFindFirstOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionInvoiceFindFirstOrThrowArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceClient<$Types.GetResult<DistributionInvoicePayload<ExtArgs>, T, 'findFirstOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find zero or more DistributionInvoices that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionInvoiceFindManyArgs=} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DistributionInvoices
+     * const distributionInvoices = await prisma.distributionInvoice.findMany()
+     * 
+     * // Get first 10 DistributionInvoices
+     * const distributionInvoices = await prisma.distributionInvoice.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const distributionInvoiceWithIdOnly = await prisma.distributionInvoice.findMany({ select: { id: true } })
+     * 
+    **/
+    findMany<T extends DistributionInvoiceFindManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionInvoiceFindManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<$Types.GetResult<DistributionInvoicePayload<ExtArgs>, T, 'findMany'>>
+
+    /**
+     * Create a DistributionInvoice.
+     * @param {DistributionInvoiceCreateArgs} args - Arguments to create a DistributionInvoice.
+     * @example
+     * // Create one DistributionInvoice
+     * const DistributionInvoice = await prisma.distributionInvoice.create({
+     *   data: {
+     *     // ... data to create a DistributionInvoice
+     *   }
+     * })
+     * 
+    **/
+    create<T extends DistributionInvoiceCreateArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionInvoiceCreateArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceClient<$Types.GetResult<DistributionInvoicePayload<ExtArgs>, T, 'create'>, never, ExtArgs>
+
+    /**
+     * Delete a DistributionInvoice.
+     * @param {DistributionInvoiceDeleteArgs} args - Arguments to delete one DistributionInvoice.
+     * @example
+     * // Delete one DistributionInvoice
+     * const DistributionInvoice = await prisma.distributionInvoice.delete({
+     *   where: {
+     *     // ... filter to delete one DistributionInvoice
+     *   }
+     * })
+     * 
+    **/
+    delete<T extends DistributionInvoiceDeleteArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionInvoiceDeleteArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceClient<$Types.GetResult<DistributionInvoicePayload<ExtArgs>, T, 'delete'>, never, ExtArgs>
+
+    /**
+     * Update one DistributionInvoice.
+     * @param {DistributionInvoiceUpdateArgs} args - Arguments to update one DistributionInvoice.
+     * @example
+     * // Update one DistributionInvoice
+     * const distributionInvoice = await prisma.distributionInvoice.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    update<T extends DistributionInvoiceUpdateArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionInvoiceUpdateArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceClient<$Types.GetResult<DistributionInvoicePayload<ExtArgs>, T, 'update'>, never, ExtArgs>
+
+    /**
+     * Delete zero or more DistributionInvoices.
+     * @param {DistributionInvoiceDeleteManyArgs} args - Arguments to filter DistributionInvoices to delete.
+     * @example
+     * // Delete a few DistributionInvoices
+     * const { count } = await prisma.distributionInvoice.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+    **/
+    deleteMany<T extends DistributionInvoiceDeleteManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionInvoiceDeleteManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DistributionInvoices.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionInvoiceUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DistributionInvoices
+     * const distributionInvoice = await prisma.distributionInvoice.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    updateMany<T extends DistributionInvoiceUpdateManyArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionInvoiceUpdateManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one DistributionInvoice.
+     * @param {DistributionInvoiceUpsertArgs} args - Arguments to update or create a DistributionInvoice.
+     * @example
+     * // Update or create a DistributionInvoice
+     * const distributionInvoice = await prisma.distributionInvoice.upsert({
+     *   create: {
+     *     // ... data to create a DistributionInvoice
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DistributionInvoice we want to update
+     *   }
+     * })
+    **/
+    upsert<T extends DistributionInvoiceUpsertArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionInvoiceUpsertArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceClient<$Types.GetResult<DistributionInvoicePayload<ExtArgs>, T, 'upsert'>, never, ExtArgs>
+
+    /**
+     * Count the number of DistributionInvoices.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionInvoiceCountArgs} args - Arguments to filter DistributionInvoices to count.
+     * @example
+     * // Count the number of DistributionInvoices
+     * const count = await prisma.distributionInvoice.count({
+     *   where: {
+     *     // ... the filter for the DistributionInvoices we want to count
+     *   }
+     * })
+    **/
+    count<T extends DistributionInvoiceCountArgs>(
+      args?: Subset<T, DistributionInvoiceCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DistributionInvoiceCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a DistributionInvoice.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionInvoiceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DistributionInvoiceAggregateArgs>(args: Subset<T, DistributionInvoiceAggregateArgs>): Prisma.PrismaPromise<GetDistributionInvoiceAggregateType<T>>
+
+    /**
+     * Group by DistributionInvoice.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionInvoiceGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DistributionInvoiceGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DistributionInvoiceGroupByArgs['orderBy'] }
+        : { orderBy?: DistributionInvoiceGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DistributionInvoiceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDistributionInvoiceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the DistributionInvoice model
+   */
+  readonly fields: DistributionInvoiceFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DistributionInvoice.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export class Prisma__DistributionInvoiceClient<T, Null = never, ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> implements Prisma.PrismaPromise<T> {
+    private readonly _dmmf;
+    private readonly _queryType;
+    private readonly _rootField;
+    private readonly _clientMethod;
+    private readonly _args;
+    private readonly _dataPath;
+    private readonly _errorFormat;
+    private readonly _measurePerformance?;
+    private _isList;
+    private _callsite;
+    private _requestPromise?;
+    readonly [Symbol.toStringTag]: 'PrismaPromise';
+    constructor(_dmmf: runtime.DMMFClass, _queryType: 'query' | 'mutation', _rootField: string, _clientMethod: string, _args: any, _dataPath: string[], _errorFormat: ErrorFormat, _measurePerformance?: boolean | undefined, _isList?: boolean);
+
+    order<T extends OrderArgs<ExtArgs> = {}>(args?: Subset<T, OrderArgs<ExtArgs>>): Prisma__OrderClient<$Types.GetResult<OrderPayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
+
+    items<T extends DistributionInvoice$itemsArgs<ExtArgs> = {}>(args?: Subset<T, DistributionInvoice$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Types.GetResult<DistributionInvoiceItemPayload<ExtArgs>, T, 'findMany'>| Null>;
+
+    private get _document();
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult>;
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+  }
+
+
+
+  /**
+   * Fields of the DistributionInvoice model
+   */ 
+  interface DistributionInvoiceFieldRefs {
+    readonly id: FieldRef<"DistributionInvoice", 'String'>
+    readonly requestId: FieldRef<"DistributionInvoice", 'String'>
+    readonly requestSnapshot: FieldRef<"DistributionInvoice", 'String'>
+    readonly orderId: FieldRef<"DistributionInvoice", 'String'>
+    readonly customerId: FieldRef<"DistributionInvoice", 'String'>
+    readonly customerName: FieldRef<"DistributionInvoice", 'String'>
+    readonly createdBy: FieldRef<"DistributionInvoice", 'String'>
+    readonly createdAt: FieldRef<"DistributionInvoice", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+
+  /**
+   * DistributionInvoice findUnique
+   */
+  export type DistributionInvoiceFindUniqueArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoice
+     */
+    select?: DistributionInvoiceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionInvoice to fetch.
+     */
+    where: DistributionInvoiceWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionInvoice findUniqueOrThrow
+   */
+  export type DistributionInvoiceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoice
+     */
+    select?: DistributionInvoiceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionInvoice to fetch.
+     */
+    where: DistributionInvoiceWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionInvoice findFirst
+   */
+  export type DistributionInvoiceFindFirstArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoice
+     */
+    select?: DistributionInvoiceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionInvoice to fetch.
+     */
+    where?: DistributionInvoiceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionInvoices to fetch.
+     */
+    orderBy?: DistributionInvoiceOrderByWithRelationInput | DistributionInvoiceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DistributionInvoices.
+     */
+    cursor?: DistributionInvoiceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionInvoices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionInvoices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DistributionInvoices.
+     */
+    distinct?: DistributionInvoiceScalarFieldEnum | DistributionInvoiceScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionInvoice findFirstOrThrow
+   */
+  export type DistributionInvoiceFindFirstOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoice
+     */
+    select?: DistributionInvoiceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionInvoice to fetch.
+     */
+    where?: DistributionInvoiceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionInvoices to fetch.
+     */
+    orderBy?: DistributionInvoiceOrderByWithRelationInput | DistributionInvoiceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DistributionInvoices.
+     */
+    cursor?: DistributionInvoiceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionInvoices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionInvoices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DistributionInvoices.
+     */
+    distinct?: DistributionInvoiceScalarFieldEnum | DistributionInvoiceScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionInvoice findMany
+   */
+  export type DistributionInvoiceFindManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoice
+     */
+    select?: DistributionInvoiceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionInvoices to fetch.
+     */
+    where?: DistributionInvoiceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionInvoices to fetch.
+     */
+    orderBy?: DistributionInvoiceOrderByWithRelationInput | DistributionInvoiceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing DistributionInvoices.
+     */
+    cursor?: DistributionInvoiceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionInvoices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionInvoices.
+     */
+    skip?: number
+    distinct?: DistributionInvoiceScalarFieldEnum | DistributionInvoiceScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionInvoice create
+   */
+  export type DistributionInvoiceCreateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoice
+     */
+    select?: DistributionInvoiceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceInclude<ExtArgs> | null
+    /**
+     * The data needed to create a DistributionInvoice.
+     */
+    data: XOR<DistributionInvoiceCreateInput, DistributionInvoiceUncheckedCreateInput>
+  }
+
+
+  /**
+   * DistributionInvoice update
+   */
+  export type DistributionInvoiceUpdateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoice
+     */
+    select?: DistributionInvoiceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceInclude<ExtArgs> | null
+    /**
+     * The data needed to update a DistributionInvoice.
+     */
+    data: XOR<DistributionInvoiceUpdateInput, DistributionInvoiceUncheckedUpdateInput>
+    /**
+     * Choose, which DistributionInvoice to update.
+     */
+    where: DistributionInvoiceWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionInvoice updateMany
+   */
+  export type DistributionInvoiceUpdateManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DistributionInvoices.
+     */
+    data: XOR<DistributionInvoiceUpdateManyMutationInput, DistributionInvoiceUncheckedUpdateManyInput>
+    /**
+     * Filter which DistributionInvoices to update
+     */
+    where?: DistributionInvoiceWhereInput
+  }
+
+
+  /**
+   * DistributionInvoice upsert
+   */
+  export type DistributionInvoiceUpsertArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoice
+     */
+    select?: DistributionInvoiceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceInclude<ExtArgs> | null
+    /**
+     * The filter to search for the DistributionInvoice to update in case it exists.
+     */
+    where: DistributionInvoiceWhereUniqueInput
+    /**
+     * In case the DistributionInvoice found by the `where` argument doesn't exist, create a new DistributionInvoice with this data.
+     */
+    create: XOR<DistributionInvoiceCreateInput, DistributionInvoiceUncheckedCreateInput>
+    /**
+     * In case the DistributionInvoice was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DistributionInvoiceUpdateInput, DistributionInvoiceUncheckedUpdateInput>
+  }
+
+
+  /**
+   * DistributionInvoice delete
+   */
+  export type DistributionInvoiceDeleteArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoice
+     */
+    select?: DistributionInvoiceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceInclude<ExtArgs> | null
+    /**
+     * Filter which DistributionInvoice to delete.
+     */
+    where: DistributionInvoiceWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionInvoice deleteMany
+   */
+  export type DistributionInvoiceDeleteManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DistributionInvoices to delete
+     */
+    where?: DistributionInvoiceWhereInput
+  }
+
+
+  /**
+   * DistributionInvoice.items
+   */
+  export type DistributionInvoice$itemsArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceItem
+     */
+    select?: DistributionInvoiceItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceItemInclude<ExtArgs> | null
+    where?: DistributionInvoiceItemWhereInput
+    orderBy?: DistributionInvoiceItemOrderByWithRelationInput | DistributionInvoiceItemOrderByWithRelationInput[]
+    cursor?: DistributionInvoiceItemWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DistributionInvoiceItemScalarFieldEnum | DistributionInvoiceItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionInvoice without action
+   */
+  export type DistributionInvoiceArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoice
+     */
+    select?: DistributionInvoiceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceInclude<ExtArgs> | null
+  }
+
+
+
+  /**
+   * Model DistributionInvoiceItem
+   */
+
+
+  export type AggregateDistributionInvoiceItem = {
+    _count: DistributionInvoiceItemCountAggregateOutputType | null
+    _avg: DistributionInvoiceItemAvgAggregateOutputType | null
+    _sum: DistributionInvoiceItemSumAggregateOutputType | null
+    _min: DistributionInvoiceItemMinAggregateOutputType | null
+    _max: DistributionInvoiceItemMaxAggregateOutputType | null
+  }
+
+  export type DistributionInvoiceItemAvgAggregateOutputType = {
+    quantity: number | null
+  }
+
+  export type DistributionInvoiceItemSumAggregateOutputType = {
+    quantity: number | null
+  }
+
+  export type DistributionInvoiceItemMinAggregateOutputType = {
+    id: string | null
+    distributionInvoiceId: string | null
+    distributionId: string | null
+    distributionItemId: string | null
+    orderItemId: string | null
+    quantity: number | null
+  }
+
+  export type DistributionInvoiceItemMaxAggregateOutputType = {
+    id: string | null
+    distributionInvoiceId: string | null
+    distributionId: string | null
+    distributionItemId: string | null
+    orderItemId: string | null
+    quantity: number | null
+  }
+
+  export type DistributionInvoiceItemCountAggregateOutputType = {
+    id: number
+    distributionInvoiceId: number
+    distributionId: number
+    distributionItemId: number
+    orderItemId: number
+    quantity: number
+    _all: number
+  }
+
+
+  export type DistributionInvoiceItemAvgAggregateInputType = {
+    quantity?: true
+  }
+
+  export type DistributionInvoiceItemSumAggregateInputType = {
+    quantity?: true
+  }
+
+  export type DistributionInvoiceItemMinAggregateInputType = {
+    id?: true
+    distributionInvoiceId?: true
+    distributionId?: true
+    distributionItemId?: true
+    orderItemId?: true
+    quantity?: true
+  }
+
+  export type DistributionInvoiceItemMaxAggregateInputType = {
+    id?: true
+    distributionInvoiceId?: true
+    distributionId?: true
+    distributionItemId?: true
+    orderItemId?: true
+    quantity?: true
+  }
+
+  export type DistributionInvoiceItemCountAggregateInputType = {
+    id?: true
+    distributionInvoiceId?: true
+    distributionId?: true
+    distributionItemId?: true
+    orderItemId?: true
+    quantity?: true
+    _all?: true
+  }
+
+  export type DistributionInvoiceItemAggregateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DistributionInvoiceItem to aggregate.
+     */
+    where?: DistributionInvoiceItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionInvoiceItems to fetch.
+     */
+    orderBy?: DistributionInvoiceItemOrderByWithRelationInput | DistributionInvoiceItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DistributionInvoiceItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionInvoiceItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionInvoiceItems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned DistributionInvoiceItems
+    **/
+    _count?: true | DistributionInvoiceItemCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: DistributionInvoiceItemAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: DistributionInvoiceItemSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DistributionInvoiceItemMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DistributionInvoiceItemMaxAggregateInputType
+  }
+
+  export type GetDistributionInvoiceItemAggregateType<T extends DistributionInvoiceItemAggregateArgs> = {
+        [P in keyof T & keyof AggregateDistributionInvoiceItem]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDistributionInvoiceItem[P]>
+      : GetScalarType<T[P], AggregateDistributionInvoiceItem[P]>
+  }
+
+
+
+
+  export type DistributionInvoiceItemGroupByArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    where?: DistributionInvoiceItemWhereInput
+    orderBy?: DistributionInvoiceItemOrderByWithAggregationInput | DistributionInvoiceItemOrderByWithAggregationInput[]
+    by: DistributionInvoiceItemScalarFieldEnum[] | DistributionInvoiceItemScalarFieldEnum
+    having?: DistributionInvoiceItemScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DistributionInvoiceItemCountAggregateInputType | true
+    _avg?: DistributionInvoiceItemAvgAggregateInputType
+    _sum?: DistributionInvoiceItemSumAggregateInputType
+    _min?: DistributionInvoiceItemMinAggregateInputType
+    _max?: DistributionInvoiceItemMaxAggregateInputType
+  }
+
+
+  export type DistributionInvoiceItemGroupByOutputType = {
+    id: string
+    distributionInvoiceId: string
+    distributionId: string
+    distributionItemId: string
+    orderItemId: string
+    quantity: number
+    _count: DistributionInvoiceItemCountAggregateOutputType | null
+    _avg: DistributionInvoiceItemAvgAggregateOutputType | null
+    _sum: DistributionInvoiceItemSumAggregateOutputType | null
+    _min: DistributionInvoiceItemMinAggregateOutputType | null
+    _max: DistributionInvoiceItemMaxAggregateOutputType | null
+  }
+
+  type GetDistributionInvoiceItemGroupByPayload<T extends DistributionInvoiceItemGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DistributionInvoiceItemGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DistributionInvoiceItemGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DistributionInvoiceItemGroupByOutputType[P]>
+            : GetScalarType<T[P], DistributionInvoiceItemGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DistributionInvoiceItemSelect<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    distributionInvoiceId?: boolean
+    distributionId?: boolean
+    distributionItemId?: boolean
+    orderItemId?: boolean
+    quantity?: boolean
+    invoice?: boolean | DistributionInvoiceArgs<ExtArgs>
+    distribution?: boolean | DistributionArgs<ExtArgs>
+    distributionItem?: boolean | DistributionItemArgs<ExtArgs>
+    orderItem?: boolean | OrderItemArgs<ExtArgs>
+  }, ExtArgs["result"]["distributionInvoiceItem"]>
+
+  export type DistributionInvoiceItemSelectScalar = {
+    id?: boolean
+    distributionInvoiceId?: boolean
+    distributionId?: boolean
+    distributionItemId?: boolean
+    orderItemId?: boolean
+    quantity?: boolean
+  }
+
+  export type DistributionInvoiceItemInclude<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    invoice?: boolean | DistributionInvoiceArgs<ExtArgs>
+    distribution?: boolean | DistributionArgs<ExtArgs>
+    distributionItem?: boolean | DistributionItemArgs<ExtArgs>
+    orderItem?: boolean | OrderItemArgs<ExtArgs>
+  }
+
+
+  type DistributionInvoiceItemGetPayload<S extends boolean | null | undefined | DistributionInvoiceItemArgs> = $Types.GetResult<DistributionInvoiceItemPayload, S>
+
+  type DistributionInvoiceItemCountArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = 
+    Omit<DistributionInvoiceItemFindManyArgs, 'select' | 'include'> & {
+      select?: DistributionInvoiceItemCountAggregateInputType | true
+    }
+
+  export interface DistributionInvoiceItemDelegate<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DistributionInvoiceItem'], meta: { name: 'DistributionInvoiceItem' } }
+    /**
+     * Find zero or one DistributionInvoiceItem that matches the filter.
+     * @param {DistributionInvoiceItemFindUniqueArgs} args - Arguments to find a DistributionInvoiceItem
+     * @example
+     * // Get one DistributionInvoiceItem
+     * const distributionInvoiceItem = await prisma.distributionInvoiceItem.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUnique<T extends DistributionInvoiceItemFindUniqueArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionInvoiceItemFindUniqueArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceItemClient<$Types.GetResult<DistributionInvoiceItemPayload<ExtArgs>, T, 'findUnique'> | null, null, ExtArgs>
+
+    /**
+     * Find one DistributionInvoiceItem that matches the filter or throw an error  with `error.code='P2025'` 
+     *     if no matches were found.
+     * @param {DistributionInvoiceItemFindUniqueOrThrowArgs} args - Arguments to find a DistributionInvoiceItem
+     * @example
+     * // Get one DistributionInvoiceItem
+     * const distributionInvoiceItem = await prisma.distributionInvoiceItem.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUniqueOrThrow<T extends DistributionInvoiceItemFindUniqueOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionInvoiceItemFindUniqueOrThrowArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceItemClient<$Types.GetResult<DistributionInvoiceItemPayload<ExtArgs>, T, 'findUniqueOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find the first DistributionInvoiceItem that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionInvoiceItemFindFirstArgs} args - Arguments to find a DistributionInvoiceItem
+     * @example
+     * // Get one DistributionInvoiceItem
+     * const distributionInvoiceItem = await prisma.distributionInvoiceItem.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirst<T extends DistributionInvoiceItemFindFirstArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionInvoiceItemFindFirstArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceItemClient<$Types.GetResult<DistributionInvoiceItemPayload<ExtArgs>, T, 'findFirst'> | null, null, ExtArgs>
+
+    /**
+     * Find the first DistributionInvoiceItem that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionInvoiceItemFindFirstOrThrowArgs} args - Arguments to find a DistributionInvoiceItem
+     * @example
+     * // Get one DistributionInvoiceItem
+     * const distributionInvoiceItem = await prisma.distributionInvoiceItem.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirstOrThrow<T extends DistributionInvoiceItemFindFirstOrThrowArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionInvoiceItemFindFirstOrThrowArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceItemClient<$Types.GetResult<DistributionInvoiceItemPayload<ExtArgs>, T, 'findFirstOrThrow'>, never, ExtArgs>
+
+    /**
+     * Find zero or more DistributionInvoiceItems that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionInvoiceItemFindManyArgs=} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DistributionInvoiceItems
+     * const distributionInvoiceItems = await prisma.distributionInvoiceItem.findMany()
+     * 
+     * // Get first 10 DistributionInvoiceItems
+     * const distributionInvoiceItems = await prisma.distributionInvoiceItem.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const distributionInvoiceItemWithIdOnly = await prisma.distributionInvoiceItem.findMany({ select: { id: true } })
+     * 
+    **/
+    findMany<T extends DistributionInvoiceItemFindManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionInvoiceItemFindManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<$Types.GetResult<DistributionInvoiceItemPayload<ExtArgs>, T, 'findMany'>>
+
+    /**
+     * Create a DistributionInvoiceItem.
+     * @param {DistributionInvoiceItemCreateArgs} args - Arguments to create a DistributionInvoiceItem.
+     * @example
+     * // Create one DistributionInvoiceItem
+     * const DistributionInvoiceItem = await prisma.distributionInvoiceItem.create({
+     *   data: {
+     *     // ... data to create a DistributionInvoiceItem
+     *   }
+     * })
+     * 
+    **/
+    create<T extends DistributionInvoiceItemCreateArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionInvoiceItemCreateArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceItemClient<$Types.GetResult<DistributionInvoiceItemPayload<ExtArgs>, T, 'create'>, never, ExtArgs>
+
+    /**
+     * Delete a DistributionInvoiceItem.
+     * @param {DistributionInvoiceItemDeleteArgs} args - Arguments to delete one DistributionInvoiceItem.
+     * @example
+     * // Delete one DistributionInvoiceItem
+     * const DistributionInvoiceItem = await prisma.distributionInvoiceItem.delete({
+     *   where: {
+     *     // ... filter to delete one DistributionInvoiceItem
+     *   }
+     * })
+     * 
+    **/
+    delete<T extends DistributionInvoiceItemDeleteArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionInvoiceItemDeleteArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceItemClient<$Types.GetResult<DistributionInvoiceItemPayload<ExtArgs>, T, 'delete'>, never, ExtArgs>
+
+    /**
+     * Update one DistributionInvoiceItem.
+     * @param {DistributionInvoiceItemUpdateArgs} args - Arguments to update one DistributionInvoiceItem.
+     * @example
+     * // Update one DistributionInvoiceItem
+     * const distributionInvoiceItem = await prisma.distributionInvoiceItem.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    update<T extends DistributionInvoiceItemUpdateArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionInvoiceItemUpdateArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceItemClient<$Types.GetResult<DistributionInvoiceItemPayload<ExtArgs>, T, 'update'>, never, ExtArgs>
+
+    /**
+     * Delete zero or more DistributionInvoiceItems.
+     * @param {DistributionInvoiceItemDeleteManyArgs} args - Arguments to filter DistributionInvoiceItems to delete.
+     * @example
+     * // Delete a few DistributionInvoiceItems
+     * const { count } = await prisma.distributionInvoiceItem.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+    **/
+    deleteMany<T extends DistributionInvoiceItemDeleteManyArgs<ExtArgs>>(
+      args?: SelectSubset<T, DistributionInvoiceItemDeleteManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DistributionInvoiceItems.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionInvoiceItemUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DistributionInvoiceItems
+     * const distributionInvoiceItem = await prisma.distributionInvoiceItem.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    updateMany<T extends DistributionInvoiceItemUpdateManyArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionInvoiceItemUpdateManyArgs<ExtArgs>>
+    ): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one DistributionInvoiceItem.
+     * @param {DistributionInvoiceItemUpsertArgs} args - Arguments to update or create a DistributionInvoiceItem.
+     * @example
+     * // Update or create a DistributionInvoiceItem
+     * const distributionInvoiceItem = await prisma.distributionInvoiceItem.upsert({
+     *   create: {
+     *     // ... data to create a DistributionInvoiceItem
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DistributionInvoiceItem we want to update
+     *   }
+     * })
+    **/
+    upsert<T extends DistributionInvoiceItemUpsertArgs<ExtArgs>>(
+      args: SelectSubset<T, DistributionInvoiceItemUpsertArgs<ExtArgs>>
+    ): Prisma__DistributionInvoiceItemClient<$Types.GetResult<DistributionInvoiceItemPayload<ExtArgs>, T, 'upsert'>, never, ExtArgs>
+
+    /**
+     * Count the number of DistributionInvoiceItems.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionInvoiceItemCountArgs} args - Arguments to filter DistributionInvoiceItems to count.
+     * @example
+     * // Count the number of DistributionInvoiceItems
+     * const count = await prisma.distributionInvoiceItem.count({
+     *   where: {
+     *     // ... the filter for the DistributionInvoiceItems we want to count
+     *   }
+     * })
+    **/
+    count<T extends DistributionInvoiceItemCountArgs>(
+      args?: Subset<T, DistributionInvoiceItemCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DistributionInvoiceItemCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a DistributionInvoiceItem.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionInvoiceItemAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DistributionInvoiceItemAggregateArgs>(args: Subset<T, DistributionInvoiceItemAggregateArgs>): Prisma.PrismaPromise<GetDistributionInvoiceItemAggregateType<T>>
+
+    /**
+     * Group by DistributionInvoiceItem.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DistributionInvoiceItemGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DistributionInvoiceItemGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DistributionInvoiceItemGroupByArgs['orderBy'] }
+        : { orderBy?: DistributionInvoiceItemGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DistributionInvoiceItemGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDistributionInvoiceItemGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the DistributionInvoiceItem model
+   */
+  readonly fields: DistributionInvoiceItemFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DistributionInvoiceItem.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export class Prisma__DistributionInvoiceItemClient<T, Null = never, ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> implements Prisma.PrismaPromise<T> {
+    private readonly _dmmf;
+    private readonly _queryType;
+    private readonly _rootField;
+    private readonly _clientMethod;
+    private readonly _args;
+    private readonly _dataPath;
+    private readonly _errorFormat;
+    private readonly _measurePerformance?;
+    private _isList;
+    private _callsite;
+    private _requestPromise?;
+    readonly [Symbol.toStringTag]: 'PrismaPromise';
+    constructor(_dmmf: runtime.DMMFClass, _queryType: 'query' | 'mutation', _rootField: string, _clientMethod: string, _args: any, _dataPath: string[], _errorFormat: ErrorFormat, _measurePerformance?: boolean | undefined, _isList?: boolean);
+
+    invoice<T extends DistributionInvoiceArgs<ExtArgs> = {}>(args?: Subset<T, DistributionInvoiceArgs<ExtArgs>>): Prisma__DistributionInvoiceClient<$Types.GetResult<DistributionInvoicePayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
+
+    distribution<T extends DistributionArgs<ExtArgs> = {}>(args?: Subset<T, DistributionArgs<ExtArgs>>): Prisma__DistributionClient<$Types.GetResult<DistributionPayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
+
+    distributionItem<T extends DistributionItemArgs<ExtArgs> = {}>(args?: Subset<T, DistributionItemArgs<ExtArgs>>): Prisma__DistributionItemClient<$Types.GetResult<DistributionItemPayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
+
+    orderItem<T extends OrderItemArgs<ExtArgs> = {}>(args?: Subset<T, OrderItemArgs<ExtArgs>>): Prisma__OrderItemClient<$Types.GetResult<OrderItemPayload<ExtArgs>, T, 'findUnique'> | Null, never, ExtArgs>;
+
+    private get _document();
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult>;
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+  }
+
+
+
+  /**
+   * Fields of the DistributionInvoiceItem model
+   */ 
+  interface DistributionInvoiceItemFieldRefs {
+    readonly id: FieldRef<"DistributionInvoiceItem", 'String'>
+    readonly distributionInvoiceId: FieldRef<"DistributionInvoiceItem", 'String'>
+    readonly distributionId: FieldRef<"DistributionInvoiceItem", 'String'>
+    readonly distributionItemId: FieldRef<"DistributionInvoiceItem", 'String'>
+    readonly orderItemId: FieldRef<"DistributionInvoiceItem", 'String'>
+    readonly quantity: FieldRef<"DistributionInvoiceItem", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+
+  /**
+   * DistributionInvoiceItem findUnique
+   */
+  export type DistributionInvoiceItemFindUniqueArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceItem
+     */
+    select?: DistributionInvoiceItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionInvoiceItem to fetch.
+     */
+    where: DistributionInvoiceItemWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionInvoiceItem findUniqueOrThrow
+   */
+  export type DistributionInvoiceItemFindUniqueOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceItem
+     */
+    select?: DistributionInvoiceItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionInvoiceItem to fetch.
+     */
+    where: DistributionInvoiceItemWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionInvoiceItem findFirst
+   */
+  export type DistributionInvoiceItemFindFirstArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceItem
+     */
+    select?: DistributionInvoiceItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionInvoiceItem to fetch.
+     */
+    where?: DistributionInvoiceItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionInvoiceItems to fetch.
+     */
+    orderBy?: DistributionInvoiceItemOrderByWithRelationInput | DistributionInvoiceItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DistributionInvoiceItems.
+     */
+    cursor?: DistributionInvoiceItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionInvoiceItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionInvoiceItems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DistributionInvoiceItems.
+     */
+    distinct?: DistributionInvoiceItemScalarFieldEnum | DistributionInvoiceItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionInvoiceItem findFirstOrThrow
+   */
+  export type DistributionInvoiceItemFindFirstOrThrowArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceItem
+     */
+    select?: DistributionInvoiceItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionInvoiceItem to fetch.
+     */
+    where?: DistributionInvoiceItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionInvoiceItems to fetch.
+     */
+    orderBy?: DistributionInvoiceItemOrderByWithRelationInput | DistributionInvoiceItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DistributionInvoiceItems.
+     */
+    cursor?: DistributionInvoiceItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionInvoiceItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionInvoiceItems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DistributionInvoiceItems.
+     */
+    distinct?: DistributionInvoiceItemScalarFieldEnum | DistributionInvoiceItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionInvoiceItem findMany
+   */
+  export type DistributionInvoiceItemFindManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceItem
+     */
+    select?: DistributionInvoiceItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceItemInclude<ExtArgs> | null
+    /**
+     * Filter, which DistributionInvoiceItems to fetch.
+     */
+    where?: DistributionInvoiceItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DistributionInvoiceItems to fetch.
+     */
+    orderBy?: DistributionInvoiceItemOrderByWithRelationInput | DistributionInvoiceItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing DistributionInvoiceItems.
+     */
+    cursor?: DistributionInvoiceItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DistributionInvoiceItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DistributionInvoiceItems.
+     */
+    skip?: number
+    distinct?: DistributionInvoiceItemScalarFieldEnum | DistributionInvoiceItemScalarFieldEnum[]
+  }
+
+
+  /**
+   * DistributionInvoiceItem create
+   */
+  export type DistributionInvoiceItemCreateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceItem
+     */
+    select?: DistributionInvoiceItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceItemInclude<ExtArgs> | null
+    /**
+     * The data needed to create a DistributionInvoiceItem.
+     */
+    data: XOR<DistributionInvoiceItemCreateInput, DistributionInvoiceItemUncheckedCreateInput>
+  }
+
+
+  /**
+   * DistributionInvoiceItem update
+   */
+  export type DistributionInvoiceItemUpdateArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceItem
+     */
+    select?: DistributionInvoiceItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceItemInclude<ExtArgs> | null
+    /**
+     * The data needed to update a DistributionInvoiceItem.
+     */
+    data: XOR<DistributionInvoiceItemUpdateInput, DistributionInvoiceItemUncheckedUpdateInput>
+    /**
+     * Choose, which DistributionInvoiceItem to update.
+     */
+    where: DistributionInvoiceItemWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionInvoiceItem updateMany
+   */
+  export type DistributionInvoiceItemUpdateManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DistributionInvoiceItems.
+     */
+    data: XOR<DistributionInvoiceItemUpdateManyMutationInput, DistributionInvoiceItemUncheckedUpdateManyInput>
+    /**
+     * Filter which DistributionInvoiceItems to update
+     */
+    where?: DistributionInvoiceItemWhereInput
+  }
+
+
+  /**
+   * DistributionInvoiceItem upsert
+   */
+  export type DistributionInvoiceItemUpsertArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceItem
+     */
+    select?: DistributionInvoiceItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceItemInclude<ExtArgs> | null
+    /**
+     * The filter to search for the DistributionInvoiceItem to update in case it exists.
+     */
+    where: DistributionInvoiceItemWhereUniqueInput
+    /**
+     * In case the DistributionInvoiceItem found by the `where` argument doesn't exist, create a new DistributionInvoiceItem with this data.
+     */
+    create: XOR<DistributionInvoiceItemCreateInput, DistributionInvoiceItemUncheckedCreateInput>
+    /**
+     * In case the DistributionInvoiceItem was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DistributionInvoiceItemUpdateInput, DistributionInvoiceItemUncheckedUpdateInput>
+  }
+
+
+  /**
+   * DistributionInvoiceItem delete
+   */
+  export type DistributionInvoiceItemDeleteArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceItem
+     */
+    select?: DistributionInvoiceItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceItemInclude<ExtArgs> | null
+    /**
+     * Filter which DistributionInvoiceItem to delete.
+     */
+    where: DistributionInvoiceItemWhereUniqueInput
+  }
+
+
+  /**
+   * DistributionInvoiceItem deleteMany
+   */
+  export type DistributionInvoiceItemDeleteManyArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DistributionInvoiceItems to delete
+     */
+    where?: DistributionInvoiceItemWhereInput
+  }
+
+
+  /**
+   * DistributionInvoiceItem without action
+   */
+  export type DistributionInvoiceItemArgs<ExtArgs extends $Extensions.Args = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DistributionInvoiceItem
+     */
+    select?: DistributionInvoiceItemSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well.
+     */
+    include?: DistributionInvoiceItemInclude<ExtArgs> | null
   }
 
 
@@ -28919,6 +36790,7 @@ export namespace Prisma {
     price: 'price',
     taxRate: 'taxRate',
     stockQty: 'stockQty',
+    reservedQty: 'reservedQty',
     minStockQty: 'minStockQty',
     maxStockQty: 'maxStockQty',
     supplierId: 'supplierId',
@@ -29084,6 +36956,105 @@ export namespace Prisma {
   };
 
   export type OrderItemScalarFieldEnum = (typeof OrderItemScalarFieldEnum)[keyof typeof OrderItemScalarFieldEnum]
+
+
+  export const DistributionScalarFieldEnum: {
+    id: 'id',
+    documentNumber: 'documentNumber',
+    customerId: 'customerId',
+    customerName: 'customerName',
+    status: 'status',
+    notes: 'notes',
+    revision: 'revision',
+    createdBy: 'createdBy',
+    updatedBy: 'updatedBy',
+    approvedBy: 'approvedBy',
+    approvedAt: 'approvedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type DistributionScalarFieldEnum = (typeof DistributionScalarFieldEnum)[keyof typeof DistributionScalarFieldEnum]
+
+
+  export const DistributionItemScalarFieldEnum: {
+    id: 'id',
+    distributionId: 'distributionId',
+    productId: 'productId',
+    position: 'position',
+    productLabel: 'productLabel',
+    quantity: 'quantity',
+    shippedQuantity: 'shippedQuantity',
+    invoicedQuantity: 'invoicedQuantity',
+    unitPrice: 'unitPrice',
+    taxRate: 'taxRate',
+    isCancelled: 'isCancelled'
+  };
+
+  export type DistributionItemScalarFieldEnum = (typeof DistributionItemScalarFieldEnum)[keyof typeof DistributionItemScalarFieldEnum]
+
+
+  export const DistributionRevisionScalarFieldEnum: {
+    id: 'id',
+    distributionId: 'distributionId',
+    revision: 'revision',
+    action: 'action',
+    performedBy: 'performedBy',
+    beforeSnapshot: 'beforeSnapshot',
+    afterSnapshot: 'afterSnapshot',
+    createdAt: 'createdAt'
+  };
+
+  export type DistributionRevisionScalarFieldEnum = (typeof DistributionRevisionScalarFieldEnum)[keyof typeof DistributionRevisionScalarFieldEnum]
+
+
+  export const DistributionDispatchScalarFieldEnum: {
+    id: 'id',
+    dispatchNumber: 'dispatchNumber',
+    distributionId: 'distributionId',
+    notes: 'notes',
+    createdBy: 'createdBy',
+    dispatchedAt: 'dispatchedAt',
+    createdAt: 'createdAt'
+  };
+
+  export type DistributionDispatchScalarFieldEnum = (typeof DistributionDispatchScalarFieldEnum)[keyof typeof DistributionDispatchScalarFieldEnum]
+
+
+  export const DistributionDispatchItemScalarFieldEnum: {
+    id: 'id',
+    dispatchId: 'dispatchId',
+    distributionItemId: 'distributionItemId',
+    quantity: 'quantity'
+  };
+
+  export type DistributionDispatchItemScalarFieldEnum = (typeof DistributionDispatchItemScalarFieldEnum)[keyof typeof DistributionDispatchItemScalarFieldEnum]
+
+
+  export const DistributionInvoiceScalarFieldEnum: {
+    id: 'id',
+    requestId: 'requestId',
+    requestSnapshot: 'requestSnapshot',
+    orderId: 'orderId',
+    customerId: 'customerId',
+    customerName: 'customerName',
+    createdBy: 'createdBy',
+    createdAt: 'createdAt'
+  };
+
+  export type DistributionInvoiceScalarFieldEnum = (typeof DistributionInvoiceScalarFieldEnum)[keyof typeof DistributionInvoiceScalarFieldEnum]
+
+
+  export const DistributionInvoiceItemScalarFieldEnum: {
+    id: 'id',
+    distributionInvoiceId: 'distributionInvoiceId',
+    distributionId: 'distributionId',
+    distributionItemId: 'distributionItemId',
+    orderItemId: 'orderItemId',
+    quantity: 'quantity'
+  };
+
+  export type DistributionInvoiceItemScalarFieldEnum = (typeof DistributionInvoiceItemScalarFieldEnum)[keyof typeof DistributionInvoiceItemScalarFieldEnum]
 
 
   export const OrderReturnScalarFieldEnum: {
@@ -29429,6 +37400,7 @@ export namespace Prisma {
     price?: FloatFilter<"Product"> | number
     taxRate?: FloatFilter<"Product"> | number
     stockQty?: IntFilter<"Product"> | number
+    reservedQty?: IntFilter<"Product"> | number
     minStockQty?: IntFilter<"Product"> | number
     maxStockQty?: IntFilter<"Product"> | number
     supplierId?: StringNullableFilter<"Product"> | string | null
@@ -29442,6 +37414,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaListRelationFilter
     supplierPrices?: SupplierPriceListRelationFilter
     stocktakeItems?: StocktakeItemListRelationFilter
+    distributionItems?: DistributionItemListRelationFilter
     supplier?: XOR<SupplierNullableRelationFilter, SupplierWhereInput> | null
   }
 
@@ -29462,6 +37435,7 @@ export namespace Prisma {
     price?: SortOrder
     taxRate?: SortOrder
     stockQty?: SortOrder
+    reservedQty?: SortOrder
     minStockQty?: SortOrder
     maxStockQty?: SortOrder
     supplierId?: SortOrderInput | SortOrder
@@ -29475,6 +37449,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaOrderByRelationAggregateInput
     supplierPrices?: SupplierPriceOrderByRelationAggregateInput
     stocktakeItems?: StocktakeItemOrderByRelationAggregateInput
+    distributionItems?: DistributionItemOrderByRelationAggregateInput
     supplier?: SupplierOrderByWithRelationInput
   }
 
@@ -29498,6 +37473,7 @@ export namespace Prisma {
     price?: FloatFilter<"Product"> | number
     taxRate?: FloatFilter<"Product"> | number
     stockQty?: IntFilter<"Product"> | number
+    reservedQty?: IntFilter<"Product"> | number
     minStockQty?: IntFilter<"Product"> | number
     maxStockQty?: IntFilter<"Product"> | number
     supplierId?: StringNullableFilter<"Product"> | string | null
@@ -29511,6 +37487,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaListRelationFilter
     supplierPrices?: SupplierPriceListRelationFilter
     stocktakeItems?: StocktakeItemListRelationFilter
+    distributionItems?: DistributionItemListRelationFilter
     supplier?: XOR<SupplierNullableRelationFilter, SupplierWhereInput> | null
   }, "id">
 
@@ -29531,6 +37508,7 @@ export namespace Prisma {
     price?: SortOrder
     taxRate?: SortOrder
     stockQty?: SortOrder
+    reservedQty?: SortOrder
     minStockQty?: SortOrder
     maxStockQty?: SortOrder
     supplierId?: SortOrderInput | SortOrder
@@ -29564,6 +37542,7 @@ export namespace Prisma {
     price?: FloatWithAggregatesFilter<"Product"> | number
     taxRate?: FloatWithAggregatesFilter<"Product"> | number
     stockQty?: IntWithAggregatesFilter<"Product"> | number
+    reservedQty?: IntWithAggregatesFilter<"Product"> | number
     minStockQty?: IntWithAggregatesFilter<"Product"> | number
     maxStockQty?: IntWithAggregatesFilter<"Product"> | number
     supplierId?: StringNullableWithAggregatesFilter<"Product"> | string | null
@@ -30043,6 +38022,7 @@ export namespace Prisma {
     user?: XOR<UserRelationFilter, UserWhereInput>
     items?: OrderItemListRelationFilter
     orderReturns?: OrderReturnListRelationFilter
+    distributionInvoice?: XOR<DistributionInvoiceNullableRelationFilter, DistributionInvoiceWhereInput> | null
   }
 
   export type OrderOrderByWithRelationInput = {
@@ -30067,6 +38047,7 @@ export namespace Prisma {
     user?: UserOrderByWithRelationInput
     items?: OrderItemOrderByRelationAggregateInput
     orderReturns?: OrderReturnOrderByRelationAggregateInput
+    distributionInvoice?: DistributionInvoiceOrderByWithRelationInput
   }
 
   export type OrderWhereUniqueInput = Prisma.AtLeast<{
@@ -30094,6 +38075,7 @@ export namespace Prisma {
     user?: XOR<UserRelationFilter, UserWhereInput>
     items?: OrderItemListRelationFilter
     orderReturns?: OrderReturnListRelationFilter
+    distributionInvoice?: XOR<DistributionInvoiceNullableRelationFilter, DistributionInvoiceWhereInput> | null
   }, "id" | "invoiceNumber">
 
   export type OrderOrderByWithAggregationInput = {
@@ -30166,6 +38148,7 @@ export namespace Prisma {
     discounts?: AccountDiscountListRelationFilter
     customPrices?: CustomerPriceListRelationFilter
     ceilingQuotas?: CustomerCeilingQuotaListRelationFilter
+    distributions?: DistributionListRelationFilter
   }
 
   export type CustomerOrderByWithRelationInput = {
@@ -30187,6 +38170,7 @@ export namespace Prisma {
     discounts?: AccountDiscountOrderByRelationAggregateInput
     customPrices?: CustomerPriceOrderByRelationAggregateInput
     ceilingQuotas?: CustomerCeilingQuotaOrderByRelationAggregateInput
+    distributions?: DistributionOrderByRelationAggregateInput
   }
 
   export type CustomerWhereUniqueInput = Prisma.AtLeast<{
@@ -30211,6 +38195,7 @@ export namespace Prisma {
     discounts?: AccountDiscountListRelationFilter
     customPrices?: CustomerPriceListRelationFilter
     ceilingQuotas?: CustomerCeilingQuotaListRelationFilter
+    distributions?: DistributionListRelationFilter
   }, "id" | "name">
 
   export type CustomerOrderByWithAggregationInput = {
@@ -30332,6 +38317,7 @@ export namespace Prisma {
     order?: XOR<OrderRelationFilter, OrderWhereInput>
     product?: XOR<ProductRelationFilter, ProductWhereInput>
     returnItems?: OrderReturnItemListRelationFilter
+    distributionInvoiceItems?: DistributionInvoiceItemListRelationFilter
   }
 
   export type OrderItemOrderByWithRelationInput = {
@@ -30346,6 +38332,7 @@ export namespace Prisma {
     order?: OrderOrderByWithRelationInput
     product?: ProductOrderByWithRelationInput
     returnItems?: OrderReturnItemOrderByRelationAggregateInput
+    distributionInvoiceItems?: DistributionInvoiceItemOrderByRelationAggregateInput
   }
 
   export type OrderItemWhereUniqueInput = Prisma.AtLeast<{
@@ -30363,6 +38350,7 @@ export namespace Prisma {
     order?: XOR<OrderRelationFilter, OrderWhereInput>
     product?: XOR<ProductRelationFilter, ProductWhereInput>
     returnItems?: OrderReturnItemListRelationFilter
+    distributionInvoiceItems?: DistributionInvoiceItemListRelationFilter
   }, "id">
 
   export type OrderItemOrderByWithAggregationInput = {
@@ -30393,6 +38381,552 @@ export namespace Prisma {
     unitPrice?: FloatWithAggregatesFilter<"OrderItem"> | number
     taxAmount?: FloatWithAggregatesFilter<"OrderItem"> | number
     total?: FloatWithAggregatesFilter<"OrderItem"> | number
+  }
+
+  export type DistributionWhereInput = {
+    AND?: DistributionWhereInput | DistributionWhereInput[]
+    OR?: DistributionWhereInput[]
+    NOT?: DistributionWhereInput | DistributionWhereInput[]
+    id?: StringFilter<"Distribution"> | string
+    documentNumber?: StringFilter<"Distribution"> | string
+    customerId?: StringFilter<"Distribution"> | string
+    customerName?: StringFilter<"Distribution"> | string
+    status?: StringFilter<"Distribution"> | string
+    notes?: StringNullableFilter<"Distribution"> | string | null
+    revision?: IntFilter<"Distribution"> | number
+    createdBy?: StringFilter<"Distribution"> | string
+    updatedBy?: StringNullableFilter<"Distribution"> | string | null
+    approvedBy?: StringNullableFilter<"Distribution"> | string | null
+    approvedAt?: DateTimeNullableFilter<"Distribution"> | Date | string | null
+    createdAt?: DateTimeFilter<"Distribution"> | Date | string
+    updatedAt?: DateTimeFilter<"Distribution"> | Date | string
+    customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
+    items?: DistributionItemListRelationFilter
+    revisions?: DistributionRevisionListRelationFilter
+    dispatches?: DistributionDispatchListRelationFilter
+    invoiceItems?: DistributionInvoiceItemListRelationFilter
+  }
+
+  export type DistributionOrderByWithRelationInput = {
+    id?: SortOrder
+    documentNumber?: SortOrder
+    customerId?: SortOrder
+    customerName?: SortOrder
+    status?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    revision?: SortOrder
+    createdBy?: SortOrder
+    updatedBy?: SortOrderInput | SortOrder
+    approvedBy?: SortOrderInput | SortOrder
+    approvedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    customer?: CustomerOrderByWithRelationInput
+    items?: DistributionItemOrderByRelationAggregateInput
+    revisions?: DistributionRevisionOrderByRelationAggregateInput
+    dispatches?: DistributionDispatchOrderByRelationAggregateInput
+    invoiceItems?: DistributionInvoiceItemOrderByRelationAggregateInput
+  }
+
+  export type DistributionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    documentNumber?: string
+    AND?: DistributionWhereInput | DistributionWhereInput[]
+    OR?: DistributionWhereInput[]
+    NOT?: DistributionWhereInput | DistributionWhereInput[]
+    customerId?: StringFilter<"Distribution"> | string
+    customerName?: StringFilter<"Distribution"> | string
+    status?: StringFilter<"Distribution"> | string
+    notes?: StringNullableFilter<"Distribution"> | string | null
+    revision?: IntFilter<"Distribution"> | number
+    createdBy?: StringFilter<"Distribution"> | string
+    updatedBy?: StringNullableFilter<"Distribution"> | string | null
+    approvedBy?: StringNullableFilter<"Distribution"> | string | null
+    approvedAt?: DateTimeNullableFilter<"Distribution"> | Date | string | null
+    createdAt?: DateTimeFilter<"Distribution"> | Date | string
+    updatedAt?: DateTimeFilter<"Distribution"> | Date | string
+    customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
+    items?: DistributionItemListRelationFilter
+    revisions?: DistributionRevisionListRelationFilter
+    dispatches?: DistributionDispatchListRelationFilter
+    invoiceItems?: DistributionInvoiceItemListRelationFilter
+  }, "id" | "documentNumber">
+
+  export type DistributionOrderByWithAggregationInput = {
+    id?: SortOrder
+    documentNumber?: SortOrder
+    customerId?: SortOrder
+    customerName?: SortOrder
+    status?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    revision?: SortOrder
+    createdBy?: SortOrder
+    updatedBy?: SortOrderInput | SortOrder
+    approvedBy?: SortOrderInput | SortOrder
+    approvedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: DistributionCountOrderByAggregateInput
+    _avg?: DistributionAvgOrderByAggregateInput
+    _max?: DistributionMaxOrderByAggregateInput
+    _min?: DistributionMinOrderByAggregateInput
+    _sum?: DistributionSumOrderByAggregateInput
+  }
+
+  export type DistributionScalarWhereWithAggregatesInput = {
+    AND?: DistributionScalarWhereWithAggregatesInput | DistributionScalarWhereWithAggregatesInput[]
+    OR?: DistributionScalarWhereWithAggregatesInput[]
+    NOT?: DistributionScalarWhereWithAggregatesInput | DistributionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Distribution"> | string
+    documentNumber?: StringWithAggregatesFilter<"Distribution"> | string
+    customerId?: StringWithAggregatesFilter<"Distribution"> | string
+    customerName?: StringWithAggregatesFilter<"Distribution"> | string
+    status?: StringWithAggregatesFilter<"Distribution"> | string
+    notes?: StringNullableWithAggregatesFilter<"Distribution"> | string | null
+    revision?: IntWithAggregatesFilter<"Distribution"> | number
+    createdBy?: StringWithAggregatesFilter<"Distribution"> | string
+    updatedBy?: StringNullableWithAggregatesFilter<"Distribution"> | string | null
+    approvedBy?: StringNullableWithAggregatesFilter<"Distribution"> | string | null
+    approvedAt?: DateTimeNullableWithAggregatesFilter<"Distribution"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"Distribution"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Distribution"> | Date | string
+  }
+
+  export type DistributionItemWhereInput = {
+    AND?: DistributionItemWhereInput | DistributionItemWhereInput[]
+    OR?: DistributionItemWhereInput[]
+    NOT?: DistributionItemWhereInput | DistributionItemWhereInput[]
+    id?: StringFilter<"DistributionItem"> | string
+    distributionId?: StringFilter<"DistributionItem"> | string
+    productId?: StringFilter<"DistributionItem"> | string
+    position?: IntFilter<"DistributionItem"> | number
+    productLabel?: StringFilter<"DistributionItem"> | string
+    quantity?: IntFilter<"DistributionItem"> | number
+    shippedQuantity?: IntFilter<"DistributionItem"> | number
+    invoicedQuantity?: IntFilter<"DistributionItem"> | number
+    unitPrice?: FloatFilter<"DistributionItem"> | number
+    taxRate?: FloatFilter<"DistributionItem"> | number
+    isCancelled?: BoolFilter<"DistributionItem"> | boolean
+    distribution?: XOR<DistributionRelationFilter, DistributionWhereInput>
+    product?: XOR<ProductRelationFilter, ProductWhereInput>
+    dispatchItems?: DistributionDispatchItemListRelationFilter
+    invoiceItems?: DistributionInvoiceItemListRelationFilter
+  }
+
+  export type DistributionItemOrderByWithRelationInput = {
+    id?: SortOrder
+    distributionId?: SortOrder
+    productId?: SortOrder
+    position?: SortOrder
+    productLabel?: SortOrder
+    quantity?: SortOrder
+    shippedQuantity?: SortOrder
+    invoicedQuantity?: SortOrder
+    unitPrice?: SortOrder
+    taxRate?: SortOrder
+    isCancelled?: SortOrder
+    distribution?: DistributionOrderByWithRelationInput
+    product?: ProductOrderByWithRelationInput
+    dispatchItems?: DistributionDispatchItemOrderByRelationAggregateInput
+    invoiceItems?: DistributionInvoiceItemOrderByRelationAggregateInput
+  }
+
+  export type DistributionItemWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    distributionId_productId?: DistributionItemDistributionIdProductIdCompoundUniqueInput
+    AND?: DistributionItemWhereInput | DistributionItemWhereInput[]
+    OR?: DistributionItemWhereInput[]
+    NOT?: DistributionItemWhereInput | DistributionItemWhereInput[]
+    distributionId?: StringFilter<"DistributionItem"> | string
+    productId?: StringFilter<"DistributionItem"> | string
+    position?: IntFilter<"DistributionItem"> | number
+    productLabel?: StringFilter<"DistributionItem"> | string
+    quantity?: IntFilter<"DistributionItem"> | number
+    shippedQuantity?: IntFilter<"DistributionItem"> | number
+    invoicedQuantity?: IntFilter<"DistributionItem"> | number
+    unitPrice?: FloatFilter<"DistributionItem"> | number
+    taxRate?: FloatFilter<"DistributionItem"> | number
+    isCancelled?: BoolFilter<"DistributionItem"> | boolean
+    distribution?: XOR<DistributionRelationFilter, DistributionWhereInput>
+    product?: XOR<ProductRelationFilter, ProductWhereInput>
+    dispatchItems?: DistributionDispatchItemListRelationFilter
+    invoiceItems?: DistributionInvoiceItemListRelationFilter
+  }, "id" | "distributionId_productId">
+
+  export type DistributionItemOrderByWithAggregationInput = {
+    id?: SortOrder
+    distributionId?: SortOrder
+    productId?: SortOrder
+    position?: SortOrder
+    productLabel?: SortOrder
+    quantity?: SortOrder
+    shippedQuantity?: SortOrder
+    invoicedQuantity?: SortOrder
+    unitPrice?: SortOrder
+    taxRate?: SortOrder
+    isCancelled?: SortOrder
+    _count?: DistributionItemCountOrderByAggregateInput
+    _avg?: DistributionItemAvgOrderByAggregateInput
+    _max?: DistributionItemMaxOrderByAggregateInput
+    _min?: DistributionItemMinOrderByAggregateInput
+    _sum?: DistributionItemSumOrderByAggregateInput
+  }
+
+  export type DistributionItemScalarWhereWithAggregatesInput = {
+    AND?: DistributionItemScalarWhereWithAggregatesInput | DistributionItemScalarWhereWithAggregatesInput[]
+    OR?: DistributionItemScalarWhereWithAggregatesInput[]
+    NOT?: DistributionItemScalarWhereWithAggregatesInput | DistributionItemScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"DistributionItem"> | string
+    distributionId?: StringWithAggregatesFilter<"DistributionItem"> | string
+    productId?: StringWithAggregatesFilter<"DistributionItem"> | string
+    position?: IntWithAggregatesFilter<"DistributionItem"> | number
+    productLabel?: StringWithAggregatesFilter<"DistributionItem"> | string
+    quantity?: IntWithAggregatesFilter<"DistributionItem"> | number
+    shippedQuantity?: IntWithAggregatesFilter<"DistributionItem"> | number
+    invoicedQuantity?: IntWithAggregatesFilter<"DistributionItem"> | number
+    unitPrice?: FloatWithAggregatesFilter<"DistributionItem"> | number
+    taxRate?: FloatWithAggregatesFilter<"DistributionItem"> | number
+    isCancelled?: BoolWithAggregatesFilter<"DistributionItem"> | boolean
+  }
+
+  export type DistributionRevisionWhereInput = {
+    AND?: DistributionRevisionWhereInput | DistributionRevisionWhereInput[]
+    OR?: DistributionRevisionWhereInput[]
+    NOT?: DistributionRevisionWhereInput | DistributionRevisionWhereInput[]
+    id?: StringFilter<"DistributionRevision"> | string
+    distributionId?: StringFilter<"DistributionRevision"> | string
+    revision?: IntFilter<"DistributionRevision"> | number
+    action?: StringFilter<"DistributionRevision"> | string
+    performedBy?: StringFilter<"DistributionRevision"> | string
+    beforeSnapshot?: StringNullableFilter<"DistributionRevision"> | string | null
+    afterSnapshot?: StringFilter<"DistributionRevision"> | string
+    createdAt?: DateTimeFilter<"DistributionRevision"> | Date | string
+    distribution?: XOR<DistributionRelationFilter, DistributionWhereInput>
+  }
+
+  export type DistributionRevisionOrderByWithRelationInput = {
+    id?: SortOrder
+    distributionId?: SortOrder
+    revision?: SortOrder
+    action?: SortOrder
+    performedBy?: SortOrder
+    beforeSnapshot?: SortOrderInput | SortOrder
+    afterSnapshot?: SortOrder
+    createdAt?: SortOrder
+    distribution?: DistributionOrderByWithRelationInput
+  }
+
+  export type DistributionRevisionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    distributionId_revision?: DistributionRevisionDistributionIdRevisionCompoundUniqueInput
+    AND?: DistributionRevisionWhereInput | DistributionRevisionWhereInput[]
+    OR?: DistributionRevisionWhereInput[]
+    NOT?: DistributionRevisionWhereInput | DistributionRevisionWhereInput[]
+    distributionId?: StringFilter<"DistributionRevision"> | string
+    revision?: IntFilter<"DistributionRevision"> | number
+    action?: StringFilter<"DistributionRevision"> | string
+    performedBy?: StringFilter<"DistributionRevision"> | string
+    beforeSnapshot?: StringNullableFilter<"DistributionRevision"> | string | null
+    afterSnapshot?: StringFilter<"DistributionRevision"> | string
+    createdAt?: DateTimeFilter<"DistributionRevision"> | Date | string
+    distribution?: XOR<DistributionRelationFilter, DistributionWhereInput>
+  }, "id" | "distributionId_revision">
+
+  export type DistributionRevisionOrderByWithAggregationInput = {
+    id?: SortOrder
+    distributionId?: SortOrder
+    revision?: SortOrder
+    action?: SortOrder
+    performedBy?: SortOrder
+    beforeSnapshot?: SortOrderInput | SortOrder
+    afterSnapshot?: SortOrder
+    createdAt?: SortOrder
+    _count?: DistributionRevisionCountOrderByAggregateInput
+    _avg?: DistributionRevisionAvgOrderByAggregateInput
+    _max?: DistributionRevisionMaxOrderByAggregateInput
+    _min?: DistributionRevisionMinOrderByAggregateInput
+    _sum?: DistributionRevisionSumOrderByAggregateInput
+  }
+
+  export type DistributionRevisionScalarWhereWithAggregatesInput = {
+    AND?: DistributionRevisionScalarWhereWithAggregatesInput | DistributionRevisionScalarWhereWithAggregatesInput[]
+    OR?: DistributionRevisionScalarWhereWithAggregatesInput[]
+    NOT?: DistributionRevisionScalarWhereWithAggregatesInput | DistributionRevisionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"DistributionRevision"> | string
+    distributionId?: StringWithAggregatesFilter<"DistributionRevision"> | string
+    revision?: IntWithAggregatesFilter<"DistributionRevision"> | number
+    action?: StringWithAggregatesFilter<"DistributionRevision"> | string
+    performedBy?: StringWithAggregatesFilter<"DistributionRevision"> | string
+    beforeSnapshot?: StringNullableWithAggregatesFilter<"DistributionRevision"> | string | null
+    afterSnapshot?: StringWithAggregatesFilter<"DistributionRevision"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"DistributionRevision"> | Date | string
+  }
+
+  export type DistributionDispatchWhereInput = {
+    AND?: DistributionDispatchWhereInput | DistributionDispatchWhereInput[]
+    OR?: DistributionDispatchWhereInput[]
+    NOT?: DistributionDispatchWhereInput | DistributionDispatchWhereInput[]
+    id?: StringFilter<"DistributionDispatch"> | string
+    dispatchNumber?: StringFilter<"DistributionDispatch"> | string
+    distributionId?: StringFilter<"DistributionDispatch"> | string
+    notes?: StringNullableFilter<"DistributionDispatch"> | string | null
+    createdBy?: StringFilter<"DistributionDispatch"> | string
+    dispatchedAt?: DateTimeFilter<"DistributionDispatch"> | Date | string
+    createdAt?: DateTimeFilter<"DistributionDispatch"> | Date | string
+    distribution?: XOR<DistributionRelationFilter, DistributionWhereInput>
+    items?: DistributionDispatchItemListRelationFilter
+  }
+
+  export type DistributionDispatchOrderByWithRelationInput = {
+    id?: SortOrder
+    dispatchNumber?: SortOrder
+    distributionId?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdBy?: SortOrder
+    dispatchedAt?: SortOrder
+    createdAt?: SortOrder
+    distribution?: DistributionOrderByWithRelationInput
+    items?: DistributionDispatchItemOrderByRelationAggregateInput
+  }
+
+  export type DistributionDispatchWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    dispatchNumber?: string
+    AND?: DistributionDispatchWhereInput | DistributionDispatchWhereInput[]
+    OR?: DistributionDispatchWhereInput[]
+    NOT?: DistributionDispatchWhereInput | DistributionDispatchWhereInput[]
+    distributionId?: StringFilter<"DistributionDispatch"> | string
+    notes?: StringNullableFilter<"DistributionDispatch"> | string | null
+    createdBy?: StringFilter<"DistributionDispatch"> | string
+    dispatchedAt?: DateTimeFilter<"DistributionDispatch"> | Date | string
+    createdAt?: DateTimeFilter<"DistributionDispatch"> | Date | string
+    distribution?: XOR<DistributionRelationFilter, DistributionWhereInput>
+    items?: DistributionDispatchItemListRelationFilter
+  }, "id" | "dispatchNumber">
+
+  export type DistributionDispatchOrderByWithAggregationInput = {
+    id?: SortOrder
+    dispatchNumber?: SortOrder
+    distributionId?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdBy?: SortOrder
+    dispatchedAt?: SortOrder
+    createdAt?: SortOrder
+    _count?: DistributionDispatchCountOrderByAggregateInput
+    _max?: DistributionDispatchMaxOrderByAggregateInput
+    _min?: DistributionDispatchMinOrderByAggregateInput
+  }
+
+  export type DistributionDispatchScalarWhereWithAggregatesInput = {
+    AND?: DistributionDispatchScalarWhereWithAggregatesInput | DistributionDispatchScalarWhereWithAggregatesInput[]
+    OR?: DistributionDispatchScalarWhereWithAggregatesInput[]
+    NOT?: DistributionDispatchScalarWhereWithAggregatesInput | DistributionDispatchScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"DistributionDispatch"> | string
+    dispatchNumber?: StringWithAggregatesFilter<"DistributionDispatch"> | string
+    distributionId?: StringWithAggregatesFilter<"DistributionDispatch"> | string
+    notes?: StringNullableWithAggregatesFilter<"DistributionDispatch"> | string | null
+    createdBy?: StringWithAggregatesFilter<"DistributionDispatch"> | string
+    dispatchedAt?: DateTimeWithAggregatesFilter<"DistributionDispatch"> | Date | string
+    createdAt?: DateTimeWithAggregatesFilter<"DistributionDispatch"> | Date | string
+  }
+
+  export type DistributionDispatchItemWhereInput = {
+    AND?: DistributionDispatchItemWhereInput | DistributionDispatchItemWhereInput[]
+    OR?: DistributionDispatchItemWhereInput[]
+    NOT?: DistributionDispatchItemWhereInput | DistributionDispatchItemWhereInput[]
+    id?: StringFilter<"DistributionDispatchItem"> | string
+    dispatchId?: StringFilter<"DistributionDispatchItem"> | string
+    distributionItemId?: StringFilter<"DistributionDispatchItem"> | string
+    quantity?: IntFilter<"DistributionDispatchItem"> | number
+    dispatch?: XOR<DistributionDispatchRelationFilter, DistributionDispatchWhereInput>
+    distributionItem?: XOR<DistributionItemRelationFilter, DistributionItemWhereInput>
+  }
+
+  export type DistributionDispatchItemOrderByWithRelationInput = {
+    id?: SortOrder
+    dispatchId?: SortOrder
+    distributionItemId?: SortOrder
+    quantity?: SortOrder
+    dispatch?: DistributionDispatchOrderByWithRelationInput
+    distributionItem?: DistributionItemOrderByWithRelationInput
+  }
+
+  export type DistributionDispatchItemWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: DistributionDispatchItemWhereInput | DistributionDispatchItemWhereInput[]
+    OR?: DistributionDispatchItemWhereInput[]
+    NOT?: DistributionDispatchItemWhereInput | DistributionDispatchItemWhereInput[]
+    dispatchId?: StringFilter<"DistributionDispatchItem"> | string
+    distributionItemId?: StringFilter<"DistributionDispatchItem"> | string
+    quantity?: IntFilter<"DistributionDispatchItem"> | number
+    dispatch?: XOR<DistributionDispatchRelationFilter, DistributionDispatchWhereInput>
+    distributionItem?: XOR<DistributionItemRelationFilter, DistributionItemWhereInput>
+  }, "id">
+
+  export type DistributionDispatchItemOrderByWithAggregationInput = {
+    id?: SortOrder
+    dispatchId?: SortOrder
+    distributionItemId?: SortOrder
+    quantity?: SortOrder
+    _count?: DistributionDispatchItemCountOrderByAggregateInput
+    _avg?: DistributionDispatchItemAvgOrderByAggregateInput
+    _max?: DistributionDispatchItemMaxOrderByAggregateInput
+    _min?: DistributionDispatchItemMinOrderByAggregateInput
+    _sum?: DistributionDispatchItemSumOrderByAggregateInput
+  }
+
+  export type DistributionDispatchItemScalarWhereWithAggregatesInput = {
+    AND?: DistributionDispatchItemScalarWhereWithAggregatesInput | DistributionDispatchItemScalarWhereWithAggregatesInput[]
+    OR?: DistributionDispatchItemScalarWhereWithAggregatesInput[]
+    NOT?: DistributionDispatchItemScalarWhereWithAggregatesInput | DistributionDispatchItemScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"DistributionDispatchItem"> | string
+    dispatchId?: StringWithAggregatesFilter<"DistributionDispatchItem"> | string
+    distributionItemId?: StringWithAggregatesFilter<"DistributionDispatchItem"> | string
+    quantity?: IntWithAggregatesFilter<"DistributionDispatchItem"> | number
+  }
+
+  export type DistributionInvoiceWhereInput = {
+    AND?: DistributionInvoiceWhereInput | DistributionInvoiceWhereInput[]
+    OR?: DistributionInvoiceWhereInput[]
+    NOT?: DistributionInvoiceWhereInput | DistributionInvoiceWhereInput[]
+    id?: StringFilter<"DistributionInvoice"> | string
+    requestId?: StringFilter<"DistributionInvoice"> | string
+    requestSnapshot?: StringFilter<"DistributionInvoice"> | string
+    orderId?: StringFilter<"DistributionInvoice"> | string
+    customerId?: StringFilter<"DistributionInvoice"> | string
+    customerName?: StringFilter<"DistributionInvoice"> | string
+    createdBy?: StringFilter<"DistributionInvoice"> | string
+    createdAt?: DateTimeFilter<"DistributionInvoice"> | Date | string
+    order?: XOR<OrderRelationFilter, OrderWhereInput>
+    items?: DistributionInvoiceItemListRelationFilter
+  }
+
+  export type DistributionInvoiceOrderByWithRelationInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    requestSnapshot?: SortOrder
+    orderId?: SortOrder
+    customerId?: SortOrder
+    customerName?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    order?: OrderOrderByWithRelationInput
+    items?: DistributionInvoiceItemOrderByRelationAggregateInput
+  }
+
+  export type DistributionInvoiceWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    requestId?: string
+    orderId?: string
+    AND?: DistributionInvoiceWhereInput | DistributionInvoiceWhereInput[]
+    OR?: DistributionInvoiceWhereInput[]
+    NOT?: DistributionInvoiceWhereInput | DistributionInvoiceWhereInput[]
+    requestSnapshot?: StringFilter<"DistributionInvoice"> | string
+    customerId?: StringFilter<"DistributionInvoice"> | string
+    customerName?: StringFilter<"DistributionInvoice"> | string
+    createdBy?: StringFilter<"DistributionInvoice"> | string
+    createdAt?: DateTimeFilter<"DistributionInvoice"> | Date | string
+    order?: XOR<OrderRelationFilter, OrderWhereInput>
+    items?: DistributionInvoiceItemListRelationFilter
+  }, "id" | "requestId" | "orderId">
+
+  export type DistributionInvoiceOrderByWithAggregationInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    requestSnapshot?: SortOrder
+    orderId?: SortOrder
+    customerId?: SortOrder
+    customerName?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    _count?: DistributionInvoiceCountOrderByAggregateInput
+    _max?: DistributionInvoiceMaxOrderByAggregateInput
+    _min?: DistributionInvoiceMinOrderByAggregateInput
+  }
+
+  export type DistributionInvoiceScalarWhereWithAggregatesInput = {
+    AND?: DistributionInvoiceScalarWhereWithAggregatesInput | DistributionInvoiceScalarWhereWithAggregatesInput[]
+    OR?: DistributionInvoiceScalarWhereWithAggregatesInput[]
+    NOT?: DistributionInvoiceScalarWhereWithAggregatesInput | DistributionInvoiceScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"DistributionInvoice"> | string
+    requestId?: StringWithAggregatesFilter<"DistributionInvoice"> | string
+    requestSnapshot?: StringWithAggregatesFilter<"DistributionInvoice"> | string
+    orderId?: StringWithAggregatesFilter<"DistributionInvoice"> | string
+    customerId?: StringWithAggregatesFilter<"DistributionInvoice"> | string
+    customerName?: StringWithAggregatesFilter<"DistributionInvoice"> | string
+    createdBy?: StringWithAggregatesFilter<"DistributionInvoice"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"DistributionInvoice"> | Date | string
+  }
+
+  export type DistributionInvoiceItemWhereInput = {
+    AND?: DistributionInvoiceItemWhereInput | DistributionInvoiceItemWhereInput[]
+    OR?: DistributionInvoiceItemWhereInput[]
+    NOT?: DistributionInvoiceItemWhereInput | DistributionInvoiceItemWhereInput[]
+    id?: StringFilter<"DistributionInvoiceItem"> | string
+    distributionInvoiceId?: StringFilter<"DistributionInvoiceItem"> | string
+    distributionId?: StringFilter<"DistributionInvoiceItem"> | string
+    distributionItemId?: StringFilter<"DistributionInvoiceItem"> | string
+    orderItemId?: StringFilter<"DistributionInvoiceItem"> | string
+    quantity?: IntFilter<"DistributionInvoiceItem"> | number
+    invoice?: XOR<DistributionInvoiceRelationFilter, DistributionInvoiceWhereInput>
+    distribution?: XOR<DistributionRelationFilter, DistributionWhereInput>
+    distributionItem?: XOR<DistributionItemRelationFilter, DistributionItemWhereInput>
+    orderItem?: XOR<OrderItemRelationFilter, OrderItemWhereInput>
+  }
+
+  export type DistributionInvoiceItemOrderByWithRelationInput = {
+    id?: SortOrder
+    distributionInvoiceId?: SortOrder
+    distributionId?: SortOrder
+    distributionItemId?: SortOrder
+    orderItemId?: SortOrder
+    quantity?: SortOrder
+    invoice?: DistributionInvoiceOrderByWithRelationInput
+    distribution?: DistributionOrderByWithRelationInput
+    distributionItem?: DistributionItemOrderByWithRelationInput
+    orderItem?: OrderItemOrderByWithRelationInput
+  }
+
+  export type DistributionInvoiceItemWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    orderItemId?: string
+    AND?: DistributionInvoiceItemWhereInput | DistributionInvoiceItemWhereInput[]
+    OR?: DistributionInvoiceItemWhereInput[]
+    NOT?: DistributionInvoiceItemWhereInput | DistributionInvoiceItemWhereInput[]
+    distributionInvoiceId?: StringFilter<"DistributionInvoiceItem"> | string
+    distributionId?: StringFilter<"DistributionInvoiceItem"> | string
+    distributionItemId?: StringFilter<"DistributionInvoiceItem"> | string
+    quantity?: IntFilter<"DistributionInvoiceItem"> | number
+    invoice?: XOR<DistributionInvoiceRelationFilter, DistributionInvoiceWhereInput>
+    distribution?: XOR<DistributionRelationFilter, DistributionWhereInput>
+    distributionItem?: XOR<DistributionItemRelationFilter, DistributionItemWhereInput>
+    orderItem?: XOR<OrderItemRelationFilter, OrderItemWhereInput>
+  }, "id" | "orderItemId">
+
+  export type DistributionInvoiceItemOrderByWithAggregationInput = {
+    id?: SortOrder
+    distributionInvoiceId?: SortOrder
+    distributionId?: SortOrder
+    distributionItemId?: SortOrder
+    orderItemId?: SortOrder
+    quantity?: SortOrder
+    _count?: DistributionInvoiceItemCountOrderByAggregateInput
+    _avg?: DistributionInvoiceItemAvgOrderByAggregateInput
+    _max?: DistributionInvoiceItemMaxOrderByAggregateInput
+    _min?: DistributionInvoiceItemMinOrderByAggregateInput
+    _sum?: DistributionInvoiceItemSumOrderByAggregateInput
+  }
+
+  export type DistributionInvoiceItemScalarWhereWithAggregatesInput = {
+    AND?: DistributionInvoiceItemScalarWhereWithAggregatesInput | DistributionInvoiceItemScalarWhereWithAggregatesInput[]
+    OR?: DistributionInvoiceItemScalarWhereWithAggregatesInput[]
+    NOT?: DistributionInvoiceItemScalarWhereWithAggregatesInput | DistributionInvoiceItemScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"DistributionInvoiceItem"> | string
+    distributionInvoiceId?: StringWithAggregatesFilter<"DistributionInvoiceItem"> | string
+    distributionId?: StringWithAggregatesFilter<"DistributionInvoiceItem"> | string
+    distributionItemId?: StringWithAggregatesFilter<"DistributionInvoiceItem"> | string
+    orderItemId?: StringWithAggregatesFilter<"DistributionInvoiceItem"> | string
+    quantity?: IntWithAggregatesFilter<"DistributionInvoiceItem"> | number
   }
 
   export type OrderReturnWhereInput = {
@@ -31549,6 +40083,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     imageUrl?: string | null
@@ -31561,6 +40096,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
 
@@ -31581,6 +40117,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     supplierId?: string | null
@@ -31594,6 +40131,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductUpdateInput = {
@@ -31613,6 +40151,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31625,6 +40164,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
 
@@ -31645,6 +40185,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     supplierId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31658,6 +40199,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUpdateManyMutationInput = {
@@ -31677,6 +40219,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31701,6 +40244,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     supplierId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -32157,6 +40701,7 @@ export namespace Prisma {
     user: UserCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     orderReturns?: OrderReturnCreateNestedManyWithoutOrderInput
+    distributionInvoice?: DistributionInvoiceCreateNestedOneWithoutOrderInput
   }
 
   export type OrderUncheckedCreateInput = {
@@ -32179,6 +40724,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     orderReturns?: OrderReturnUncheckedCreateNestedManyWithoutOrderInput
+    distributionInvoice?: DistributionInvoiceUncheckedCreateNestedOneWithoutOrderInput
   }
 
   export type OrderUpdateInput = {
@@ -32201,6 +40747,7 @@ export namespace Prisma {
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     orderReturns?: OrderReturnUpdateManyWithoutOrderNestedInput
+    distributionInvoice?: DistributionInvoiceUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateInput = {
@@ -32223,6 +40770,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     orderReturns?: OrderReturnUncheckedUpdateManyWithoutOrderNestedInput
+    distributionInvoice?: DistributionInvoiceUncheckedUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUpdateManyMutationInput = {
@@ -32282,6 +40830,7 @@ export namespace Prisma {
     discounts?: AccountDiscountCreateNestedManyWithoutCustomerInput
     customPrices?: CustomerPriceCreateNestedManyWithoutCustomerInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutCustomerInput
+    distributions?: DistributionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateInput = {
@@ -32303,6 +40852,7 @@ export namespace Prisma {
     discounts?: AccountDiscountUncheckedCreateNestedManyWithoutCustomerInput
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutCustomerInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutCustomerInput
+    distributions?: DistributionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUpdateInput = {
@@ -32324,6 +40874,7 @@ export namespace Prisma {
     discounts?: AccountDiscountUpdateManyWithoutCustomerNestedInput
     customPrices?: CustomerPriceUpdateManyWithoutCustomerNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutCustomerNestedInput
+    distributions?: DistributionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateInput = {
@@ -32345,6 +40896,7 @@ export namespace Prisma {
     discounts?: AccountDiscountUncheckedUpdateManyWithoutCustomerNestedInput
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutCustomerNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutCustomerNestedInput
+    distributions?: DistributionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUpdateManyMutationInput = {
@@ -32439,6 +40991,7 @@ export namespace Prisma {
     order: OrderCreateNestedOneWithoutItemsInput
     product: ProductCreateNestedOneWithoutOrderItemsInput
     returnItems?: OrderReturnItemCreateNestedManyWithoutOrderItemInput
+    distributionInvoiceItems?: DistributionInvoiceItemCreateNestedManyWithoutOrderItemInput
   }
 
   export type OrderItemUncheckedCreateInput = {
@@ -32451,6 +41004,7 @@ export namespace Prisma {
     taxAmount: number
     total: number
     returnItems?: OrderReturnItemUncheckedCreateNestedManyWithoutOrderItemInput
+    distributionInvoiceItems?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutOrderItemInput
   }
 
   export type OrderItemUpdateInput = {
@@ -32463,6 +41017,7 @@ export namespace Prisma {
     order?: OrderUpdateOneRequiredWithoutItemsNestedInput
     product?: ProductUpdateOneRequiredWithoutOrderItemsNestedInput
     returnItems?: OrderReturnItemUpdateManyWithoutOrderItemNestedInput
+    distributionInvoiceItems?: DistributionInvoiceItemUpdateManyWithoutOrderItemNestedInput
   }
 
   export type OrderItemUncheckedUpdateInput = {
@@ -32475,6 +41030,7 @@ export namespace Prisma {
     taxAmount?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
     returnItems?: OrderReturnItemUncheckedUpdateManyWithoutOrderItemNestedInput
+    distributionInvoiceItems?: DistributionInvoiceItemUncheckedUpdateManyWithoutOrderItemNestedInput
   }
 
   export type OrderItemUpdateManyMutationInput = {
@@ -32495,6 +41051,494 @@ export namespace Prisma {
     unitPrice?: FloatFieldUpdateOperationsInput | number
     taxAmount?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionCreateInput = {
+    id?: string
+    documentNumber: string
+    customerName: string
+    status?: string
+    notes?: string | null
+    revision?: number
+    createdBy: string
+    updatedBy?: string | null
+    approvedBy?: string | null
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    customer: CustomerCreateNestedOneWithoutDistributionsInput
+    items?: DistributionItemCreateNestedManyWithoutDistributionInput
+    revisions?: DistributionRevisionCreateNestedManyWithoutDistributionInput
+    dispatches?: DistributionDispatchCreateNestedManyWithoutDistributionInput
+    invoiceItems?: DistributionInvoiceItemCreateNestedManyWithoutDistributionInput
+  }
+
+  export type DistributionUncheckedCreateInput = {
+    id?: string
+    documentNumber: string
+    customerId: string
+    customerName: string
+    status?: string
+    notes?: string | null
+    revision?: number
+    createdBy: string
+    updatedBy?: string | null
+    approvedBy?: string | null
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    items?: DistributionItemUncheckedCreateNestedManyWithoutDistributionInput
+    revisions?: DistributionRevisionUncheckedCreateNestedManyWithoutDistributionInput
+    dispatches?: DistributionDispatchUncheckedCreateNestedManyWithoutDistributionInput
+    invoiceItems?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutDistributionInput
+  }
+
+  export type DistributionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customer?: CustomerUpdateOneRequiredWithoutDistributionsNestedInput
+    items?: DistributionItemUpdateManyWithoutDistributionNestedInput
+    revisions?: DistributionRevisionUpdateManyWithoutDistributionNestedInput
+    dispatches?: DistributionDispatchUpdateManyWithoutDistributionNestedInput
+    invoiceItems?: DistributionInvoiceItemUpdateManyWithoutDistributionNestedInput
+  }
+
+  export type DistributionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    items?: DistributionItemUncheckedUpdateManyWithoutDistributionNestedInput
+    revisions?: DistributionRevisionUncheckedUpdateManyWithoutDistributionNestedInput
+    dispatches?: DistributionDispatchUncheckedUpdateManyWithoutDistributionNestedInput
+    invoiceItems?: DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionNestedInput
+  }
+
+  export type DistributionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionItemCreateInput = {
+    id?: string
+    position: number
+    productLabel: string
+    quantity: number
+    shippedQuantity?: number
+    invoicedQuantity?: number
+    unitPrice: number
+    taxRate: number
+    isCancelled?: boolean
+    distribution: DistributionCreateNestedOneWithoutItemsInput
+    product: ProductCreateNestedOneWithoutDistributionItemsInput
+    dispatchItems?: DistributionDispatchItemCreateNestedManyWithoutDistributionItemInput
+    invoiceItems?: DistributionInvoiceItemCreateNestedManyWithoutDistributionItemInput
+  }
+
+  export type DistributionItemUncheckedCreateInput = {
+    id?: string
+    distributionId: string
+    productId: string
+    position: number
+    productLabel: string
+    quantity: number
+    shippedQuantity?: number
+    invoicedQuantity?: number
+    unitPrice: number
+    taxRate: number
+    isCancelled?: boolean
+    dispatchItems?: DistributionDispatchItemUncheckedCreateNestedManyWithoutDistributionItemInput
+    invoiceItems?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutDistributionItemInput
+  }
+
+  export type DistributionItemUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    position?: IntFieldUpdateOperationsInput | number
+    productLabel?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    shippedQuantity?: IntFieldUpdateOperationsInput | number
+    invoicedQuantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    distribution?: DistributionUpdateOneRequiredWithoutItemsNestedInput
+    product?: ProductUpdateOneRequiredWithoutDistributionItemsNestedInput
+    dispatchItems?: DistributionDispatchItemUpdateManyWithoutDistributionItemNestedInput
+    invoiceItems?: DistributionInvoiceItemUpdateManyWithoutDistributionItemNestedInput
+  }
+
+  export type DistributionItemUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    productId?: StringFieldUpdateOperationsInput | string
+    position?: IntFieldUpdateOperationsInput | number
+    productLabel?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    shippedQuantity?: IntFieldUpdateOperationsInput | number
+    invoicedQuantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    dispatchItems?: DistributionDispatchItemUncheckedUpdateManyWithoutDistributionItemNestedInput
+    invoiceItems?: DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionItemNestedInput
+  }
+
+  export type DistributionItemUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    position?: IntFieldUpdateOperationsInput | number
+    productLabel?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    shippedQuantity?: IntFieldUpdateOperationsInput | number
+    invoicedQuantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type DistributionItemUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    productId?: StringFieldUpdateOperationsInput | string
+    position?: IntFieldUpdateOperationsInput | number
+    productLabel?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    shippedQuantity?: IntFieldUpdateOperationsInput | number
+    invoicedQuantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type DistributionRevisionCreateInput = {
+    id?: string
+    revision: number
+    action: string
+    performedBy: string
+    beforeSnapshot?: string | null
+    afterSnapshot: string
+    createdAt?: Date | string
+    distribution: DistributionCreateNestedOneWithoutRevisionsInput
+  }
+
+  export type DistributionRevisionUncheckedCreateInput = {
+    id?: string
+    distributionId: string
+    revision: number
+    action: string
+    performedBy: string
+    beforeSnapshot?: string | null
+    afterSnapshot: string
+    createdAt?: Date | string
+  }
+
+  export type DistributionRevisionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    revision?: IntFieldUpdateOperationsInput | number
+    action?: StringFieldUpdateOperationsInput | string
+    performedBy?: StringFieldUpdateOperationsInput | string
+    beforeSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
+    afterSnapshot?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    distribution?: DistributionUpdateOneRequiredWithoutRevisionsNestedInput
+  }
+
+  export type DistributionRevisionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    revision?: IntFieldUpdateOperationsInput | number
+    action?: StringFieldUpdateOperationsInput | string
+    performedBy?: StringFieldUpdateOperationsInput | string
+    beforeSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
+    afterSnapshot?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionRevisionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    revision?: IntFieldUpdateOperationsInput | number
+    action?: StringFieldUpdateOperationsInput | string
+    performedBy?: StringFieldUpdateOperationsInput | string
+    beforeSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
+    afterSnapshot?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionRevisionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    revision?: IntFieldUpdateOperationsInput | number
+    action?: StringFieldUpdateOperationsInput | string
+    performedBy?: StringFieldUpdateOperationsInput | string
+    beforeSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
+    afterSnapshot?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionDispatchCreateInput = {
+    id?: string
+    dispatchNumber: string
+    notes?: string | null
+    createdBy: string
+    dispatchedAt: Date | string
+    createdAt?: Date | string
+    distribution: DistributionCreateNestedOneWithoutDispatchesInput
+    items?: DistributionDispatchItemCreateNestedManyWithoutDispatchInput
+  }
+
+  export type DistributionDispatchUncheckedCreateInput = {
+    id?: string
+    dispatchNumber: string
+    distributionId: string
+    notes?: string | null
+    createdBy: string
+    dispatchedAt: Date | string
+    createdAt?: Date | string
+    items?: DistributionDispatchItemUncheckedCreateNestedManyWithoutDispatchInput
+  }
+
+  export type DistributionDispatchUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dispatchNumber?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    dispatchedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    distribution?: DistributionUpdateOneRequiredWithoutDispatchesNestedInput
+    items?: DistributionDispatchItemUpdateManyWithoutDispatchNestedInput
+  }
+
+  export type DistributionDispatchUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dispatchNumber?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    dispatchedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    items?: DistributionDispatchItemUncheckedUpdateManyWithoutDispatchNestedInput
+  }
+
+  export type DistributionDispatchUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dispatchNumber?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    dispatchedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionDispatchUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dispatchNumber?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    dispatchedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionDispatchItemCreateInput = {
+    id?: string
+    quantity: number
+    dispatch: DistributionDispatchCreateNestedOneWithoutItemsInput
+    distributionItem: DistributionItemCreateNestedOneWithoutDispatchItemsInput
+  }
+
+  export type DistributionDispatchItemUncheckedCreateInput = {
+    id?: string
+    dispatchId: string
+    distributionItemId: string
+    quantity: number
+  }
+
+  export type DistributionDispatchItemUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    dispatch?: DistributionDispatchUpdateOneRequiredWithoutItemsNestedInput
+    distributionItem?: DistributionItemUpdateOneRequiredWithoutDispatchItemsNestedInput
+  }
+
+  export type DistributionDispatchItemUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dispatchId?: StringFieldUpdateOperationsInput | string
+    distributionItemId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionDispatchItemUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionDispatchItemUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dispatchId?: StringFieldUpdateOperationsInput | string
+    distributionItemId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionInvoiceCreateInput = {
+    id?: string
+    requestId: string
+    requestSnapshot: string
+    customerId: string
+    customerName: string
+    createdBy: string
+    createdAt?: Date | string
+    order: OrderCreateNestedOneWithoutDistributionInvoiceInput
+    items?: DistributionInvoiceItemCreateNestedManyWithoutInvoiceInput
+  }
+
+  export type DistributionInvoiceUncheckedCreateInput = {
+    id?: string
+    requestId: string
+    requestSnapshot: string
+    orderId: string
+    customerId: string
+    customerName: string
+    createdBy: string
+    createdAt?: Date | string
+    items?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutInvoiceInput
+  }
+
+  export type DistributionInvoiceUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestId?: StringFieldUpdateOperationsInput | string
+    requestSnapshot?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    order?: OrderUpdateOneRequiredWithoutDistributionInvoiceNestedInput
+    items?: DistributionInvoiceItemUpdateManyWithoutInvoiceNestedInput
+  }
+
+  export type DistributionInvoiceUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestId?: StringFieldUpdateOperationsInput | string
+    requestSnapshot?: StringFieldUpdateOperationsInput | string
+    orderId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    items?: DistributionInvoiceItemUncheckedUpdateManyWithoutInvoiceNestedInput
+  }
+
+  export type DistributionInvoiceUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestId?: StringFieldUpdateOperationsInput | string
+    requestSnapshot?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionInvoiceUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestId?: StringFieldUpdateOperationsInput | string
+    requestSnapshot?: StringFieldUpdateOperationsInput | string
+    orderId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionInvoiceItemCreateInput = {
+    id?: string
+    quantity: number
+    invoice: DistributionInvoiceCreateNestedOneWithoutItemsInput
+    distribution: DistributionCreateNestedOneWithoutInvoiceItemsInput
+    distributionItem: DistributionItemCreateNestedOneWithoutInvoiceItemsInput
+    orderItem: OrderItemCreateNestedOneWithoutDistributionInvoiceItemsInput
+  }
+
+  export type DistributionInvoiceItemUncheckedCreateInput = {
+    id?: string
+    distributionInvoiceId: string
+    distributionId: string
+    distributionItemId: string
+    orderItemId: string
+    quantity: number
+  }
+
+  export type DistributionInvoiceItemUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    invoice?: DistributionInvoiceUpdateOneRequiredWithoutItemsNestedInput
+    distribution?: DistributionUpdateOneRequiredWithoutInvoiceItemsNestedInput
+    distributionItem?: DistributionItemUpdateOneRequiredWithoutInvoiceItemsNestedInput
+    orderItem?: OrderItemUpdateOneRequiredWithoutDistributionInvoiceItemsNestedInput
+  }
+
+  export type DistributionInvoiceItemUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionInvoiceId?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    distributionItemId?: StringFieldUpdateOperationsInput | string
+    orderItemId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionInvoiceItemUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionInvoiceItemUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionInvoiceId?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    distributionItemId?: StringFieldUpdateOperationsInput | string
+    orderItemId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
   }
 
   export type OrderReturnCreateInput = {
@@ -33660,6 +42704,12 @@ export namespace Prisma {
     none?: StocktakeItemWhereInput
   }
 
+  export type DistributionItemListRelationFilter = {
+    every?: DistributionItemWhereInput
+    some?: DistributionItemWhereInput
+    none?: DistributionItemWhereInput
+  }
+
   export type SupplierNullableRelationFilter = {
     is?: SupplierWhereInput | null
     isNot?: SupplierWhereInput | null
@@ -33698,6 +42748,10 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type DistributionItemOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type ProductCountOrderByAggregateInput = {
     id?: SortOrder
     code?: SortOrder
@@ -33715,6 +42769,7 @@ export namespace Prisma {
     price?: SortOrder
     taxRate?: SortOrder
     stockQty?: SortOrder
+    reservedQty?: SortOrder
     minStockQty?: SortOrder
     maxStockQty?: SortOrder
     supplierId?: SortOrder
@@ -33730,6 +42785,7 @@ export namespace Prisma {
     price?: SortOrder
     taxRate?: SortOrder
     stockQty?: SortOrder
+    reservedQty?: SortOrder
     minStockQty?: SortOrder
     maxStockQty?: SortOrder
   }
@@ -33751,6 +42807,7 @@ export namespace Prisma {
     price?: SortOrder
     taxRate?: SortOrder
     stockQty?: SortOrder
+    reservedQty?: SortOrder
     minStockQty?: SortOrder
     maxStockQty?: SortOrder
     supplierId?: SortOrder
@@ -33776,6 +42833,7 @@ export namespace Prisma {
     price?: SortOrder
     taxRate?: SortOrder
     stockQty?: SortOrder
+    reservedQty?: SortOrder
     minStockQty?: SortOrder
     maxStockQty?: SortOrder
     supplierId?: SortOrder
@@ -33791,6 +42849,7 @@ export namespace Prisma {
     price?: SortOrder
     taxRate?: SortOrder
     stockQty?: SortOrder
+    reservedQty?: SortOrder
     minStockQty?: SortOrder
     maxStockQty?: SortOrder
   }
@@ -34206,6 +43265,11 @@ export namespace Prisma {
     isNot?: UserWhereInput
   }
 
+  export type DistributionInvoiceNullableRelationFilter = {
+    is?: DistributionInvoiceWhereInput | null
+    isNot?: DistributionInvoiceWhereInput | null
+  }
+
   export type OrderCountOrderByAggregateInput = {
     id?: SortOrder
     invoiceNumber?: SortOrder
@@ -34298,11 +43362,21 @@ export namespace Prisma {
     none?: AccountDiscountWhereInput
   }
 
+  export type DistributionListRelationFilter = {
+    every?: DistributionWhereInput
+    some?: DistributionWhereInput
+    none?: DistributionWhereInput
+  }
+
   export type PaymentOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
   export type AccountDiscountOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type DistributionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -34413,6 +43487,16 @@ export namespace Prisma {
     isNot?: OrderWhereInput
   }
 
+  export type DistributionInvoiceItemListRelationFilter = {
+    every?: DistributionInvoiceItemWhereInput
+    some?: DistributionInvoiceItemWhereInput
+    none?: DistributionInvoiceItemWhereInput
+  }
+
+  export type DistributionInvoiceItemOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type OrderItemCountOrderByAggregateInput = {
     id?: SortOrder
     orderId?: SortOrder
@@ -34460,6 +43544,355 @@ export namespace Prisma {
     unitPrice?: SortOrder
     taxAmount?: SortOrder
     total?: SortOrder
+  }
+
+  export type DistributionRevisionListRelationFilter = {
+    every?: DistributionRevisionWhereInput
+    some?: DistributionRevisionWhereInput
+    none?: DistributionRevisionWhereInput
+  }
+
+  export type DistributionDispatchListRelationFilter = {
+    every?: DistributionDispatchWhereInput
+    some?: DistributionDispatchWhereInput
+    none?: DistributionDispatchWhereInput
+  }
+
+  export type DistributionRevisionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type DistributionDispatchOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type DistributionCountOrderByAggregateInput = {
+    id?: SortOrder
+    documentNumber?: SortOrder
+    customerId?: SortOrder
+    customerName?: SortOrder
+    status?: SortOrder
+    notes?: SortOrder
+    revision?: SortOrder
+    createdBy?: SortOrder
+    updatedBy?: SortOrder
+    approvedBy?: SortOrder
+    approvedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DistributionAvgOrderByAggregateInput = {
+    revision?: SortOrder
+  }
+
+  export type DistributionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    documentNumber?: SortOrder
+    customerId?: SortOrder
+    customerName?: SortOrder
+    status?: SortOrder
+    notes?: SortOrder
+    revision?: SortOrder
+    createdBy?: SortOrder
+    updatedBy?: SortOrder
+    approvedBy?: SortOrder
+    approvedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DistributionMinOrderByAggregateInput = {
+    id?: SortOrder
+    documentNumber?: SortOrder
+    customerId?: SortOrder
+    customerName?: SortOrder
+    status?: SortOrder
+    notes?: SortOrder
+    revision?: SortOrder
+    createdBy?: SortOrder
+    updatedBy?: SortOrder
+    approvedBy?: SortOrder
+    approvedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DistributionSumOrderByAggregateInput = {
+    revision?: SortOrder
+  }
+
+  export type DistributionRelationFilter = {
+    is?: DistributionWhereInput
+    isNot?: DistributionWhereInput
+  }
+
+  export type DistributionDispatchItemListRelationFilter = {
+    every?: DistributionDispatchItemWhereInput
+    some?: DistributionDispatchItemWhereInput
+    none?: DistributionDispatchItemWhereInput
+  }
+
+  export type DistributionDispatchItemOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type DistributionItemDistributionIdProductIdCompoundUniqueInput = {
+    distributionId: string
+    productId: string
+  }
+
+  export type DistributionItemCountOrderByAggregateInput = {
+    id?: SortOrder
+    distributionId?: SortOrder
+    productId?: SortOrder
+    position?: SortOrder
+    productLabel?: SortOrder
+    quantity?: SortOrder
+    shippedQuantity?: SortOrder
+    invoicedQuantity?: SortOrder
+    unitPrice?: SortOrder
+    taxRate?: SortOrder
+    isCancelled?: SortOrder
+  }
+
+  export type DistributionItemAvgOrderByAggregateInput = {
+    position?: SortOrder
+    quantity?: SortOrder
+    shippedQuantity?: SortOrder
+    invoicedQuantity?: SortOrder
+    unitPrice?: SortOrder
+    taxRate?: SortOrder
+  }
+
+  export type DistributionItemMaxOrderByAggregateInput = {
+    id?: SortOrder
+    distributionId?: SortOrder
+    productId?: SortOrder
+    position?: SortOrder
+    productLabel?: SortOrder
+    quantity?: SortOrder
+    shippedQuantity?: SortOrder
+    invoicedQuantity?: SortOrder
+    unitPrice?: SortOrder
+    taxRate?: SortOrder
+    isCancelled?: SortOrder
+  }
+
+  export type DistributionItemMinOrderByAggregateInput = {
+    id?: SortOrder
+    distributionId?: SortOrder
+    productId?: SortOrder
+    position?: SortOrder
+    productLabel?: SortOrder
+    quantity?: SortOrder
+    shippedQuantity?: SortOrder
+    invoicedQuantity?: SortOrder
+    unitPrice?: SortOrder
+    taxRate?: SortOrder
+    isCancelled?: SortOrder
+  }
+
+  export type DistributionItemSumOrderByAggregateInput = {
+    position?: SortOrder
+    quantity?: SortOrder
+    shippedQuantity?: SortOrder
+    invoicedQuantity?: SortOrder
+    unitPrice?: SortOrder
+    taxRate?: SortOrder
+  }
+
+  export type DistributionRevisionDistributionIdRevisionCompoundUniqueInput = {
+    distributionId: string
+    revision: number
+  }
+
+  export type DistributionRevisionCountOrderByAggregateInput = {
+    id?: SortOrder
+    distributionId?: SortOrder
+    revision?: SortOrder
+    action?: SortOrder
+    performedBy?: SortOrder
+    beforeSnapshot?: SortOrder
+    afterSnapshot?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type DistributionRevisionAvgOrderByAggregateInput = {
+    revision?: SortOrder
+  }
+
+  export type DistributionRevisionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    distributionId?: SortOrder
+    revision?: SortOrder
+    action?: SortOrder
+    performedBy?: SortOrder
+    beforeSnapshot?: SortOrder
+    afterSnapshot?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type DistributionRevisionMinOrderByAggregateInput = {
+    id?: SortOrder
+    distributionId?: SortOrder
+    revision?: SortOrder
+    action?: SortOrder
+    performedBy?: SortOrder
+    beforeSnapshot?: SortOrder
+    afterSnapshot?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type DistributionRevisionSumOrderByAggregateInput = {
+    revision?: SortOrder
+  }
+
+  export type DistributionDispatchCountOrderByAggregateInput = {
+    id?: SortOrder
+    dispatchNumber?: SortOrder
+    distributionId?: SortOrder
+    notes?: SortOrder
+    createdBy?: SortOrder
+    dispatchedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type DistributionDispatchMaxOrderByAggregateInput = {
+    id?: SortOrder
+    dispatchNumber?: SortOrder
+    distributionId?: SortOrder
+    notes?: SortOrder
+    createdBy?: SortOrder
+    dispatchedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type DistributionDispatchMinOrderByAggregateInput = {
+    id?: SortOrder
+    dispatchNumber?: SortOrder
+    distributionId?: SortOrder
+    notes?: SortOrder
+    createdBy?: SortOrder
+    dispatchedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type DistributionDispatchRelationFilter = {
+    is?: DistributionDispatchWhereInput
+    isNot?: DistributionDispatchWhereInput
+  }
+
+  export type DistributionItemRelationFilter = {
+    is?: DistributionItemWhereInput
+    isNot?: DistributionItemWhereInput
+  }
+
+  export type DistributionDispatchItemCountOrderByAggregateInput = {
+    id?: SortOrder
+    dispatchId?: SortOrder
+    distributionItemId?: SortOrder
+    quantity?: SortOrder
+  }
+
+  export type DistributionDispatchItemAvgOrderByAggregateInput = {
+    quantity?: SortOrder
+  }
+
+  export type DistributionDispatchItemMaxOrderByAggregateInput = {
+    id?: SortOrder
+    dispatchId?: SortOrder
+    distributionItemId?: SortOrder
+    quantity?: SortOrder
+  }
+
+  export type DistributionDispatchItemMinOrderByAggregateInput = {
+    id?: SortOrder
+    dispatchId?: SortOrder
+    distributionItemId?: SortOrder
+    quantity?: SortOrder
+  }
+
+  export type DistributionDispatchItemSumOrderByAggregateInput = {
+    quantity?: SortOrder
+  }
+
+  export type DistributionInvoiceCountOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    requestSnapshot?: SortOrder
+    orderId?: SortOrder
+    customerId?: SortOrder
+    customerName?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type DistributionInvoiceMaxOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    requestSnapshot?: SortOrder
+    orderId?: SortOrder
+    customerId?: SortOrder
+    customerName?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type DistributionInvoiceMinOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    requestSnapshot?: SortOrder
+    orderId?: SortOrder
+    customerId?: SortOrder
+    customerName?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type DistributionInvoiceRelationFilter = {
+    is?: DistributionInvoiceWhereInput
+    isNot?: DistributionInvoiceWhereInput
+  }
+
+  export type OrderItemRelationFilter = {
+    is?: OrderItemWhereInput
+    isNot?: OrderItemWhereInput
+  }
+
+  export type DistributionInvoiceItemCountOrderByAggregateInput = {
+    id?: SortOrder
+    distributionInvoiceId?: SortOrder
+    distributionId?: SortOrder
+    distributionItemId?: SortOrder
+    orderItemId?: SortOrder
+    quantity?: SortOrder
+  }
+
+  export type DistributionInvoiceItemAvgOrderByAggregateInput = {
+    quantity?: SortOrder
+  }
+
+  export type DistributionInvoiceItemMaxOrderByAggregateInput = {
+    id?: SortOrder
+    distributionInvoiceId?: SortOrder
+    distributionId?: SortOrder
+    distributionItemId?: SortOrder
+    orderItemId?: SortOrder
+    quantity?: SortOrder
+  }
+
+  export type DistributionInvoiceItemMinOrderByAggregateInput = {
+    id?: SortOrder
+    distributionInvoiceId?: SortOrder
+    distributionId?: SortOrder
+    distributionItemId?: SortOrder
+    orderItemId?: SortOrder
+    quantity?: SortOrder
+  }
+
+  export type DistributionInvoiceItemSumOrderByAggregateInput = {
+    quantity?: SortOrder
   }
 
   export type UserNullableRelationFilter = {
@@ -34540,11 +43973,6 @@ export namespace Prisma {
   export type OrderReturnRelationFilter = {
     is?: OrderReturnWhereInput
     isNot?: OrderReturnWhereInput
-  }
-
-  export type OrderItemRelationFilter = {
-    is?: OrderItemWhereInput
-    isNot?: OrderItemWhereInput
   }
 
   export type OrderReturnItemCountOrderByAggregateInput = {
@@ -35277,6 +44705,12 @@ export namespace Prisma {
     connect?: StocktakeItemWhereUniqueInput | StocktakeItemWhereUniqueInput[]
   }
 
+  export type DistributionItemCreateNestedManyWithoutProductInput = {
+    create?: XOR<DistributionItemCreateWithoutProductInput, DistributionItemUncheckedCreateWithoutProductInput> | DistributionItemCreateWithoutProductInput[] | DistributionItemUncheckedCreateWithoutProductInput[]
+    connectOrCreate?: DistributionItemCreateOrConnectWithoutProductInput | DistributionItemCreateOrConnectWithoutProductInput[]
+    connect?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+  }
+
   export type SupplierCreateNestedOneWithoutProductsInput = {
     create?: XOR<SupplierCreateWithoutProductsInput, SupplierUncheckedCreateWithoutProductsInput>
     connectOrCreate?: SupplierCreateOrConnectWithoutProductsInput
@@ -35323,6 +44757,12 @@ export namespace Prisma {
     create?: XOR<StocktakeItemCreateWithoutProductInput, StocktakeItemUncheckedCreateWithoutProductInput> | StocktakeItemCreateWithoutProductInput[] | StocktakeItemUncheckedCreateWithoutProductInput[]
     connectOrCreate?: StocktakeItemCreateOrConnectWithoutProductInput | StocktakeItemCreateOrConnectWithoutProductInput[]
     connect?: StocktakeItemWhereUniqueInput | StocktakeItemWhereUniqueInput[]
+  }
+
+  export type DistributionItemUncheckedCreateNestedManyWithoutProductInput = {
+    create?: XOR<DistributionItemCreateWithoutProductInput, DistributionItemUncheckedCreateWithoutProductInput> | DistributionItemCreateWithoutProductInput[] | DistributionItemUncheckedCreateWithoutProductInput[]
+    connectOrCreate?: DistributionItemCreateOrConnectWithoutProductInput | DistributionItemCreateOrConnectWithoutProductInput[]
+    connect?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
   }
 
   export type NullableStringFieldUpdateOperationsInput = {
@@ -35444,6 +44884,19 @@ export namespace Prisma {
     deleteMany?: StocktakeItemScalarWhereInput | StocktakeItemScalarWhereInput[]
   }
 
+  export type DistributionItemUpdateManyWithoutProductNestedInput = {
+    create?: XOR<DistributionItemCreateWithoutProductInput, DistributionItemUncheckedCreateWithoutProductInput> | DistributionItemCreateWithoutProductInput[] | DistributionItemUncheckedCreateWithoutProductInput[]
+    connectOrCreate?: DistributionItemCreateOrConnectWithoutProductInput | DistributionItemCreateOrConnectWithoutProductInput[]
+    upsert?: DistributionItemUpsertWithWhereUniqueWithoutProductInput | DistributionItemUpsertWithWhereUniqueWithoutProductInput[]
+    set?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    disconnect?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    delete?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    connect?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    update?: DistributionItemUpdateWithWhereUniqueWithoutProductInput | DistributionItemUpdateWithWhereUniqueWithoutProductInput[]
+    updateMany?: DistributionItemUpdateManyWithWhereWithoutProductInput | DistributionItemUpdateManyWithWhereWithoutProductInput[]
+    deleteMany?: DistributionItemScalarWhereInput | DistributionItemScalarWhereInput[]
+  }
+
   export type SupplierUpdateOneWithoutProductsNestedInput = {
     create?: XOR<SupplierCreateWithoutProductsInput, SupplierUncheckedCreateWithoutProductsInput>
     connectOrCreate?: SupplierCreateOrConnectWithoutProductsInput
@@ -35543,6 +44996,19 @@ export namespace Prisma {
     update?: StocktakeItemUpdateWithWhereUniqueWithoutProductInput | StocktakeItemUpdateWithWhereUniqueWithoutProductInput[]
     updateMany?: StocktakeItemUpdateManyWithWhereWithoutProductInput | StocktakeItemUpdateManyWithWhereWithoutProductInput[]
     deleteMany?: StocktakeItemScalarWhereInput | StocktakeItemScalarWhereInput[]
+  }
+
+  export type DistributionItemUncheckedUpdateManyWithoutProductNestedInput = {
+    create?: XOR<DistributionItemCreateWithoutProductInput, DistributionItemUncheckedCreateWithoutProductInput> | DistributionItemCreateWithoutProductInput[] | DistributionItemUncheckedCreateWithoutProductInput[]
+    connectOrCreate?: DistributionItemCreateOrConnectWithoutProductInput | DistributionItemCreateOrConnectWithoutProductInput[]
+    upsert?: DistributionItemUpsertWithWhereUniqueWithoutProductInput | DistributionItemUpsertWithWhereUniqueWithoutProductInput[]
+    set?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    disconnect?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    delete?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    connect?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    update?: DistributionItemUpdateWithWhereUniqueWithoutProductInput | DistributionItemUpdateWithWhereUniqueWithoutProductInput[]
+    updateMany?: DistributionItemUpdateManyWithWhereWithoutProductInput | DistributionItemUpdateManyWithWhereWithoutProductInput[]
+    deleteMany?: DistributionItemScalarWhereInput | DistributionItemScalarWhereInput[]
   }
 
   export type StocktakeItemCreateNestedManyWithoutStocktakeInput = {
@@ -35647,6 +45113,12 @@ export namespace Prisma {
     connect?: OrderReturnWhereUniqueInput | OrderReturnWhereUniqueInput[]
   }
 
+  export type DistributionInvoiceCreateNestedOneWithoutOrderInput = {
+    create?: XOR<DistributionInvoiceCreateWithoutOrderInput, DistributionInvoiceUncheckedCreateWithoutOrderInput>
+    connectOrCreate?: DistributionInvoiceCreateOrConnectWithoutOrderInput
+    connect?: DistributionInvoiceWhereUniqueInput
+  }
+
   export type OrderItemUncheckedCreateNestedManyWithoutOrderInput = {
     create?: XOR<OrderItemCreateWithoutOrderInput, OrderItemUncheckedCreateWithoutOrderInput> | OrderItemCreateWithoutOrderInput[] | OrderItemUncheckedCreateWithoutOrderInput[]
     connectOrCreate?: OrderItemCreateOrConnectWithoutOrderInput | OrderItemCreateOrConnectWithoutOrderInput[]
@@ -35657,6 +45129,12 @@ export namespace Prisma {
     create?: XOR<OrderReturnCreateWithoutOrderInput, OrderReturnUncheckedCreateWithoutOrderInput> | OrderReturnCreateWithoutOrderInput[] | OrderReturnUncheckedCreateWithoutOrderInput[]
     connectOrCreate?: OrderReturnCreateOrConnectWithoutOrderInput | OrderReturnCreateOrConnectWithoutOrderInput[]
     connect?: OrderReturnWhereUniqueInput | OrderReturnWhereUniqueInput[]
+  }
+
+  export type DistributionInvoiceUncheckedCreateNestedOneWithoutOrderInput = {
+    create?: XOR<DistributionInvoiceCreateWithoutOrderInput, DistributionInvoiceUncheckedCreateWithoutOrderInput>
+    connectOrCreate?: DistributionInvoiceCreateOrConnectWithoutOrderInput
+    connect?: DistributionInvoiceWhereUniqueInput
   }
 
   export type BoolFieldUpdateOperationsInput = {
@@ -35707,6 +45185,16 @@ export namespace Prisma {
     deleteMany?: OrderReturnScalarWhereInput | OrderReturnScalarWhereInput[]
   }
 
+  export type DistributionInvoiceUpdateOneWithoutOrderNestedInput = {
+    create?: XOR<DistributionInvoiceCreateWithoutOrderInput, DistributionInvoiceUncheckedCreateWithoutOrderInput>
+    connectOrCreate?: DistributionInvoiceCreateOrConnectWithoutOrderInput
+    upsert?: DistributionInvoiceUpsertWithoutOrderInput
+    disconnect?: DistributionInvoiceWhereInput | boolean
+    delete?: DistributionInvoiceWhereInput | boolean
+    connect?: DistributionInvoiceWhereUniqueInput
+    update?: XOR<XOR<DistributionInvoiceUpdateToOneWithWhereWithoutOrderInput, DistributionInvoiceUpdateWithoutOrderInput>, DistributionInvoiceUncheckedUpdateWithoutOrderInput>
+  }
+
   export type OrderItemUncheckedUpdateManyWithoutOrderNestedInput = {
     create?: XOR<OrderItemCreateWithoutOrderInput, OrderItemUncheckedCreateWithoutOrderInput> | OrderItemCreateWithoutOrderInput[] | OrderItemUncheckedCreateWithoutOrderInput[]
     connectOrCreate?: OrderItemCreateOrConnectWithoutOrderInput | OrderItemCreateOrConnectWithoutOrderInput[]
@@ -35731,6 +45219,16 @@ export namespace Prisma {
     update?: OrderReturnUpdateWithWhereUniqueWithoutOrderInput | OrderReturnUpdateWithWhereUniqueWithoutOrderInput[]
     updateMany?: OrderReturnUpdateManyWithWhereWithoutOrderInput | OrderReturnUpdateManyWithWhereWithoutOrderInput[]
     deleteMany?: OrderReturnScalarWhereInput | OrderReturnScalarWhereInput[]
+  }
+
+  export type DistributionInvoiceUncheckedUpdateOneWithoutOrderNestedInput = {
+    create?: XOR<DistributionInvoiceCreateWithoutOrderInput, DistributionInvoiceUncheckedCreateWithoutOrderInput>
+    connectOrCreate?: DistributionInvoiceCreateOrConnectWithoutOrderInput
+    upsert?: DistributionInvoiceUpsertWithoutOrderInput
+    disconnect?: DistributionInvoiceWhereInput | boolean
+    delete?: DistributionInvoiceWhereInput | boolean
+    connect?: DistributionInvoiceWhereUniqueInput
+    update?: XOR<XOR<DistributionInvoiceUpdateToOneWithWhereWithoutOrderInput, DistributionInvoiceUpdateWithoutOrderInput>, DistributionInvoiceUncheckedUpdateWithoutOrderInput>
   }
 
   export type OrderCreateNestedManyWithoutCustomerInput = {
@@ -35769,6 +45267,12 @@ export namespace Prisma {
     connect?: CustomerCeilingQuotaWhereUniqueInput | CustomerCeilingQuotaWhereUniqueInput[]
   }
 
+  export type DistributionCreateNestedManyWithoutCustomerInput = {
+    create?: XOR<DistributionCreateWithoutCustomerInput, DistributionUncheckedCreateWithoutCustomerInput> | DistributionCreateWithoutCustomerInput[] | DistributionUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: DistributionCreateOrConnectWithoutCustomerInput | DistributionCreateOrConnectWithoutCustomerInput[]
+    connect?: DistributionWhereUniqueInput | DistributionWhereUniqueInput[]
+  }
+
   export type OrderUncheckedCreateNestedManyWithoutCustomerInput = {
     create?: XOR<OrderCreateWithoutCustomerInput, OrderUncheckedCreateWithoutCustomerInput> | OrderCreateWithoutCustomerInput[] | OrderUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: OrderCreateOrConnectWithoutCustomerInput | OrderCreateOrConnectWithoutCustomerInput[]
@@ -35803,6 +45307,12 @@ export namespace Prisma {
     create?: XOR<CustomerCeilingQuotaCreateWithoutCustomerInput, CustomerCeilingQuotaUncheckedCreateWithoutCustomerInput> | CustomerCeilingQuotaCreateWithoutCustomerInput[] | CustomerCeilingQuotaUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: CustomerCeilingQuotaCreateOrConnectWithoutCustomerInput | CustomerCeilingQuotaCreateOrConnectWithoutCustomerInput[]
     connect?: CustomerCeilingQuotaWhereUniqueInput | CustomerCeilingQuotaWhereUniqueInput[]
+  }
+
+  export type DistributionUncheckedCreateNestedManyWithoutCustomerInput = {
+    create?: XOR<DistributionCreateWithoutCustomerInput, DistributionUncheckedCreateWithoutCustomerInput> | DistributionCreateWithoutCustomerInput[] | DistributionUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: DistributionCreateOrConnectWithoutCustomerInput | DistributionCreateOrConnectWithoutCustomerInput[]
+    connect?: DistributionWhereUniqueInput | DistributionWhereUniqueInput[]
   }
 
   export type OrderUpdateManyWithoutCustomerNestedInput = {
@@ -35883,6 +45393,19 @@ export namespace Prisma {
     deleteMany?: CustomerCeilingQuotaScalarWhereInput | CustomerCeilingQuotaScalarWhereInput[]
   }
 
+  export type DistributionUpdateManyWithoutCustomerNestedInput = {
+    create?: XOR<DistributionCreateWithoutCustomerInput, DistributionUncheckedCreateWithoutCustomerInput> | DistributionCreateWithoutCustomerInput[] | DistributionUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: DistributionCreateOrConnectWithoutCustomerInput | DistributionCreateOrConnectWithoutCustomerInput[]
+    upsert?: DistributionUpsertWithWhereUniqueWithoutCustomerInput | DistributionUpsertWithWhereUniqueWithoutCustomerInput[]
+    set?: DistributionWhereUniqueInput | DistributionWhereUniqueInput[]
+    disconnect?: DistributionWhereUniqueInput | DistributionWhereUniqueInput[]
+    delete?: DistributionWhereUniqueInput | DistributionWhereUniqueInput[]
+    connect?: DistributionWhereUniqueInput | DistributionWhereUniqueInput[]
+    update?: DistributionUpdateWithWhereUniqueWithoutCustomerInput | DistributionUpdateWithWhereUniqueWithoutCustomerInput[]
+    updateMany?: DistributionUpdateManyWithWhereWithoutCustomerInput | DistributionUpdateManyWithWhereWithoutCustomerInput[]
+    deleteMany?: DistributionScalarWhereInput | DistributionScalarWhereInput[]
+  }
+
   export type OrderUncheckedUpdateManyWithoutCustomerNestedInput = {
     create?: XOR<OrderCreateWithoutCustomerInput, OrderUncheckedCreateWithoutCustomerInput> | OrderCreateWithoutCustomerInput[] | OrderUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: OrderCreateOrConnectWithoutCustomerInput | OrderCreateOrConnectWithoutCustomerInput[]
@@ -35961,6 +45484,19 @@ export namespace Prisma {
     deleteMany?: CustomerCeilingQuotaScalarWhereInput | CustomerCeilingQuotaScalarWhereInput[]
   }
 
+  export type DistributionUncheckedUpdateManyWithoutCustomerNestedInput = {
+    create?: XOR<DistributionCreateWithoutCustomerInput, DistributionUncheckedCreateWithoutCustomerInput> | DistributionCreateWithoutCustomerInput[] | DistributionUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: DistributionCreateOrConnectWithoutCustomerInput | DistributionCreateOrConnectWithoutCustomerInput[]
+    upsert?: DistributionUpsertWithWhereUniqueWithoutCustomerInput | DistributionUpsertWithWhereUniqueWithoutCustomerInput[]
+    set?: DistributionWhereUniqueInput | DistributionWhereUniqueInput[]
+    disconnect?: DistributionWhereUniqueInput | DistributionWhereUniqueInput[]
+    delete?: DistributionWhereUniqueInput | DistributionWhereUniqueInput[]
+    connect?: DistributionWhereUniqueInput | DistributionWhereUniqueInput[]
+    update?: DistributionUpdateWithWhereUniqueWithoutCustomerInput | DistributionUpdateWithWhereUniqueWithoutCustomerInput[]
+    updateMany?: DistributionUpdateManyWithWhereWithoutCustomerInput | DistributionUpdateManyWithWhereWithoutCustomerInput[]
+    deleteMany?: DistributionScalarWhereInput | DistributionScalarWhereInput[]
+  }
+
   export type CustomerCreateNestedOneWithoutCustomPricesInput = {
     create?: XOR<CustomerCreateWithoutCustomPricesInput, CustomerUncheckedCreateWithoutCustomPricesInput>
     connectOrCreate?: CustomerCreateOrConnectWithoutCustomPricesInput
@@ -36007,10 +45543,22 @@ export namespace Prisma {
     connect?: OrderReturnItemWhereUniqueInput | OrderReturnItemWhereUniqueInput[]
   }
 
+  export type DistributionInvoiceItemCreateNestedManyWithoutOrderItemInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutOrderItemInput, DistributionInvoiceItemUncheckedCreateWithoutOrderItemInput> | DistributionInvoiceItemCreateWithoutOrderItemInput[] | DistributionInvoiceItemUncheckedCreateWithoutOrderItemInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutOrderItemInput | DistributionInvoiceItemCreateOrConnectWithoutOrderItemInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+  }
+
   export type OrderReturnItemUncheckedCreateNestedManyWithoutOrderItemInput = {
     create?: XOR<OrderReturnItemCreateWithoutOrderItemInput, OrderReturnItemUncheckedCreateWithoutOrderItemInput> | OrderReturnItemCreateWithoutOrderItemInput[] | OrderReturnItemUncheckedCreateWithoutOrderItemInput[]
     connectOrCreate?: OrderReturnItemCreateOrConnectWithoutOrderItemInput | OrderReturnItemCreateOrConnectWithoutOrderItemInput[]
     connect?: OrderReturnItemWhereUniqueInput | OrderReturnItemWhereUniqueInput[]
+  }
+
+  export type DistributionInvoiceItemUncheckedCreateNestedManyWithoutOrderItemInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutOrderItemInput, DistributionInvoiceItemUncheckedCreateWithoutOrderItemInput> | DistributionInvoiceItemCreateWithoutOrderItemInput[] | DistributionInvoiceItemUncheckedCreateWithoutOrderItemInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutOrderItemInput | DistributionInvoiceItemCreateOrConnectWithoutOrderItemInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
   }
 
   export type OrderUpdateOneRequiredWithoutItemsNestedInput = {
@@ -36042,6 +45590,19 @@ export namespace Prisma {
     deleteMany?: OrderReturnItemScalarWhereInput | OrderReturnItemScalarWhereInput[]
   }
 
+  export type DistributionInvoiceItemUpdateManyWithoutOrderItemNestedInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutOrderItemInput, DistributionInvoiceItemUncheckedCreateWithoutOrderItemInput> | DistributionInvoiceItemCreateWithoutOrderItemInput[] | DistributionInvoiceItemUncheckedCreateWithoutOrderItemInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutOrderItemInput | DistributionInvoiceItemCreateOrConnectWithoutOrderItemInput[]
+    upsert?: DistributionInvoiceItemUpsertWithWhereUniqueWithoutOrderItemInput | DistributionInvoiceItemUpsertWithWhereUniqueWithoutOrderItemInput[]
+    set?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    disconnect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    delete?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    update?: DistributionInvoiceItemUpdateWithWhereUniqueWithoutOrderItemInput | DistributionInvoiceItemUpdateWithWhereUniqueWithoutOrderItemInput[]
+    updateMany?: DistributionInvoiceItemUpdateManyWithWhereWithoutOrderItemInput | DistributionInvoiceItemUpdateManyWithWhereWithoutOrderItemInput[]
+    deleteMany?: DistributionInvoiceItemScalarWhereInput | DistributionInvoiceItemScalarWhereInput[]
+  }
+
   export type OrderReturnItemUncheckedUpdateManyWithoutOrderItemNestedInput = {
     create?: XOR<OrderReturnItemCreateWithoutOrderItemInput, OrderReturnItemUncheckedCreateWithoutOrderItemInput> | OrderReturnItemCreateWithoutOrderItemInput[] | OrderReturnItemUncheckedCreateWithoutOrderItemInput[]
     connectOrCreate?: OrderReturnItemCreateOrConnectWithoutOrderItemInput | OrderReturnItemCreateOrConnectWithoutOrderItemInput[]
@@ -36053,6 +45614,491 @@ export namespace Prisma {
     update?: OrderReturnItemUpdateWithWhereUniqueWithoutOrderItemInput | OrderReturnItemUpdateWithWhereUniqueWithoutOrderItemInput[]
     updateMany?: OrderReturnItemUpdateManyWithWhereWithoutOrderItemInput | OrderReturnItemUpdateManyWithWhereWithoutOrderItemInput[]
     deleteMany?: OrderReturnItemScalarWhereInput | OrderReturnItemScalarWhereInput[]
+  }
+
+  export type DistributionInvoiceItemUncheckedUpdateManyWithoutOrderItemNestedInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutOrderItemInput, DistributionInvoiceItemUncheckedCreateWithoutOrderItemInput> | DistributionInvoiceItemCreateWithoutOrderItemInput[] | DistributionInvoiceItemUncheckedCreateWithoutOrderItemInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutOrderItemInput | DistributionInvoiceItemCreateOrConnectWithoutOrderItemInput[]
+    upsert?: DistributionInvoiceItemUpsertWithWhereUniqueWithoutOrderItemInput | DistributionInvoiceItemUpsertWithWhereUniqueWithoutOrderItemInput[]
+    set?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    disconnect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    delete?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    update?: DistributionInvoiceItemUpdateWithWhereUniqueWithoutOrderItemInput | DistributionInvoiceItemUpdateWithWhereUniqueWithoutOrderItemInput[]
+    updateMany?: DistributionInvoiceItemUpdateManyWithWhereWithoutOrderItemInput | DistributionInvoiceItemUpdateManyWithWhereWithoutOrderItemInput[]
+    deleteMany?: DistributionInvoiceItemScalarWhereInput | DistributionInvoiceItemScalarWhereInput[]
+  }
+
+  export type CustomerCreateNestedOneWithoutDistributionsInput = {
+    create?: XOR<CustomerCreateWithoutDistributionsInput, CustomerUncheckedCreateWithoutDistributionsInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutDistributionsInput
+    connect?: CustomerWhereUniqueInput
+  }
+
+  export type DistributionItemCreateNestedManyWithoutDistributionInput = {
+    create?: XOR<DistributionItemCreateWithoutDistributionInput, DistributionItemUncheckedCreateWithoutDistributionInput> | DistributionItemCreateWithoutDistributionInput[] | DistributionItemUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionItemCreateOrConnectWithoutDistributionInput | DistributionItemCreateOrConnectWithoutDistributionInput[]
+    connect?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+  }
+
+  export type DistributionRevisionCreateNestedManyWithoutDistributionInput = {
+    create?: XOR<DistributionRevisionCreateWithoutDistributionInput, DistributionRevisionUncheckedCreateWithoutDistributionInput> | DistributionRevisionCreateWithoutDistributionInput[] | DistributionRevisionUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionRevisionCreateOrConnectWithoutDistributionInput | DistributionRevisionCreateOrConnectWithoutDistributionInput[]
+    connect?: DistributionRevisionWhereUniqueInput | DistributionRevisionWhereUniqueInput[]
+  }
+
+  export type DistributionDispatchCreateNestedManyWithoutDistributionInput = {
+    create?: XOR<DistributionDispatchCreateWithoutDistributionInput, DistributionDispatchUncheckedCreateWithoutDistributionInput> | DistributionDispatchCreateWithoutDistributionInput[] | DistributionDispatchUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionDispatchCreateOrConnectWithoutDistributionInput | DistributionDispatchCreateOrConnectWithoutDistributionInput[]
+    connect?: DistributionDispatchWhereUniqueInput | DistributionDispatchWhereUniqueInput[]
+  }
+
+  export type DistributionInvoiceItemCreateNestedManyWithoutDistributionInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutDistributionInput, DistributionInvoiceItemUncheckedCreateWithoutDistributionInput> | DistributionInvoiceItemCreateWithoutDistributionInput[] | DistributionInvoiceItemUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutDistributionInput | DistributionInvoiceItemCreateOrConnectWithoutDistributionInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+  }
+
+  export type DistributionItemUncheckedCreateNestedManyWithoutDistributionInput = {
+    create?: XOR<DistributionItemCreateWithoutDistributionInput, DistributionItemUncheckedCreateWithoutDistributionInput> | DistributionItemCreateWithoutDistributionInput[] | DistributionItemUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionItemCreateOrConnectWithoutDistributionInput | DistributionItemCreateOrConnectWithoutDistributionInput[]
+    connect?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+  }
+
+  export type DistributionRevisionUncheckedCreateNestedManyWithoutDistributionInput = {
+    create?: XOR<DistributionRevisionCreateWithoutDistributionInput, DistributionRevisionUncheckedCreateWithoutDistributionInput> | DistributionRevisionCreateWithoutDistributionInput[] | DistributionRevisionUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionRevisionCreateOrConnectWithoutDistributionInput | DistributionRevisionCreateOrConnectWithoutDistributionInput[]
+    connect?: DistributionRevisionWhereUniqueInput | DistributionRevisionWhereUniqueInput[]
+  }
+
+  export type DistributionDispatchUncheckedCreateNestedManyWithoutDistributionInput = {
+    create?: XOR<DistributionDispatchCreateWithoutDistributionInput, DistributionDispatchUncheckedCreateWithoutDistributionInput> | DistributionDispatchCreateWithoutDistributionInput[] | DistributionDispatchUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionDispatchCreateOrConnectWithoutDistributionInput | DistributionDispatchCreateOrConnectWithoutDistributionInput[]
+    connect?: DistributionDispatchWhereUniqueInput | DistributionDispatchWhereUniqueInput[]
+  }
+
+  export type DistributionInvoiceItemUncheckedCreateNestedManyWithoutDistributionInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutDistributionInput, DistributionInvoiceItemUncheckedCreateWithoutDistributionInput> | DistributionInvoiceItemCreateWithoutDistributionInput[] | DistributionInvoiceItemUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutDistributionInput | DistributionInvoiceItemCreateOrConnectWithoutDistributionInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+  }
+
+  export type CustomerUpdateOneRequiredWithoutDistributionsNestedInput = {
+    create?: XOR<CustomerCreateWithoutDistributionsInput, CustomerUncheckedCreateWithoutDistributionsInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutDistributionsInput
+    upsert?: CustomerUpsertWithoutDistributionsInput
+    connect?: CustomerWhereUniqueInput
+    update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutDistributionsInput, CustomerUpdateWithoutDistributionsInput>, CustomerUncheckedUpdateWithoutDistributionsInput>
+  }
+
+  export type DistributionItemUpdateManyWithoutDistributionNestedInput = {
+    create?: XOR<DistributionItemCreateWithoutDistributionInput, DistributionItemUncheckedCreateWithoutDistributionInput> | DistributionItemCreateWithoutDistributionInput[] | DistributionItemUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionItemCreateOrConnectWithoutDistributionInput | DistributionItemCreateOrConnectWithoutDistributionInput[]
+    upsert?: DistributionItemUpsertWithWhereUniqueWithoutDistributionInput | DistributionItemUpsertWithWhereUniqueWithoutDistributionInput[]
+    set?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    disconnect?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    delete?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    connect?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    update?: DistributionItemUpdateWithWhereUniqueWithoutDistributionInput | DistributionItemUpdateWithWhereUniqueWithoutDistributionInput[]
+    updateMany?: DistributionItemUpdateManyWithWhereWithoutDistributionInput | DistributionItemUpdateManyWithWhereWithoutDistributionInput[]
+    deleteMany?: DistributionItemScalarWhereInput | DistributionItemScalarWhereInput[]
+  }
+
+  export type DistributionRevisionUpdateManyWithoutDistributionNestedInput = {
+    create?: XOR<DistributionRevisionCreateWithoutDistributionInput, DistributionRevisionUncheckedCreateWithoutDistributionInput> | DistributionRevisionCreateWithoutDistributionInput[] | DistributionRevisionUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionRevisionCreateOrConnectWithoutDistributionInput | DistributionRevisionCreateOrConnectWithoutDistributionInput[]
+    upsert?: DistributionRevisionUpsertWithWhereUniqueWithoutDistributionInput | DistributionRevisionUpsertWithWhereUniqueWithoutDistributionInput[]
+    set?: DistributionRevisionWhereUniqueInput | DistributionRevisionWhereUniqueInput[]
+    disconnect?: DistributionRevisionWhereUniqueInput | DistributionRevisionWhereUniqueInput[]
+    delete?: DistributionRevisionWhereUniqueInput | DistributionRevisionWhereUniqueInput[]
+    connect?: DistributionRevisionWhereUniqueInput | DistributionRevisionWhereUniqueInput[]
+    update?: DistributionRevisionUpdateWithWhereUniqueWithoutDistributionInput | DistributionRevisionUpdateWithWhereUniqueWithoutDistributionInput[]
+    updateMany?: DistributionRevisionUpdateManyWithWhereWithoutDistributionInput | DistributionRevisionUpdateManyWithWhereWithoutDistributionInput[]
+    deleteMany?: DistributionRevisionScalarWhereInput | DistributionRevisionScalarWhereInput[]
+  }
+
+  export type DistributionDispatchUpdateManyWithoutDistributionNestedInput = {
+    create?: XOR<DistributionDispatchCreateWithoutDistributionInput, DistributionDispatchUncheckedCreateWithoutDistributionInput> | DistributionDispatchCreateWithoutDistributionInput[] | DistributionDispatchUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionDispatchCreateOrConnectWithoutDistributionInput | DistributionDispatchCreateOrConnectWithoutDistributionInput[]
+    upsert?: DistributionDispatchUpsertWithWhereUniqueWithoutDistributionInput | DistributionDispatchUpsertWithWhereUniqueWithoutDistributionInput[]
+    set?: DistributionDispatchWhereUniqueInput | DistributionDispatchWhereUniqueInput[]
+    disconnect?: DistributionDispatchWhereUniqueInput | DistributionDispatchWhereUniqueInput[]
+    delete?: DistributionDispatchWhereUniqueInput | DistributionDispatchWhereUniqueInput[]
+    connect?: DistributionDispatchWhereUniqueInput | DistributionDispatchWhereUniqueInput[]
+    update?: DistributionDispatchUpdateWithWhereUniqueWithoutDistributionInput | DistributionDispatchUpdateWithWhereUniqueWithoutDistributionInput[]
+    updateMany?: DistributionDispatchUpdateManyWithWhereWithoutDistributionInput | DistributionDispatchUpdateManyWithWhereWithoutDistributionInput[]
+    deleteMany?: DistributionDispatchScalarWhereInput | DistributionDispatchScalarWhereInput[]
+  }
+
+  export type DistributionInvoiceItemUpdateManyWithoutDistributionNestedInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutDistributionInput, DistributionInvoiceItemUncheckedCreateWithoutDistributionInput> | DistributionInvoiceItemCreateWithoutDistributionInput[] | DistributionInvoiceItemUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutDistributionInput | DistributionInvoiceItemCreateOrConnectWithoutDistributionInput[]
+    upsert?: DistributionInvoiceItemUpsertWithWhereUniqueWithoutDistributionInput | DistributionInvoiceItemUpsertWithWhereUniqueWithoutDistributionInput[]
+    set?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    disconnect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    delete?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    update?: DistributionInvoiceItemUpdateWithWhereUniqueWithoutDistributionInput | DistributionInvoiceItemUpdateWithWhereUniqueWithoutDistributionInput[]
+    updateMany?: DistributionInvoiceItemUpdateManyWithWhereWithoutDistributionInput | DistributionInvoiceItemUpdateManyWithWhereWithoutDistributionInput[]
+    deleteMany?: DistributionInvoiceItemScalarWhereInput | DistributionInvoiceItemScalarWhereInput[]
+  }
+
+  export type DistributionItemUncheckedUpdateManyWithoutDistributionNestedInput = {
+    create?: XOR<DistributionItemCreateWithoutDistributionInput, DistributionItemUncheckedCreateWithoutDistributionInput> | DistributionItemCreateWithoutDistributionInput[] | DistributionItemUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionItemCreateOrConnectWithoutDistributionInput | DistributionItemCreateOrConnectWithoutDistributionInput[]
+    upsert?: DistributionItemUpsertWithWhereUniqueWithoutDistributionInput | DistributionItemUpsertWithWhereUniqueWithoutDistributionInput[]
+    set?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    disconnect?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    delete?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    connect?: DistributionItemWhereUniqueInput | DistributionItemWhereUniqueInput[]
+    update?: DistributionItemUpdateWithWhereUniqueWithoutDistributionInput | DistributionItemUpdateWithWhereUniqueWithoutDistributionInput[]
+    updateMany?: DistributionItemUpdateManyWithWhereWithoutDistributionInput | DistributionItemUpdateManyWithWhereWithoutDistributionInput[]
+    deleteMany?: DistributionItemScalarWhereInput | DistributionItemScalarWhereInput[]
+  }
+
+  export type DistributionRevisionUncheckedUpdateManyWithoutDistributionNestedInput = {
+    create?: XOR<DistributionRevisionCreateWithoutDistributionInput, DistributionRevisionUncheckedCreateWithoutDistributionInput> | DistributionRevisionCreateWithoutDistributionInput[] | DistributionRevisionUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionRevisionCreateOrConnectWithoutDistributionInput | DistributionRevisionCreateOrConnectWithoutDistributionInput[]
+    upsert?: DistributionRevisionUpsertWithWhereUniqueWithoutDistributionInput | DistributionRevisionUpsertWithWhereUniqueWithoutDistributionInput[]
+    set?: DistributionRevisionWhereUniqueInput | DistributionRevisionWhereUniqueInput[]
+    disconnect?: DistributionRevisionWhereUniqueInput | DistributionRevisionWhereUniqueInput[]
+    delete?: DistributionRevisionWhereUniqueInput | DistributionRevisionWhereUniqueInput[]
+    connect?: DistributionRevisionWhereUniqueInput | DistributionRevisionWhereUniqueInput[]
+    update?: DistributionRevisionUpdateWithWhereUniqueWithoutDistributionInput | DistributionRevisionUpdateWithWhereUniqueWithoutDistributionInput[]
+    updateMany?: DistributionRevisionUpdateManyWithWhereWithoutDistributionInput | DistributionRevisionUpdateManyWithWhereWithoutDistributionInput[]
+    deleteMany?: DistributionRevisionScalarWhereInput | DistributionRevisionScalarWhereInput[]
+  }
+
+  export type DistributionDispatchUncheckedUpdateManyWithoutDistributionNestedInput = {
+    create?: XOR<DistributionDispatchCreateWithoutDistributionInput, DistributionDispatchUncheckedCreateWithoutDistributionInput> | DistributionDispatchCreateWithoutDistributionInput[] | DistributionDispatchUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionDispatchCreateOrConnectWithoutDistributionInput | DistributionDispatchCreateOrConnectWithoutDistributionInput[]
+    upsert?: DistributionDispatchUpsertWithWhereUniqueWithoutDistributionInput | DistributionDispatchUpsertWithWhereUniqueWithoutDistributionInput[]
+    set?: DistributionDispatchWhereUniqueInput | DistributionDispatchWhereUniqueInput[]
+    disconnect?: DistributionDispatchWhereUniqueInput | DistributionDispatchWhereUniqueInput[]
+    delete?: DistributionDispatchWhereUniqueInput | DistributionDispatchWhereUniqueInput[]
+    connect?: DistributionDispatchWhereUniqueInput | DistributionDispatchWhereUniqueInput[]
+    update?: DistributionDispatchUpdateWithWhereUniqueWithoutDistributionInput | DistributionDispatchUpdateWithWhereUniqueWithoutDistributionInput[]
+    updateMany?: DistributionDispatchUpdateManyWithWhereWithoutDistributionInput | DistributionDispatchUpdateManyWithWhereWithoutDistributionInput[]
+    deleteMany?: DistributionDispatchScalarWhereInput | DistributionDispatchScalarWhereInput[]
+  }
+
+  export type DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionNestedInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutDistributionInput, DistributionInvoiceItemUncheckedCreateWithoutDistributionInput> | DistributionInvoiceItemCreateWithoutDistributionInput[] | DistributionInvoiceItemUncheckedCreateWithoutDistributionInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutDistributionInput | DistributionInvoiceItemCreateOrConnectWithoutDistributionInput[]
+    upsert?: DistributionInvoiceItemUpsertWithWhereUniqueWithoutDistributionInput | DistributionInvoiceItemUpsertWithWhereUniqueWithoutDistributionInput[]
+    set?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    disconnect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    delete?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    update?: DistributionInvoiceItemUpdateWithWhereUniqueWithoutDistributionInput | DistributionInvoiceItemUpdateWithWhereUniqueWithoutDistributionInput[]
+    updateMany?: DistributionInvoiceItemUpdateManyWithWhereWithoutDistributionInput | DistributionInvoiceItemUpdateManyWithWhereWithoutDistributionInput[]
+    deleteMany?: DistributionInvoiceItemScalarWhereInput | DistributionInvoiceItemScalarWhereInput[]
+  }
+
+  export type DistributionCreateNestedOneWithoutItemsInput = {
+    create?: XOR<DistributionCreateWithoutItemsInput, DistributionUncheckedCreateWithoutItemsInput>
+    connectOrCreate?: DistributionCreateOrConnectWithoutItemsInput
+    connect?: DistributionWhereUniqueInput
+  }
+
+  export type ProductCreateNestedOneWithoutDistributionItemsInput = {
+    create?: XOR<ProductCreateWithoutDistributionItemsInput, ProductUncheckedCreateWithoutDistributionItemsInput>
+    connectOrCreate?: ProductCreateOrConnectWithoutDistributionItemsInput
+    connect?: ProductWhereUniqueInput
+  }
+
+  export type DistributionDispatchItemCreateNestedManyWithoutDistributionItemInput = {
+    create?: XOR<DistributionDispatchItemCreateWithoutDistributionItemInput, DistributionDispatchItemUncheckedCreateWithoutDistributionItemInput> | DistributionDispatchItemCreateWithoutDistributionItemInput[] | DistributionDispatchItemUncheckedCreateWithoutDistributionItemInput[]
+    connectOrCreate?: DistributionDispatchItemCreateOrConnectWithoutDistributionItemInput | DistributionDispatchItemCreateOrConnectWithoutDistributionItemInput[]
+    connect?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+  }
+
+  export type DistributionInvoiceItemCreateNestedManyWithoutDistributionItemInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutDistributionItemInput, DistributionInvoiceItemUncheckedCreateWithoutDistributionItemInput> | DistributionInvoiceItemCreateWithoutDistributionItemInput[] | DistributionInvoiceItemUncheckedCreateWithoutDistributionItemInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutDistributionItemInput | DistributionInvoiceItemCreateOrConnectWithoutDistributionItemInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+  }
+
+  export type DistributionDispatchItemUncheckedCreateNestedManyWithoutDistributionItemInput = {
+    create?: XOR<DistributionDispatchItemCreateWithoutDistributionItemInput, DistributionDispatchItemUncheckedCreateWithoutDistributionItemInput> | DistributionDispatchItemCreateWithoutDistributionItemInput[] | DistributionDispatchItemUncheckedCreateWithoutDistributionItemInput[]
+    connectOrCreate?: DistributionDispatchItemCreateOrConnectWithoutDistributionItemInput | DistributionDispatchItemCreateOrConnectWithoutDistributionItemInput[]
+    connect?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+  }
+
+  export type DistributionInvoiceItemUncheckedCreateNestedManyWithoutDistributionItemInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutDistributionItemInput, DistributionInvoiceItemUncheckedCreateWithoutDistributionItemInput> | DistributionInvoiceItemCreateWithoutDistributionItemInput[] | DistributionInvoiceItemUncheckedCreateWithoutDistributionItemInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutDistributionItemInput | DistributionInvoiceItemCreateOrConnectWithoutDistributionItemInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+  }
+
+  export type DistributionUpdateOneRequiredWithoutItemsNestedInput = {
+    create?: XOR<DistributionCreateWithoutItemsInput, DistributionUncheckedCreateWithoutItemsInput>
+    connectOrCreate?: DistributionCreateOrConnectWithoutItemsInput
+    upsert?: DistributionUpsertWithoutItemsInput
+    connect?: DistributionWhereUniqueInput
+    update?: XOR<XOR<DistributionUpdateToOneWithWhereWithoutItemsInput, DistributionUpdateWithoutItemsInput>, DistributionUncheckedUpdateWithoutItemsInput>
+  }
+
+  export type ProductUpdateOneRequiredWithoutDistributionItemsNestedInput = {
+    create?: XOR<ProductCreateWithoutDistributionItemsInput, ProductUncheckedCreateWithoutDistributionItemsInput>
+    connectOrCreate?: ProductCreateOrConnectWithoutDistributionItemsInput
+    upsert?: ProductUpsertWithoutDistributionItemsInput
+    connect?: ProductWhereUniqueInput
+    update?: XOR<XOR<ProductUpdateToOneWithWhereWithoutDistributionItemsInput, ProductUpdateWithoutDistributionItemsInput>, ProductUncheckedUpdateWithoutDistributionItemsInput>
+  }
+
+  export type DistributionDispatchItemUpdateManyWithoutDistributionItemNestedInput = {
+    create?: XOR<DistributionDispatchItemCreateWithoutDistributionItemInput, DistributionDispatchItemUncheckedCreateWithoutDistributionItemInput> | DistributionDispatchItemCreateWithoutDistributionItemInput[] | DistributionDispatchItemUncheckedCreateWithoutDistributionItemInput[]
+    connectOrCreate?: DistributionDispatchItemCreateOrConnectWithoutDistributionItemInput | DistributionDispatchItemCreateOrConnectWithoutDistributionItemInput[]
+    upsert?: DistributionDispatchItemUpsertWithWhereUniqueWithoutDistributionItemInput | DistributionDispatchItemUpsertWithWhereUniqueWithoutDistributionItemInput[]
+    set?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    disconnect?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    delete?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    connect?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    update?: DistributionDispatchItemUpdateWithWhereUniqueWithoutDistributionItemInput | DistributionDispatchItemUpdateWithWhereUniqueWithoutDistributionItemInput[]
+    updateMany?: DistributionDispatchItemUpdateManyWithWhereWithoutDistributionItemInput | DistributionDispatchItemUpdateManyWithWhereWithoutDistributionItemInput[]
+    deleteMany?: DistributionDispatchItemScalarWhereInput | DistributionDispatchItemScalarWhereInput[]
+  }
+
+  export type DistributionInvoiceItemUpdateManyWithoutDistributionItemNestedInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutDistributionItemInput, DistributionInvoiceItemUncheckedCreateWithoutDistributionItemInput> | DistributionInvoiceItemCreateWithoutDistributionItemInput[] | DistributionInvoiceItemUncheckedCreateWithoutDistributionItemInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutDistributionItemInput | DistributionInvoiceItemCreateOrConnectWithoutDistributionItemInput[]
+    upsert?: DistributionInvoiceItemUpsertWithWhereUniqueWithoutDistributionItemInput | DistributionInvoiceItemUpsertWithWhereUniqueWithoutDistributionItemInput[]
+    set?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    disconnect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    delete?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    update?: DistributionInvoiceItemUpdateWithWhereUniqueWithoutDistributionItemInput | DistributionInvoiceItemUpdateWithWhereUniqueWithoutDistributionItemInput[]
+    updateMany?: DistributionInvoiceItemUpdateManyWithWhereWithoutDistributionItemInput | DistributionInvoiceItemUpdateManyWithWhereWithoutDistributionItemInput[]
+    deleteMany?: DistributionInvoiceItemScalarWhereInput | DistributionInvoiceItemScalarWhereInput[]
+  }
+
+  export type DistributionDispatchItemUncheckedUpdateManyWithoutDistributionItemNestedInput = {
+    create?: XOR<DistributionDispatchItemCreateWithoutDistributionItemInput, DistributionDispatchItemUncheckedCreateWithoutDistributionItemInput> | DistributionDispatchItemCreateWithoutDistributionItemInput[] | DistributionDispatchItemUncheckedCreateWithoutDistributionItemInput[]
+    connectOrCreate?: DistributionDispatchItemCreateOrConnectWithoutDistributionItemInput | DistributionDispatchItemCreateOrConnectWithoutDistributionItemInput[]
+    upsert?: DistributionDispatchItemUpsertWithWhereUniqueWithoutDistributionItemInput | DistributionDispatchItemUpsertWithWhereUniqueWithoutDistributionItemInput[]
+    set?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    disconnect?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    delete?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    connect?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    update?: DistributionDispatchItemUpdateWithWhereUniqueWithoutDistributionItemInput | DistributionDispatchItemUpdateWithWhereUniqueWithoutDistributionItemInput[]
+    updateMany?: DistributionDispatchItemUpdateManyWithWhereWithoutDistributionItemInput | DistributionDispatchItemUpdateManyWithWhereWithoutDistributionItemInput[]
+    deleteMany?: DistributionDispatchItemScalarWhereInput | DistributionDispatchItemScalarWhereInput[]
+  }
+
+  export type DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionItemNestedInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutDistributionItemInput, DistributionInvoiceItemUncheckedCreateWithoutDistributionItemInput> | DistributionInvoiceItemCreateWithoutDistributionItemInput[] | DistributionInvoiceItemUncheckedCreateWithoutDistributionItemInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutDistributionItemInput | DistributionInvoiceItemCreateOrConnectWithoutDistributionItemInput[]
+    upsert?: DistributionInvoiceItemUpsertWithWhereUniqueWithoutDistributionItemInput | DistributionInvoiceItemUpsertWithWhereUniqueWithoutDistributionItemInput[]
+    set?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    disconnect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    delete?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    update?: DistributionInvoiceItemUpdateWithWhereUniqueWithoutDistributionItemInput | DistributionInvoiceItemUpdateWithWhereUniqueWithoutDistributionItemInput[]
+    updateMany?: DistributionInvoiceItemUpdateManyWithWhereWithoutDistributionItemInput | DistributionInvoiceItemUpdateManyWithWhereWithoutDistributionItemInput[]
+    deleteMany?: DistributionInvoiceItemScalarWhereInput | DistributionInvoiceItemScalarWhereInput[]
+  }
+
+  export type DistributionCreateNestedOneWithoutRevisionsInput = {
+    create?: XOR<DistributionCreateWithoutRevisionsInput, DistributionUncheckedCreateWithoutRevisionsInput>
+    connectOrCreate?: DistributionCreateOrConnectWithoutRevisionsInput
+    connect?: DistributionWhereUniqueInput
+  }
+
+  export type DistributionUpdateOneRequiredWithoutRevisionsNestedInput = {
+    create?: XOR<DistributionCreateWithoutRevisionsInput, DistributionUncheckedCreateWithoutRevisionsInput>
+    connectOrCreate?: DistributionCreateOrConnectWithoutRevisionsInput
+    upsert?: DistributionUpsertWithoutRevisionsInput
+    connect?: DistributionWhereUniqueInput
+    update?: XOR<XOR<DistributionUpdateToOneWithWhereWithoutRevisionsInput, DistributionUpdateWithoutRevisionsInput>, DistributionUncheckedUpdateWithoutRevisionsInput>
+  }
+
+  export type DistributionCreateNestedOneWithoutDispatchesInput = {
+    create?: XOR<DistributionCreateWithoutDispatchesInput, DistributionUncheckedCreateWithoutDispatchesInput>
+    connectOrCreate?: DistributionCreateOrConnectWithoutDispatchesInput
+    connect?: DistributionWhereUniqueInput
+  }
+
+  export type DistributionDispatchItemCreateNestedManyWithoutDispatchInput = {
+    create?: XOR<DistributionDispatchItemCreateWithoutDispatchInput, DistributionDispatchItemUncheckedCreateWithoutDispatchInput> | DistributionDispatchItemCreateWithoutDispatchInput[] | DistributionDispatchItemUncheckedCreateWithoutDispatchInput[]
+    connectOrCreate?: DistributionDispatchItemCreateOrConnectWithoutDispatchInput | DistributionDispatchItemCreateOrConnectWithoutDispatchInput[]
+    connect?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+  }
+
+  export type DistributionDispatchItemUncheckedCreateNestedManyWithoutDispatchInput = {
+    create?: XOR<DistributionDispatchItemCreateWithoutDispatchInput, DistributionDispatchItemUncheckedCreateWithoutDispatchInput> | DistributionDispatchItemCreateWithoutDispatchInput[] | DistributionDispatchItemUncheckedCreateWithoutDispatchInput[]
+    connectOrCreate?: DistributionDispatchItemCreateOrConnectWithoutDispatchInput | DistributionDispatchItemCreateOrConnectWithoutDispatchInput[]
+    connect?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+  }
+
+  export type DistributionUpdateOneRequiredWithoutDispatchesNestedInput = {
+    create?: XOR<DistributionCreateWithoutDispatchesInput, DistributionUncheckedCreateWithoutDispatchesInput>
+    connectOrCreate?: DistributionCreateOrConnectWithoutDispatchesInput
+    upsert?: DistributionUpsertWithoutDispatchesInput
+    connect?: DistributionWhereUniqueInput
+    update?: XOR<XOR<DistributionUpdateToOneWithWhereWithoutDispatchesInput, DistributionUpdateWithoutDispatchesInput>, DistributionUncheckedUpdateWithoutDispatchesInput>
+  }
+
+  export type DistributionDispatchItemUpdateManyWithoutDispatchNestedInput = {
+    create?: XOR<DistributionDispatchItemCreateWithoutDispatchInput, DistributionDispatchItemUncheckedCreateWithoutDispatchInput> | DistributionDispatchItemCreateWithoutDispatchInput[] | DistributionDispatchItemUncheckedCreateWithoutDispatchInput[]
+    connectOrCreate?: DistributionDispatchItemCreateOrConnectWithoutDispatchInput | DistributionDispatchItemCreateOrConnectWithoutDispatchInput[]
+    upsert?: DistributionDispatchItemUpsertWithWhereUniqueWithoutDispatchInput | DistributionDispatchItemUpsertWithWhereUniqueWithoutDispatchInput[]
+    set?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    disconnect?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    delete?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    connect?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    update?: DistributionDispatchItemUpdateWithWhereUniqueWithoutDispatchInput | DistributionDispatchItemUpdateWithWhereUniqueWithoutDispatchInput[]
+    updateMany?: DistributionDispatchItemUpdateManyWithWhereWithoutDispatchInput | DistributionDispatchItemUpdateManyWithWhereWithoutDispatchInput[]
+    deleteMany?: DistributionDispatchItemScalarWhereInput | DistributionDispatchItemScalarWhereInput[]
+  }
+
+  export type DistributionDispatchItemUncheckedUpdateManyWithoutDispatchNestedInput = {
+    create?: XOR<DistributionDispatchItemCreateWithoutDispatchInput, DistributionDispatchItemUncheckedCreateWithoutDispatchInput> | DistributionDispatchItemCreateWithoutDispatchInput[] | DistributionDispatchItemUncheckedCreateWithoutDispatchInput[]
+    connectOrCreate?: DistributionDispatchItemCreateOrConnectWithoutDispatchInput | DistributionDispatchItemCreateOrConnectWithoutDispatchInput[]
+    upsert?: DistributionDispatchItemUpsertWithWhereUniqueWithoutDispatchInput | DistributionDispatchItemUpsertWithWhereUniqueWithoutDispatchInput[]
+    set?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    disconnect?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    delete?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    connect?: DistributionDispatchItemWhereUniqueInput | DistributionDispatchItemWhereUniqueInput[]
+    update?: DistributionDispatchItemUpdateWithWhereUniqueWithoutDispatchInput | DistributionDispatchItemUpdateWithWhereUniqueWithoutDispatchInput[]
+    updateMany?: DistributionDispatchItemUpdateManyWithWhereWithoutDispatchInput | DistributionDispatchItemUpdateManyWithWhereWithoutDispatchInput[]
+    deleteMany?: DistributionDispatchItemScalarWhereInput | DistributionDispatchItemScalarWhereInput[]
+  }
+
+  export type DistributionDispatchCreateNestedOneWithoutItemsInput = {
+    create?: XOR<DistributionDispatchCreateWithoutItemsInput, DistributionDispatchUncheckedCreateWithoutItemsInput>
+    connectOrCreate?: DistributionDispatchCreateOrConnectWithoutItemsInput
+    connect?: DistributionDispatchWhereUniqueInput
+  }
+
+  export type DistributionItemCreateNestedOneWithoutDispatchItemsInput = {
+    create?: XOR<DistributionItemCreateWithoutDispatchItemsInput, DistributionItemUncheckedCreateWithoutDispatchItemsInput>
+    connectOrCreate?: DistributionItemCreateOrConnectWithoutDispatchItemsInput
+    connect?: DistributionItemWhereUniqueInput
+  }
+
+  export type DistributionDispatchUpdateOneRequiredWithoutItemsNestedInput = {
+    create?: XOR<DistributionDispatchCreateWithoutItemsInput, DistributionDispatchUncheckedCreateWithoutItemsInput>
+    connectOrCreate?: DistributionDispatchCreateOrConnectWithoutItemsInput
+    upsert?: DistributionDispatchUpsertWithoutItemsInput
+    connect?: DistributionDispatchWhereUniqueInput
+    update?: XOR<XOR<DistributionDispatchUpdateToOneWithWhereWithoutItemsInput, DistributionDispatchUpdateWithoutItemsInput>, DistributionDispatchUncheckedUpdateWithoutItemsInput>
+  }
+
+  export type DistributionItemUpdateOneRequiredWithoutDispatchItemsNestedInput = {
+    create?: XOR<DistributionItemCreateWithoutDispatchItemsInput, DistributionItemUncheckedCreateWithoutDispatchItemsInput>
+    connectOrCreate?: DistributionItemCreateOrConnectWithoutDispatchItemsInput
+    upsert?: DistributionItemUpsertWithoutDispatchItemsInput
+    connect?: DistributionItemWhereUniqueInput
+    update?: XOR<XOR<DistributionItemUpdateToOneWithWhereWithoutDispatchItemsInput, DistributionItemUpdateWithoutDispatchItemsInput>, DistributionItemUncheckedUpdateWithoutDispatchItemsInput>
+  }
+
+  export type OrderCreateNestedOneWithoutDistributionInvoiceInput = {
+    create?: XOR<OrderCreateWithoutDistributionInvoiceInput, OrderUncheckedCreateWithoutDistributionInvoiceInput>
+    connectOrCreate?: OrderCreateOrConnectWithoutDistributionInvoiceInput
+    connect?: OrderWhereUniqueInput
+  }
+
+  export type DistributionInvoiceItemCreateNestedManyWithoutInvoiceInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutInvoiceInput, DistributionInvoiceItemUncheckedCreateWithoutInvoiceInput> | DistributionInvoiceItemCreateWithoutInvoiceInput[] | DistributionInvoiceItemUncheckedCreateWithoutInvoiceInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutInvoiceInput | DistributionInvoiceItemCreateOrConnectWithoutInvoiceInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+  }
+
+  export type DistributionInvoiceItemUncheckedCreateNestedManyWithoutInvoiceInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutInvoiceInput, DistributionInvoiceItemUncheckedCreateWithoutInvoiceInput> | DistributionInvoiceItemCreateWithoutInvoiceInput[] | DistributionInvoiceItemUncheckedCreateWithoutInvoiceInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutInvoiceInput | DistributionInvoiceItemCreateOrConnectWithoutInvoiceInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+  }
+
+  export type OrderUpdateOneRequiredWithoutDistributionInvoiceNestedInput = {
+    create?: XOR<OrderCreateWithoutDistributionInvoiceInput, OrderUncheckedCreateWithoutDistributionInvoiceInput>
+    connectOrCreate?: OrderCreateOrConnectWithoutDistributionInvoiceInput
+    upsert?: OrderUpsertWithoutDistributionInvoiceInput
+    connect?: OrderWhereUniqueInput
+    update?: XOR<XOR<OrderUpdateToOneWithWhereWithoutDistributionInvoiceInput, OrderUpdateWithoutDistributionInvoiceInput>, OrderUncheckedUpdateWithoutDistributionInvoiceInput>
+  }
+
+  export type DistributionInvoiceItemUpdateManyWithoutInvoiceNestedInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutInvoiceInput, DistributionInvoiceItemUncheckedCreateWithoutInvoiceInput> | DistributionInvoiceItemCreateWithoutInvoiceInput[] | DistributionInvoiceItemUncheckedCreateWithoutInvoiceInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutInvoiceInput | DistributionInvoiceItemCreateOrConnectWithoutInvoiceInput[]
+    upsert?: DistributionInvoiceItemUpsertWithWhereUniqueWithoutInvoiceInput | DistributionInvoiceItemUpsertWithWhereUniqueWithoutInvoiceInput[]
+    set?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    disconnect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    delete?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    update?: DistributionInvoiceItemUpdateWithWhereUniqueWithoutInvoiceInput | DistributionInvoiceItemUpdateWithWhereUniqueWithoutInvoiceInput[]
+    updateMany?: DistributionInvoiceItemUpdateManyWithWhereWithoutInvoiceInput | DistributionInvoiceItemUpdateManyWithWhereWithoutInvoiceInput[]
+    deleteMany?: DistributionInvoiceItemScalarWhereInput | DistributionInvoiceItemScalarWhereInput[]
+  }
+
+  export type DistributionInvoiceItemUncheckedUpdateManyWithoutInvoiceNestedInput = {
+    create?: XOR<DistributionInvoiceItemCreateWithoutInvoiceInput, DistributionInvoiceItemUncheckedCreateWithoutInvoiceInput> | DistributionInvoiceItemCreateWithoutInvoiceInput[] | DistributionInvoiceItemUncheckedCreateWithoutInvoiceInput[]
+    connectOrCreate?: DistributionInvoiceItemCreateOrConnectWithoutInvoiceInput | DistributionInvoiceItemCreateOrConnectWithoutInvoiceInput[]
+    upsert?: DistributionInvoiceItemUpsertWithWhereUniqueWithoutInvoiceInput | DistributionInvoiceItemUpsertWithWhereUniqueWithoutInvoiceInput[]
+    set?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    disconnect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    delete?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    connect?: DistributionInvoiceItemWhereUniqueInput | DistributionInvoiceItemWhereUniqueInput[]
+    update?: DistributionInvoiceItemUpdateWithWhereUniqueWithoutInvoiceInput | DistributionInvoiceItemUpdateWithWhereUniqueWithoutInvoiceInput[]
+    updateMany?: DistributionInvoiceItemUpdateManyWithWhereWithoutInvoiceInput | DistributionInvoiceItemUpdateManyWithWhereWithoutInvoiceInput[]
+    deleteMany?: DistributionInvoiceItemScalarWhereInput | DistributionInvoiceItemScalarWhereInput[]
+  }
+
+  export type DistributionInvoiceCreateNestedOneWithoutItemsInput = {
+    create?: XOR<DistributionInvoiceCreateWithoutItemsInput, DistributionInvoiceUncheckedCreateWithoutItemsInput>
+    connectOrCreate?: DistributionInvoiceCreateOrConnectWithoutItemsInput
+    connect?: DistributionInvoiceWhereUniqueInput
+  }
+
+  export type DistributionCreateNestedOneWithoutInvoiceItemsInput = {
+    create?: XOR<DistributionCreateWithoutInvoiceItemsInput, DistributionUncheckedCreateWithoutInvoiceItemsInput>
+    connectOrCreate?: DistributionCreateOrConnectWithoutInvoiceItemsInput
+    connect?: DistributionWhereUniqueInput
+  }
+
+  export type DistributionItemCreateNestedOneWithoutInvoiceItemsInput = {
+    create?: XOR<DistributionItemCreateWithoutInvoiceItemsInput, DistributionItemUncheckedCreateWithoutInvoiceItemsInput>
+    connectOrCreate?: DistributionItemCreateOrConnectWithoutInvoiceItemsInput
+    connect?: DistributionItemWhereUniqueInput
+  }
+
+  export type OrderItemCreateNestedOneWithoutDistributionInvoiceItemsInput = {
+    create?: XOR<OrderItemCreateWithoutDistributionInvoiceItemsInput, OrderItemUncheckedCreateWithoutDistributionInvoiceItemsInput>
+    connectOrCreate?: OrderItemCreateOrConnectWithoutDistributionInvoiceItemsInput
+    connect?: OrderItemWhereUniqueInput
+  }
+
+  export type DistributionInvoiceUpdateOneRequiredWithoutItemsNestedInput = {
+    create?: XOR<DistributionInvoiceCreateWithoutItemsInput, DistributionInvoiceUncheckedCreateWithoutItemsInput>
+    connectOrCreate?: DistributionInvoiceCreateOrConnectWithoutItemsInput
+    upsert?: DistributionInvoiceUpsertWithoutItemsInput
+    connect?: DistributionInvoiceWhereUniqueInput
+    update?: XOR<XOR<DistributionInvoiceUpdateToOneWithWhereWithoutItemsInput, DistributionInvoiceUpdateWithoutItemsInput>, DistributionInvoiceUncheckedUpdateWithoutItemsInput>
+  }
+
+  export type DistributionUpdateOneRequiredWithoutInvoiceItemsNestedInput = {
+    create?: XOR<DistributionCreateWithoutInvoiceItemsInput, DistributionUncheckedCreateWithoutInvoiceItemsInput>
+    connectOrCreate?: DistributionCreateOrConnectWithoutInvoiceItemsInput
+    upsert?: DistributionUpsertWithoutInvoiceItemsInput
+    connect?: DistributionWhereUniqueInput
+    update?: XOR<XOR<DistributionUpdateToOneWithWhereWithoutInvoiceItemsInput, DistributionUpdateWithoutInvoiceItemsInput>, DistributionUncheckedUpdateWithoutInvoiceItemsInput>
+  }
+
+  export type DistributionItemUpdateOneRequiredWithoutInvoiceItemsNestedInput = {
+    create?: XOR<DistributionItemCreateWithoutInvoiceItemsInput, DistributionItemUncheckedCreateWithoutInvoiceItemsInput>
+    connectOrCreate?: DistributionItemCreateOrConnectWithoutInvoiceItemsInput
+    upsert?: DistributionItemUpsertWithoutInvoiceItemsInput
+    connect?: DistributionItemWhereUniqueInput
+    update?: XOR<XOR<DistributionItemUpdateToOneWithWhereWithoutInvoiceItemsInput, DistributionItemUpdateWithoutInvoiceItemsInput>, DistributionItemUncheckedUpdateWithoutInvoiceItemsInput>
+  }
+
+  export type OrderItemUpdateOneRequiredWithoutDistributionInvoiceItemsNestedInput = {
+    create?: XOR<OrderItemCreateWithoutDistributionInvoiceItemsInput, OrderItemUncheckedCreateWithoutDistributionInvoiceItemsInput>
+    connectOrCreate?: OrderItemCreateOrConnectWithoutDistributionInvoiceItemsInput
+    upsert?: OrderItemUpsertWithoutDistributionInvoiceItemsInput
+    connect?: OrderItemWhereUniqueInput
+    update?: XOR<XOR<OrderItemUpdateToOneWithWhereWithoutDistributionInvoiceItemsInput, OrderItemUpdateWithoutDistributionInvoiceItemsInput>, OrderItemUncheckedUpdateWithoutDistributionInvoiceItemsInput>
   }
 
   export type OrderCreateNestedOneWithoutOrderReturnsInput = {
@@ -37081,6 +47127,7 @@ export namespace Prisma {
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     orderReturns?: OrderReturnCreateNestedManyWithoutOrderInput
+    distributionInvoice?: DistributionInvoiceCreateNestedOneWithoutOrderInput
   }
 
   export type OrderUncheckedCreateWithoutUserInput = {
@@ -37102,6 +47149,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     orderReturns?: OrderReturnUncheckedCreateNestedManyWithoutOrderInput
+    distributionInvoice?: DistributionInvoiceUncheckedCreateNestedOneWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutUserInput = {
@@ -37232,6 +47280,7 @@ export namespace Prisma {
     total: number
     order: OrderCreateNestedOneWithoutItemsInput
     returnItems?: OrderReturnItemCreateNestedManyWithoutOrderItemInput
+    distributionInvoiceItems?: DistributionInvoiceItemCreateNestedManyWithoutOrderItemInput
   }
 
   export type OrderItemUncheckedCreateWithoutProductInput = {
@@ -37243,6 +47292,7 @@ export namespace Prisma {
     taxAmount: number
     total: number
     returnItems?: OrderReturnItemUncheckedCreateNestedManyWithoutOrderItemInput
+    distributionInvoiceItems?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutOrderItemInput
   }
 
   export type OrderItemCreateOrConnectWithoutProductInput = {
@@ -37392,6 +47442,41 @@ export namespace Prisma {
   export type StocktakeItemCreateOrConnectWithoutProductInput = {
     where: StocktakeItemWhereUniqueInput
     create: XOR<StocktakeItemCreateWithoutProductInput, StocktakeItemUncheckedCreateWithoutProductInput>
+  }
+
+  export type DistributionItemCreateWithoutProductInput = {
+    id?: string
+    position: number
+    productLabel: string
+    quantity: number
+    shippedQuantity?: number
+    invoicedQuantity?: number
+    unitPrice: number
+    taxRate: number
+    isCancelled?: boolean
+    distribution: DistributionCreateNestedOneWithoutItemsInput
+    dispatchItems?: DistributionDispatchItemCreateNestedManyWithoutDistributionItemInput
+    invoiceItems?: DistributionInvoiceItemCreateNestedManyWithoutDistributionItemInput
+  }
+
+  export type DistributionItemUncheckedCreateWithoutProductInput = {
+    id?: string
+    distributionId: string
+    position: number
+    productLabel: string
+    quantity: number
+    shippedQuantity?: number
+    invoicedQuantity?: number
+    unitPrice: number
+    taxRate: number
+    isCancelled?: boolean
+    dispatchItems?: DistributionDispatchItemUncheckedCreateNestedManyWithoutDistributionItemInput
+    invoiceItems?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutDistributionItemInput
+  }
+
+  export type DistributionItemCreateOrConnectWithoutProductInput = {
+    where: DistributionItemWhereUniqueInput
+    create: XOR<DistributionItemCreateWithoutProductInput, DistributionItemUncheckedCreateWithoutProductInput>
   }
 
   export type SupplierCreateWithoutProductsInput = {
@@ -37640,6 +47725,39 @@ export namespace Prisma {
     unitCost?: FloatNullableFilter<"StocktakeItem"> | number | null
   }
 
+  export type DistributionItemUpsertWithWhereUniqueWithoutProductInput = {
+    where: DistributionItemWhereUniqueInput
+    update: XOR<DistributionItemUpdateWithoutProductInput, DistributionItemUncheckedUpdateWithoutProductInput>
+    create: XOR<DistributionItemCreateWithoutProductInput, DistributionItemUncheckedCreateWithoutProductInput>
+  }
+
+  export type DistributionItemUpdateWithWhereUniqueWithoutProductInput = {
+    where: DistributionItemWhereUniqueInput
+    data: XOR<DistributionItemUpdateWithoutProductInput, DistributionItemUncheckedUpdateWithoutProductInput>
+  }
+
+  export type DistributionItemUpdateManyWithWhereWithoutProductInput = {
+    where: DistributionItemScalarWhereInput
+    data: XOR<DistributionItemUpdateManyMutationInput, DistributionItemUncheckedUpdateManyWithoutProductInput>
+  }
+
+  export type DistributionItemScalarWhereInput = {
+    AND?: DistributionItemScalarWhereInput | DistributionItemScalarWhereInput[]
+    OR?: DistributionItemScalarWhereInput[]
+    NOT?: DistributionItemScalarWhereInput | DistributionItemScalarWhereInput[]
+    id?: StringFilter<"DistributionItem"> | string
+    distributionId?: StringFilter<"DistributionItem"> | string
+    productId?: StringFilter<"DistributionItem"> | string
+    position?: IntFilter<"DistributionItem"> | number
+    productLabel?: StringFilter<"DistributionItem"> | string
+    quantity?: IntFilter<"DistributionItem"> | number
+    shippedQuantity?: IntFilter<"DistributionItem"> | number
+    invoicedQuantity?: IntFilter<"DistributionItem"> | number
+    unitPrice?: FloatFilter<"DistributionItem"> | number
+    taxRate?: FloatFilter<"DistributionItem"> | number
+    isCancelled?: BoolFilter<"DistributionItem"> | boolean
+  }
+
   export type SupplierUpsertWithoutProductsInput = {
     update: XOR<SupplierUpdateWithoutProductsInput, SupplierUncheckedUpdateWithoutProductsInput>
     create: XOR<SupplierCreateWithoutProductsInput, SupplierUncheckedCreateWithoutProductsInput>
@@ -37774,6 +47892,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     imageUrl?: string | null
@@ -37785,6 +47904,7 @@ export namespace Prisma {
     customPrices?: CustomerPriceCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
 
@@ -37805,6 +47925,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     supplierId?: string | null
@@ -37817,6 +47938,7 @@ export namespace Prisma {
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutStocktakeItemsInput = {
@@ -37889,6 +48011,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37900,6 +48023,7 @@ export namespace Prisma {
     customPrices?: CustomerPriceUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
 
@@ -37920,6 +48044,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     supplierId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37932,6 +48057,7 @@ export namespace Prisma {
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type CustomerCreateWithoutOrdersInput = {
@@ -37952,6 +48078,7 @@ export namespace Prisma {
     discounts?: AccountDiscountCreateNestedManyWithoutCustomerInput
     customPrices?: CustomerPriceCreateNestedManyWithoutCustomerInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutCustomerInput
+    distributions?: DistributionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutOrdersInput = {
@@ -37972,6 +48099,7 @@ export namespace Prisma {
     discounts?: AccountDiscountUncheckedCreateNestedManyWithoutCustomerInput
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutCustomerInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutCustomerInput
+    distributions?: DistributionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutOrdersInput = {
@@ -38015,6 +48143,7 @@ export namespace Prisma {
     total: number
     product: ProductCreateNestedOneWithoutOrderItemsInput
     returnItems?: OrderReturnItemCreateNestedManyWithoutOrderItemInput
+    distributionInvoiceItems?: DistributionInvoiceItemCreateNestedManyWithoutOrderItemInput
   }
 
   export type OrderItemUncheckedCreateWithoutOrderInput = {
@@ -38026,6 +48155,7 @@ export namespace Prisma {
     taxAmount: number
     total: number
     returnItems?: OrderReturnItemUncheckedCreateNestedManyWithoutOrderItemInput
+    distributionInvoiceItems?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutOrderItemInput
   }
 
   export type OrderItemCreateOrConnectWithoutOrderInput = {
@@ -38072,6 +48202,33 @@ export namespace Prisma {
     create: XOR<OrderReturnCreateWithoutOrderInput, OrderReturnUncheckedCreateWithoutOrderInput>
   }
 
+  export type DistributionInvoiceCreateWithoutOrderInput = {
+    id?: string
+    requestId: string
+    requestSnapshot: string
+    customerId: string
+    customerName: string
+    createdBy: string
+    createdAt?: Date | string
+    items?: DistributionInvoiceItemCreateNestedManyWithoutInvoiceInput
+  }
+
+  export type DistributionInvoiceUncheckedCreateWithoutOrderInput = {
+    id?: string
+    requestId: string
+    requestSnapshot: string
+    customerId: string
+    customerName: string
+    createdBy: string
+    createdAt?: Date | string
+    items?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutInvoiceInput
+  }
+
+  export type DistributionInvoiceCreateOrConnectWithoutOrderInput = {
+    where: DistributionInvoiceWhereUniqueInput
+    create: XOR<DistributionInvoiceCreateWithoutOrderInput, DistributionInvoiceUncheckedCreateWithoutOrderInput>
+  }
+
   export type CustomerUpsertWithoutOrdersInput = {
     update: XOR<CustomerUpdateWithoutOrdersInput, CustomerUncheckedUpdateWithoutOrdersInput>
     create: XOR<CustomerCreateWithoutOrdersInput, CustomerUncheckedCreateWithoutOrdersInput>
@@ -38101,6 +48258,7 @@ export namespace Prisma {
     discounts?: AccountDiscountUpdateManyWithoutCustomerNestedInput
     customPrices?: CustomerPriceUpdateManyWithoutCustomerNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutCustomerNestedInput
+    distributions?: DistributionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutOrdersInput = {
@@ -38121,6 +48279,7 @@ export namespace Prisma {
     discounts?: AccountDiscountUncheckedUpdateManyWithoutCustomerNestedInput
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutCustomerNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutCustomerNestedInput
+    distributions?: DistributionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type UserUpsertWithoutOrdersInput = {
@@ -38188,6 +48347,39 @@ export namespace Prisma {
     data: XOR<OrderReturnUpdateManyMutationInput, OrderReturnUncheckedUpdateManyWithoutOrderInput>
   }
 
+  export type DistributionInvoiceUpsertWithoutOrderInput = {
+    update: XOR<DistributionInvoiceUpdateWithoutOrderInput, DistributionInvoiceUncheckedUpdateWithoutOrderInput>
+    create: XOR<DistributionInvoiceCreateWithoutOrderInput, DistributionInvoiceUncheckedCreateWithoutOrderInput>
+    where?: DistributionInvoiceWhereInput
+  }
+
+  export type DistributionInvoiceUpdateToOneWithWhereWithoutOrderInput = {
+    where?: DistributionInvoiceWhereInput
+    data: XOR<DistributionInvoiceUpdateWithoutOrderInput, DistributionInvoiceUncheckedUpdateWithoutOrderInput>
+  }
+
+  export type DistributionInvoiceUpdateWithoutOrderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestId?: StringFieldUpdateOperationsInput | string
+    requestSnapshot?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    items?: DistributionInvoiceItemUpdateManyWithoutInvoiceNestedInput
+  }
+
+  export type DistributionInvoiceUncheckedUpdateWithoutOrderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestId?: StringFieldUpdateOperationsInput | string
+    requestSnapshot?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    items?: DistributionInvoiceItemUncheckedUpdateManyWithoutInvoiceNestedInput
+  }
+
   export type OrderCreateWithoutCustomerInput = {
     id?: string
     invoiceNumber: string
@@ -38207,6 +48399,7 @@ export namespace Prisma {
     user: UserCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     orderReturns?: OrderReturnCreateNestedManyWithoutOrderInput
+    distributionInvoice?: DistributionInvoiceCreateNestedOneWithoutOrderInput
   }
 
   export type OrderUncheckedCreateWithoutCustomerInput = {
@@ -38228,6 +48421,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     orderReturns?: OrderReturnUncheckedCreateNestedManyWithoutOrderInput
+    distributionInvoice?: DistributionInvoiceUncheckedCreateNestedOneWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutCustomerInput = {
@@ -38386,6 +48580,49 @@ export namespace Prisma {
     create: XOR<CustomerCeilingQuotaCreateWithoutCustomerInput, CustomerCeilingQuotaUncheckedCreateWithoutCustomerInput>
   }
 
+  export type DistributionCreateWithoutCustomerInput = {
+    id?: string
+    documentNumber: string
+    customerName: string
+    status?: string
+    notes?: string | null
+    revision?: number
+    createdBy: string
+    updatedBy?: string | null
+    approvedBy?: string | null
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    items?: DistributionItemCreateNestedManyWithoutDistributionInput
+    revisions?: DistributionRevisionCreateNestedManyWithoutDistributionInput
+    dispatches?: DistributionDispatchCreateNestedManyWithoutDistributionInput
+    invoiceItems?: DistributionInvoiceItemCreateNestedManyWithoutDistributionInput
+  }
+
+  export type DistributionUncheckedCreateWithoutCustomerInput = {
+    id?: string
+    documentNumber: string
+    customerName: string
+    status?: string
+    notes?: string | null
+    revision?: number
+    createdBy: string
+    updatedBy?: string | null
+    approvedBy?: string | null
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    items?: DistributionItemUncheckedCreateNestedManyWithoutDistributionInput
+    revisions?: DistributionRevisionUncheckedCreateNestedManyWithoutDistributionInput
+    dispatches?: DistributionDispatchUncheckedCreateNestedManyWithoutDistributionInput
+    invoiceItems?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutDistributionInput
+  }
+
+  export type DistributionCreateOrConnectWithoutCustomerInput = {
+    where: DistributionWhereUniqueInput
+    create: XOR<DistributionCreateWithoutCustomerInput, DistributionUncheckedCreateWithoutCustomerInput>
+  }
+
   export type OrderUpsertWithWhereUniqueWithoutCustomerInput = {
     where: OrderWhereUniqueInput
     update: XOR<OrderUpdateWithoutCustomerInput, OrderUncheckedUpdateWithoutCustomerInput>
@@ -38516,6 +48753,41 @@ export namespace Prisma {
     data: XOR<CustomerCeilingQuotaUpdateManyMutationInput, CustomerCeilingQuotaUncheckedUpdateManyWithoutCustomerInput>
   }
 
+  export type DistributionUpsertWithWhereUniqueWithoutCustomerInput = {
+    where: DistributionWhereUniqueInput
+    update: XOR<DistributionUpdateWithoutCustomerInput, DistributionUncheckedUpdateWithoutCustomerInput>
+    create: XOR<DistributionCreateWithoutCustomerInput, DistributionUncheckedCreateWithoutCustomerInput>
+  }
+
+  export type DistributionUpdateWithWhereUniqueWithoutCustomerInput = {
+    where: DistributionWhereUniqueInput
+    data: XOR<DistributionUpdateWithoutCustomerInput, DistributionUncheckedUpdateWithoutCustomerInput>
+  }
+
+  export type DistributionUpdateManyWithWhereWithoutCustomerInput = {
+    where: DistributionScalarWhereInput
+    data: XOR<DistributionUpdateManyMutationInput, DistributionUncheckedUpdateManyWithoutCustomerInput>
+  }
+
+  export type DistributionScalarWhereInput = {
+    AND?: DistributionScalarWhereInput | DistributionScalarWhereInput[]
+    OR?: DistributionScalarWhereInput[]
+    NOT?: DistributionScalarWhereInput | DistributionScalarWhereInput[]
+    id?: StringFilter<"Distribution"> | string
+    documentNumber?: StringFilter<"Distribution"> | string
+    customerId?: StringFilter<"Distribution"> | string
+    customerName?: StringFilter<"Distribution"> | string
+    status?: StringFilter<"Distribution"> | string
+    notes?: StringNullableFilter<"Distribution"> | string | null
+    revision?: IntFilter<"Distribution"> | number
+    createdBy?: StringFilter<"Distribution"> | string
+    updatedBy?: StringNullableFilter<"Distribution"> | string | null
+    approvedBy?: StringNullableFilter<"Distribution"> | string | null
+    approvedAt?: DateTimeNullableFilter<"Distribution"> | Date | string | null
+    createdAt?: DateTimeFilter<"Distribution"> | Date | string
+    updatedAt?: DateTimeFilter<"Distribution"> | Date | string
+  }
+
   export type CustomerCreateWithoutCustomPricesInput = {
     id?: string
     name: string
@@ -38534,6 +48806,7 @@ export namespace Prisma {
     payments?: PaymentCreateNestedManyWithoutCustomerInput
     discounts?: AccountDiscountCreateNestedManyWithoutCustomerInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutCustomerInput
+    distributions?: DistributionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutCustomPricesInput = {
@@ -38554,6 +48827,7 @@ export namespace Prisma {
     payments?: PaymentUncheckedCreateNestedManyWithoutCustomerInput
     discounts?: AccountDiscountUncheckedCreateNestedManyWithoutCustomerInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutCustomerInput
+    distributions?: DistributionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutCustomPricesInput = {
@@ -38578,6 +48852,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     imageUrl?: string | null
@@ -38589,6 +48864,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
 
@@ -38609,6 +48885,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     supplierId?: string | null
@@ -38621,6 +48898,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutCustomPricesInput = {
@@ -38657,6 +48935,7 @@ export namespace Prisma {
     payments?: PaymentUpdateManyWithoutCustomerNestedInput
     discounts?: AccountDiscountUpdateManyWithoutCustomerNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutCustomerNestedInput
+    distributions?: DistributionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutCustomPricesInput = {
@@ -38677,6 +48956,7 @@ export namespace Prisma {
     payments?: PaymentUncheckedUpdateManyWithoutCustomerNestedInput
     discounts?: AccountDiscountUncheckedUpdateManyWithoutCustomerNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutCustomerNestedInput
+    distributions?: DistributionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type ProductUpsertWithoutCustomPricesInput = {
@@ -38707,6 +48987,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38718,6 +48999,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
 
@@ -38738,6 +49020,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     supplierId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38750,6 +49033,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type OrderCreateWithoutItemsInput = {
@@ -38771,6 +49055,7 @@ export namespace Prisma {
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     user: UserCreateNestedOneWithoutOrdersInput
     orderReturns?: OrderReturnCreateNestedManyWithoutOrderInput
+    distributionInvoice?: DistributionInvoiceCreateNestedOneWithoutOrderInput
   }
 
   export type OrderUncheckedCreateWithoutItemsInput = {
@@ -38792,6 +49077,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     orderReturns?: OrderReturnUncheckedCreateNestedManyWithoutOrderInput
+    distributionInvoice?: DistributionInvoiceUncheckedCreateNestedOneWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutItemsInput = {
@@ -38816,6 +49102,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     imageUrl?: string | null
@@ -38827,6 +49114,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
 
@@ -38847,6 +49135,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     supplierId?: string | null
@@ -38859,6 +49148,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutOrderItemsInput = {
@@ -38891,6 +49181,27 @@ export namespace Prisma {
     create: XOR<OrderReturnItemCreateWithoutOrderItemInput, OrderReturnItemUncheckedCreateWithoutOrderItemInput>
   }
 
+  export type DistributionInvoiceItemCreateWithoutOrderItemInput = {
+    id?: string
+    quantity: number
+    invoice: DistributionInvoiceCreateNestedOneWithoutItemsInput
+    distribution: DistributionCreateNestedOneWithoutInvoiceItemsInput
+    distributionItem: DistributionItemCreateNestedOneWithoutInvoiceItemsInput
+  }
+
+  export type DistributionInvoiceItemUncheckedCreateWithoutOrderItemInput = {
+    id?: string
+    distributionInvoiceId: string
+    distributionId: string
+    distributionItemId: string
+    quantity: number
+  }
+
+  export type DistributionInvoiceItemCreateOrConnectWithoutOrderItemInput = {
+    where: DistributionInvoiceItemWhereUniqueInput
+    create: XOR<DistributionInvoiceItemCreateWithoutOrderItemInput, DistributionInvoiceItemUncheckedCreateWithoutOrderItemInput>
+  }
+
   export type OrderUpsertWithoutItemsInput = {
     update: XOR<OrderUpdateWithoutItemsInput, OrderUncheckedUpdateWithoutItemsInput>
     create: XOR<OrderCreateWithoutItemsInput, OrderUncheckedCreateWithoutItemsInput>
@@ -38921,6 +49232,7 @@ export namespace Prisma {
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
     orderReturns?: OrderReturnUpdateManyWithoutOrderNestedInput
+    distributionInvoice?: DistributionInvoiceUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateWithoutItemsInput = {
@@ -38942,6 +49254,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orderReturns?: OrderReturnUncheckedUpdateManyWithoutOrderNestedInput
+    distributionInvoice?: DistributionInvoiceUncheckedUpdateOneWithoutOrderNestedInput
   }
 
   export type ProductUpsertWithoutOrderItemsInput = {
@@ -38972,6 +49285,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38983,6 +49297,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
 
@@ -39003,6 +49318,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     supplierId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39015,6 +49331,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type OrderReturnItemUpsertWithWhereUniqueWithoutOrderItemInput = {
@@ -39031,6 +49348,1433 @@ export namespace Prisma {
   export type OrderReturnItemUpdateManyWithWhereWithoutOrderItemInput = {
     where: OrderReturnItemScalarWhereInput
     data: XOR<OrderReturnItemUpdateManyMutationInput, OrderReturnItemUncheckedUpdateManyWithoutOrderItemInput>
+  }
+
+  export type DistributionInvoiceItemUpsertWithWhereUniqueWithoutOrderItemInput = {
+    where: DistributionInvoiceItemWhereUniqueInput
+    update: XOR<DistributionInvoiceItemUpdateWithoutOrderItemInput, DistributionInvoiceItemUncheckedUpdateWithoutOrderItemInput>
+    create: XOR<DistributionInvoiceItemCreateWithoutOrderItemInput, DistributionInvoiceItemUncheckedCreateWithoutOrderItemInput>
+  }
+
+  export type DistributionInvoiceItemUpdateWithWhereUniqueWithoutOrderItemInput = {
+    where: DistributionInvoiceItemWhereUniqueInput
+    data: XOR<DistributionInvoiceItemUpdateWithoutOrderItemInput, DistributionInvoiceItemUncheckedUpdateWithoutOrderItemInput>
+  }
+
+  export type DistributionInvoiceItemUpdateManyWithWhereWithoutOrderItemInput = {
+    where: DistributionInvoiceItemScalarWhereInput
+    data: XOR<DistributionInvoiceItemUpdateManyMutationInput, DistributionInvoiceItemUncheckedUpdateManyWithoutOrderItemInput>
+  }
+
+  export type DistributionInvoiceItemScalarWhereInput = {
+    AND?: DistributionInvoiceItemScalarWhereInput | DistributionInvoiceItemScalarWhereInput[]
+    OR?: DistributionInvoiceItemScalarWhereInput[]
+    NOT?: DistributionInvoiceItemScalarWhereInput | DistributionInvoiceItemScalarWhereInput[]
+    id?: StringFilter<"DistributionInvoiceItem"> | string
+    distributionInvoiceId?: StringFilter<"DistributionInvoiceItem"> | string
+    distributionId?: StringFilter<"DistributionInvoiceItem"> | string
+    distributionItemId?: StringFilter<"DistributionInvoiceItem"> | string
+    orderItemId?: StringFilter<"DistributionInvoiceItem"> | string
+    quantity?: IntFilter<"DistributionInvoiceItem"> | number
+  }
+
+  export type CustomerCreateWithoutDistributionsInput = {
+    id?: string
+    name: string
+    location?: string | null
+    buildingsCount?: number
+    cr?: string | null
+    trn?: string | null
+    customerType?: string
+    phone?: string | null
+    discount?: number
+    openingBalance?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    orders?: OrderCreateNestedManyWithoutCustomerInput
+    orderReturns?: OrderReturnCreateNestedManyWithoutCustomerInput
+    payments?: PaymentCreateNestedManyWithoutCustomerInput
+    discounts?: AccountDiscountCreateNestedManyWithoutCustomerInput
+    customPrices?: CustomerPriceCreateNestedManyWithoutCustomerInput
+    ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutCustomerInput
+  }
+
+  export type CustomerUncheckedCreateWithoutDistributionsInput = {
+    id?: string
+    name: string
+    location?: string | null
+    buildingsCount?: number
+    cr?: string | null
+    trn?: string | null
+    customerType?: string
+    phone?: string | null
+    discount?: number
+    openingBalance?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    orders?: OrderUncheckedCreateNestedManyWithoutCustomerInput
+    orderReturns?: OrderReturnUncheckedCreateNestedManyWithoutCustomerInput
+    payments?: PaymentUncheckedCreateNestedManyWithoutCustomerInput
+    discounts?: AccountDiscountUncheckedCreateNestedManyWithoutCustomerInput
+    customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutCustomerInput
+    ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutCustomerInput
+  }
+
+  export type CustomerCreateOrConnectWithoutDistributionsInput = {
+    where: CustomerWhereUniqueInput
+    create: XOR<CustomerCreateWithoutDistributionsInput, CustomerUncheckedCreateWithoutDistributionsInput>
+  }
+
+  export type DistributionItemCreateWithoutDistributionInput = {
+    id?: string
+    position: number
+    productLabel: string
+    quantity: number
+    shippedQuantity?: number
+    invoicedQuantity?: number
+    unitPrice: number
+    taxRate: number
+    isCancelled?: boolean
+    product: ProductCreateNestedOneWithoutDistributionItemsInput
+    dispatchItems?: DistributionDispatchItemCreateNestedManyWithoutDistributionItemInput
+    invoiceItems?: DistributionInvoiceItemCreateNestedManyWithoutDistributionItemInput
+  }
+
+  export type DistributionItemUncheckedCreateWithoutDistributionInput = {
+    id?: string
+    productId: string
+    position: number
+    productLabel: string
+    quantity: number
+    shippedQuantity?: number
+    invoicedQuantity?: number
+    unitPrice: number
+    taxRate: number
+    isCancelled?: boolean
+    dispatchItems?: DistributionDispatchItemUncheckedCreateNestedManyWithoutDistributionItemInput
+    invoiceItems?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutDistributionItemInput
+  }
+
+  export type DistributionItemCreateOrConnectWithoutDistributionInput = {
+    where: DistributionItemWhereUniqueInput
+    create: XOR<DistributionItemCreateWithoutDistributionInput, DistributionItemUncheckedCreateWithoutDistributionInput>
+  }
+
+  export type DistributionRevisionCreateWithoutDistributionInput = {
+    id?: string
+    revision: number
+    action: string
+    performedBy: string
+    beforeSnapshot?: string | null
+    afterSnapshot: string
+    createdAt?: Date | string
+  }
+
+  export type DistributionRevisionUncheckedCreateWithoutDistributionInput = {
+    id?: string
+    revision: number
+    action: string
+    performedBy: string
+    beforeSnapshot?: string | null
+    afterSnapshot: string
+    createdAt?: Date | string
+  }
+
+  export type DistributionRevisionCreateOrConnectWithoutDistributionInput = {
+    where: DistributionRevisionWhereUniqueInput
+    create: XOR<DistributionRevisionCreateWithoutDistributionInput, DistributionRevisionUncheckedCreateWithoutDistributionInput>
+  }
+
+  export type DistributionDispatchCreateWithoutDistributionInput = {
+    id?: string
+    dispatchNumber: string
+    notes?: string | null
+    createdBy: string
+    dispatchedAt: Date | string
+    createdAt?: Date | string
+    items?: DistributionDispatchItemCreateNestedManyWithoutDispatchInput
+  }
+
+  export type DistributionDispatchUncheckedCreateWithoutDistributionInput = {
+    id?: string
+    dispatchNumber: string
+    notes?: string | null
+    createdBy: string
+    dispatchedAt: Date | string
+    createdAt?: Date | string
+    items?: DistributionDispatchItemUncheckedCreateNestedManyWithoutDispatchInput
+  }
+
+  export type DistributionDispatchCreateOrConnectWithoutDistributionInput = {
+    where: DistributionDispatchWhereUniqueInput
+    create: XOR<DistributionDispatchCreateWithoutDistributionInput, DistributionDispatchUncheckedCreateWithoutDistributionInput>
+  }
+
+  export type DistributionInvoiceItemCreateWithoutDistributionInput = {
+    id?: string
+    quantity: number
+    invoice: DistributionInvoiceCreateNestedOneWithoutItemsInput
+    distributionItem: DistributionItemCreateNestedOneWithoutInvoiceItemsInput
+    orderItem: OrderItemCreateNestedOneWithoutDistributionInvoiceItemsInput
+  }
+
+  export type DistributionInvoiceItemUncheckedCreateWithoutDistributionInput = {
+    id?: string
+    distributionInvoiceId: string
+    distributionItemId: string
+    orderItemId: string
+    quantity: number
+  }
+
+  export type DistributionInvoiceItemCreateOrConnectWithoutDistributionInput = {
+    where: DistributionInvoiceItemWhereUniqueInput
+    create: XOR<DistributionInvoiceItemCreateWithoutDistributionInput, DistributionInvoiceItemUncheckedCreateWithoutDistributionInput>
+  }
+
+  export type CustomerUpsertWithoutDistributionsInput = {
+    update: XOR<CustomerUpdateWithoutDistributionsInput, CustomerUncheckedUpdateWithoutDistributionsInput>
+    create: XOR<CustomerCreateWithoutDistributionsInput, CustomerUncheckedCreateWithoutDistributionsInput>
+    where?: CustomerWhereInput
+  }
+
+  export type CustomerUpdateToOneWithWhereWithoutDistributionsInput = {
+    where?: CustomerWhereInput
+    data: XOR<CustomerUpdateWithoutDistributionsInput, CustomerUncheckedUpdateWithoutDistributionsInput>
+  }
+
+  export type CustomerUpdateWithoutDistributionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    buildingsCount?: IntFieldUpdateOperationsInput | number
+    cr?: NullableStringFieldUpdateOperationsInput | string | null
+    trn?: NullableStringFieldUpdateOperationsInput | string | null
+    customerType?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    discount?: FloatFieldUpdateOperationsInput | number
+    openingBalance?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    orders?: OrderUpdateManyWithoutCustomerNestedInput
+    orderReturns?: OrderReturnUpdateManyWithoutCustomerNestedInput
+    payments?: PaymentUpdateManyWithoutCustomerNestedInput
+    discounts?: AccountDiscountUpdateManyWithoutCustomerNestedInput
+    customPrices?: CustomerPriceUpdateManyWithoutCustomerNestedInput
+    ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutCustomerNestedInput
+  }
+
+  export type CustomerUncheckedUpdateWithoutDistributionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    buildingsCount?: IntFieldUpdateOperationsInput | number
+    cr?: NullableStringFieldUpdateOperationsInput | string | null
+    trn?: NullableStringFieldUpdateOperationsInput | string | null
+    customerType?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    discount?: FloatFieldUpdateOperationsInput | number
+    openingBalance?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    orders?: OrderUncheckedUpdateManyWithoutCustomerNestedInput
+    orderReturns?: OrderReturnUncheckedUpdateManyWithoutCustomerNestedInput
+    payments?: PaymentUncheckedUpdateManyWithoutCustomerNestedInput
+    discounts?: AccountDiscountUncheckedUpdateManyWithoutCustomerNestedInput
+    customPrices?: CustomerPriceUncheckedUpdateManyWithoutCustomerNestedInput
+    ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutCustomerNestedInput
+  }
+
+  export type DistributionItemUpsertWithWhereUniqueWithoutDistributionInput = {
+    where: DistributionItemWhereUniqueInput
+    update: XOR<DistributionItemUpdateWithoutDistributionInput, DistributionItemUncheckedUpdateWithoutDistributionInput>
+    create: XOR<DistributionItemCreateWithoutDistributionInput, DistributionItemUncheckedCreateWithoutDistributionInput>
+  }
+
+  export type DistributionItemUpdateWithWhereUniqueWithoutDistributionInput = {
+    where: DistributionItemWhereUniqueInput
+    data: XOR<DistributionItemUpdateWithoutDistributionInput, DistributionItemUncheckedUpdateWithoutDistributionInput>
+  }
+
+  export type DistributionItemUpdateManyWithWhereWithoutDistributionInput = {
+    where: DistributionItemScalarWhereInput
+    data: XOR<DistributionItemUpdateManyMutationInput, DistributionItemUncheckedUpdateManyWithoutDistributionInput>
+  }
+
+  export type DistributionRevisionUpsertWithWhereUniqueWithoutDistributionInput = {
+    where: DistributionRevisionWhereUniqueInput
+    update: XOR<DistributionRevisionUpdateWithoutDistributionInput, DistributionRevisionUncheckedUpdateWithoutDistributionInput>
+    create: XOR<DistributionRevisionCreateWithoutDistributionInput, DistributionRevisionUncheckedCreateWithoutDistributionInput>
+  }
+
+  export type DistributionRevisionUpdateWithWhereUniqueWithoutDistributionInput = {
+    where: DistributionRevisionWhereUniqueInput
+    data: XOR<DistributionRevisionUpdateWithoutDistributionInput, DistributionRevisionUncheckedUpdateWithoutDistributionInput>
+  }
+
+  export type DistributionRevisionUpdateManyWithWhereWithoutDistributionInput = {
+    where: DistributionRevisionScalarWhereInput
+    data: XOR<DistributionRevisionUpdateManyMutationInput, DistributionRevisionUncheckedUpdateManyWithoutDistributionInput>
+  }
+
+  export type DistributionRevisionScalarWhereInput = {
+    AND?: DistributionRevisionScalarWhereInput | DistributionRevisionScalarWhereInput[]
+    OR?: DistributionRevisionScalarWhereInput[]
+    NOT?: DistributionRevisionScalarWhereInput | DistributionRevisionScalarWhereInput[]
+    id?: StringFilter<"DistributionRevision"> | string
+    distributionId?: StringFilter<"DistributionRevision"> | string
+    revision?: IntFilter<"DistributionRevision"> | number
+    action?: StringFilter<"DistributionRevision"> | string
+    performedBy?: StringFilter<"DistributionRevision"> | string
+    beforeSnapshot?: StringNullableFilter<"DistributionRevision"> | string | null
+    afterSnapshot?: StringFilter<"DistributionRevision"> | string
+    createdAt?: DateTimeFilter<"DistributionRevision"> | Date | string
+  }
+
+  export type DistributionDispatchUpsertWithWhereUniqueWithoutDistributionInput = {
+    where: DistributionDispatchWhereUniqueInput
+    update: XOR<DistributionDispatchUpdateWithoutDistributionInput, DistributionDispatchUncheckedUpdateWithoutDistributionInput>
+    create: XOR<DistributionDispatchCreateWithoutDistributionInput, DistributionDispatchUncheckedCreateWithoutDistributionInput>
+  }
+
+  export type DistributionDispatchUpdateWithWhereUniqueWithoutDistributionInput = {
+    where: DistributionDispatchWhereUniqueInput
+    data: XOR<DistributionDispatchUpdateWithoutDistributionInput, DistributionDispatchUncheckedUpdateWithoutDistributionInput>
+  }
+
+  export type DistributionDispatchUpdateManyWithWhereWithoutDistributionInput = {
+    where: DistributionDispatchScalarWhereInput
+    data: XOR<DistributionDispatchUpdateManyMutationInput, DistributionDispatchUncheckedUpdateManyWithoutDistributionInput>
+  }
+
+  export type DistributionDispatchScalarWhereInput = {
+    AND?: DistributionDispatchScalarWhereInput | DistributionDispatchScalarWhereInput[]
+    OR?: DistributionDispatchScalarWhereInput[]
+    NOT?: DistributionDispatchScalarWhereInput | DistributionDispatchScalarWhereInput[]
+    id?: StringFilter<"DistributionDispatch"> | string
+    dispatchNumber?: StringFilter<"DistributionDispatch"> | string
+    distributionId?: StringFilter<"DistributionDispatch"> | string
+    notes?: StringNullableFilter<"DistributionDispatch"> | string | null
+    createdBy?: StringFilter<"DistributionDispatch"> | string
+    dispatchedAt?: DateTimeFilter<"DistributionDispatch"> | Date | string
+    createdAt?: DateTimeFilter<"DistributionDispatch"> | Date | string
+  }
+
+  export type DistributionInvoiceItemUpsertWithWhereUniqueWithoutDistributionInput = {
+    where: DistributionInvoiceItemWhereUniqueInput
+    update: XOR<DistributionInvoiceItemUpdateWithoutDistributionInput, DistributionInvoiceItemUncheckedUpdateWithoutDistributionInput>
+    create: XOR<DistributionInvoiceItemCreateWithoutDistributionInput, DistributionInvoiceItemUncheckedCreateWithoutDistributionInput>
+  }
+
+  export type DistributionInvoiceItemUpdateWithWhereUniqueWithoutDistributionInput = {
+    where: DistributionInvoiceItemWhereUniqueInput
+    data: XOR<DistributionInvoiceItemUpdateWithoutDistributionInput, DistributionInvoiceItemUncheckedUpdateWithoutDistributionInput>
+  }
+
+  export type DistributionInvoiceItemUpdateManyWithWhereWithoutDistributionInput = {
+    where: DistributionInvoiceItemScalarWhereInput
+    data: XOR<DistributionInvoiceItemUpdateManyMutationInput, DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionInput>
+  }
+
+  export type DistributionCreateWithoutItemsInput = {
+    id?: string
+    documentNumber: string
+    customerName: string
+    status?: string
+    notes?: string | null
+    revision?: number
+    createdBy: string
+    updatedBy?: string | null
+    approvedBy?: string | null
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    customer: CustomerCreateNestedOneWithoutDistributionsInput
+    revisions?: DistributionRevisionCreateNestedManyWithoutDistributionInput
+    dispatches?: DistributionDispatchCreateNestedManyWithoutDistributionInput
+    invoiceItems?: DistributionInvoiceItemCreateNestedManyWithoutDistributionInput
+  }
+
+  export type DistributionUncheckedCreateWithoutItemsInput = {
+    id?: string
+    documentNumber: string
+    customerId: string
+    customerName: string
+    status?: string
+    notes?: string | null
+    revision?: number
+    createdBy: string
+    updatedBy?: string | null
+    approvedBy?: string | null
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    revisions?: DistributionRevisionUncheckedCreateNestedManyWithoutDistributionInput
+    dispatches?: DistributionDispatchUncheckedCreateNestedManyWithoutDistributionInput
+    invoiceItems?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutDistributionInput
+  }
+
+  export type DistributionCreateOrConnectWithoutItemsInput = {
+    where: DistributionWhereUniqueInput
+    create: XOR<DistributionCreateWithoutItemsInput, DistributionUncheckedCreateWithoutItemsInput>
+  }
+
+  export type ProductCreateWithoutDistributionItemsInput = {
+    id?: string
+    code: string
+    barcode?: string | null
+    name: string
+    type: string
+    gauge?: string | null
+    size: string
+    color?: string | null
+    length?: string | null
+    weight?: string | null
+    pricePerKilo?: number | null
+    costPrice?: number
+    markup?: number
+    price: number
+    taxRate?: number
+    stockQty?: number
+    reservedQty?: number
+    minStockQty?: number
+    maxStockQty?: number
+    imageUrl?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    orderItems?: OrderItemCreateNestedManyWithoutProductInput
+    orderReturnItems?: OrderReturnItemCreateNestedManyWithoutProductInput
+    purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
+    customPrices?: CustomerPriceCreateNestedManyWithoutProductInput
+    ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
+    stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
+    supplier?: SupplierCreateNestedOneWithoutProductsInput
+  }
+
+  export type ProductUncheckedCreateWithoutDistributionItemsInput = {
+    id?: string
+    code: string
+    barcode?: string | null
+    name: string
+    type: string
+    gauge?: string | null
+    size: string
+    color?: string | null
+    length?: string | null
+    weight?: string | null
+    pricePerKilo?: number | null
+    costPrice?: number
+    markup?: number
+    price: number
+    taxRate?: number
+    stockQty?: number
+    reservedQty?: number
+    minStockQty?: number
+    maxStockQty?: number
+    supplierId?: string | null
+    imageUrl?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    orderItems?: OrderItemUncheckedCreateNestedManyWithoutProductInput
+    orderReturnItems?: OrderReturnItemUncheckedCreateNestedManyWithoutProductInput
+    purchaseItems?: PurchaseOrderItemUncheckedCreateNestedManyWithoutProductInput
+    customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutProductInput
+    ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
+    supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
+    stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
+  }
+
+  export type ProductCreateOrConnectWithoutDistributionItemsInput = {
+    where: ProductWhereUniqueInput
+    create: XOR<ProductCreateWithoutDistributionItemsInput, ProductUncheckedCreateWithoutDistributionItemsInput>
+  }
+
+  export type DistributionDispatchItemCreateWithoutDistributionItemInput = {
+    id?: string
+    quantity: number
+    dispatch: DistributionDispatchCreateNestedOneWithoutItemsInput
+  }
+
+  export type DistributionDispatchItemUncheckedCreateWithoutDistributionItemInput = {
+    id?: string
+    dispatchId: string
+    quantity: number
+  }
+
+  export type DistributionDispatchItemCreateOrConnectWithoutDistributionItemInput = {
+    where: DistributionDispatchItemWhereUniqueInput
+    create: XOR<DistributionDispatchItemCreateWithoutDistributionItemInput, DistributionDispatchItemUncheckedCreateWithoutDistributionItemInput>
+  }
+
+  export type DistributionInvoiceItemCreateWithoutDistributionItemInput = {
+    id?: string
+    quantity: number
+    invoice: DistributionInvoiceCreateNestedOneWithoutItemsInput
+    distribution: DistributionCreateNestedOneWithoutInvoiceItemsInput
+    orderItem: OrderItemCreateNestedOneWithoutDistributionInvoiceItemsInput
+  }
+
+  export type DistributionInvoiceItemUncheckedCreateWithoutDistributionItemInput = {
+    id?: string
+    distributionInvoiceId: string
+    distributionId: string
+    orderItemId: string
+    quantity: number
+  }
+
+  export type DistributionInvoiceItemCreateOrConnectWithoutDistributionItemInput = {
+    where: DistributionInvoiceItemWhereUniqueInput
+    create: XOR<DistributionInvoiceItemCreateWithoutDistributionItemInput, DistributionInvoiceItemUncheckedCreateWithoutDistributionItemInput>
+  }
+
+  export type DistributionUpsertWithoutItemsInput = {
+    update: XOR<DistributionUpdateWithoutItemsInput, DistributionUncheckedUpdateWithoutItemsInput>
+    create: XOR<DistributionCreateWithoutItemsInput, DistributionUncheckedCreateWithoutItemsInput>
+    where?: DistributionWhereInput
+  }
+
+  export type DistributionUpdateToOneWithWhereWithoutItemsInput = {
+    where?: DistributionWhereInput
+    data: XOR<DistributionUpdateWithoutItemsInput, DistributionUncheckedUpdateWithoutItemsInput>
+  }
+
+  export type DistributionUpdateWithoutItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customer?: CustomerUpdateOneRequiredWithoutDistributionsNestedInput
+    revisions?: DistributionRevisionUpdateManyWithoutDistributionNestedInput
+    dispatches?: DistributionDispatchUpdateManyWithoutDistributionNestedInput
+    invoiceItems?: DistributionInvoiceItemUpdateManyWithoutDistributionNestedInput
+  }
+
+  export type DistributionUncheckedUpdateWithoutItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revisions?: DistributionRevisionUncheckedUpdateManyWithoutDistributionNestedInput
+    dispatches?: DistributionDispatchUncheckedUpdateManyWithoutDistributionNestedInput
+    invoiceItems?: DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionNestedInput
+  }
+
+  export type ProductUpsertWithoutDistributionItemsInput = {
+    update: XOR<ProductUpdateWithoutDistributionItemsInput, ProductUncheckedUpdateWithoutDistributionItemsInput>
+    create: XOR<ProductCreateWithoutDistributionItemsInput, ProductUncheckedCreateWithoutDistributionItemsInput>
+    where?: ProductWhereInput
+  }
+
+  export type ProductUpdateToOneWithWhereWithoutDistributionItemsInput = {
+    where?: ProductWhereInput
+    data: XOR<ProductUpdateWithoutDistributionItemsInput, ProductUncheckedUpdateWithoutDistributionItemsInput>
+  }
+
+  export type ProductUpdateWithoutDistributionItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    barcode?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    gauge?: NullableStringFieldUpdateOperationsInput | string | null
+    size?: StringFieldUpdateOperationsInput | string
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    length?: NullableStringFieldUpdateOperationsInput | string | null
+    weight?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePerKilo?: NullableFloatFieldUpdateOperationsInput | number | null
+    costPrice?: FloatFieldUpdateOperationsInput | number
+    markup?: FloatFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
+    minStockQty?: IntFieldUpdateOperationsInput | number
+    maxStockQty?: IntFieldUpdateOperationsInput | number
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    orderItems?: OrderItemUpdateManyWithoutProductNestedInput
+    orderReturnItems?: OrderReturnItemUpdateManyWithoutProductNestedInput
+    purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
+    customPrices?: CustomerPriceUpdateManyWithoutProductNestedInput
+    ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
+    stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
+    supplier?: SupplierUpdateOneWithoutProductsNestedInput
+  }
+
+  export type ProductUncheckedUpdateWithoutDistributionItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    barcode?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    gauge?: NullableStringFieldUpdateOperationsInput | string | null
+    size?: StringFieldUpdateOperationsInput | string
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    length?: NullableStringFieldUpdateOperationsInput | string | null
+    weight?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePerKilo?: NullableFloatFieldUpdateOperationsInput | number | null
+    costPrice?: FloatFieldUpdateOperationsInput | number
+    markup?: FloatFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
+    minStockQty?: IntFieldUpdateOperationsInput | number
+    maxStockQty?: IntFieldUpdateOperationsInput | number
+    supplierId?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    orderItems?: OrderItemUncheckedUpdateManyWithoutProductNestedInput
+    orderReturnItems?: OrderReturnItemUncheckedUpdateManyWithoutProductNestedInput
+    purchaseItems?: PurchaseOrderItemUncheckedUpdateManyWithoutProductNestedInput
+    customPrices?: CustomerPriceUncheckedUpdateManyWithoutProductNestedInput
+    ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
+    supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
+    stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
+  }
+
+  export type DistributionDispatchItemUpsertWithWhereUniqueWithoutDistributionItemInput = {
+    where: DistributionDispatchItemWhereUniqueInput
+    update: XOR<DistributionDispatchItemUpdateWithoutDistributionItemInput, DistributionDispatchItemUncheckedUpdateWithoutDistributionItemInput>
+    create: XOR<DistributionDispatchItemCreateWithoutDistributionItemInput, DistributionDispatchItemUncheckedCreateWithoutDistributionItemInput>
+  }
+
+  export type DistributionDispatchItemUpdateWithWhereUniqueWithoutDistributionItemInput = {
+    where: DistributionDispatchItemWhereUniqueInput
+    data: XOR<DistributionDispatchItemUpdateWithoutDistributionItemInput, DistributionDispatchItemUncheckedUpdateWithoutDistributionItemInput>
+  }
+
+  export type DistributionDispatchItemUpdateManyWithWhereWithoutDistributionItemInput = {
+    where: DistributionDispatchItemScalarWhereInput
+    data: XOR<DistributionDispatchItemUpdateManyMutationInput, DistributionDispatchItemUncheckedUpdateManyWithoutDistributionItemInput>
+  }
+
+  export type DistributionDispatchItemScalarWhereInput = {
+    AND?: DistributionDispatchItemScalarWhereInput | DistributionDispatchItemScalarWhereInput[]
+    OR?: DistributionDispatchItemScalarWhereInput[]
+    NOT?: DistributionDispatchItemScalarWhereInput | DistributionDispatchItemScalarWhereInput[]
+    id?: StringFilter<"DistributionDispatchItem"> | string
+    dispatchId?: StringFilter<"DistributionDispatchItem"> | string
+    distributionItemId?: StringFilter<"DistributionDispatchItem"> | string
+    quantity?: IntFilter<"DistributionDispatchItem"> | number
+  }
+
+  export type DistributionInvoiceItemUpsertWithWhereUniqueWithoutDistributionItemInput = {
+    where: DistributionInvoiceItemWhereUniqueInput
+    update: XOR<DistributionInvoiceItemUpdateWithoutDistributionItemInput, DistributionInvoiceItemUncheckedUpdateWithoutDistributionItemInput>
+    create: XOR<DistributionInvoiceItemCreateWithoutDistributionItemInput, DistributionInvoiceItemUncheckedCreateWithoutDistributionItemInput>
+  }
+
+  export type DistributionInvoiceItemUpdateWithWhereUniqueWithoutDistributionItemInput = {
+    where: DistributionInvoiceItemWhereUniqueInput
+    data: XOR<DistributionInvoiceItemUpdateWithoutDistributionItemInput, DistributionInvoiceItemUncheckedUpdateWithoutDistributionItemInput>
+  }
+
+  export type DistributionInvoiceItemUpdateManyWithWhereWithoutDistributionItemInput = {
+    where: DistributionInvoiceItemScalarWhereInput
+    data: XOR<DistributionInvoiceItemUpdateManyMutationInput, DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionItemInput>
+  }
+
+  export type DistributionCreateWithoutRevisionsInput = {
+    id?: string
+    documentNumber: string
+    customerName: string
+    status?: string
+    notes?: string | null
+    revision?: number
+    createdBy: string
+    updatedBy?: string | null
+    approvedBy?: string | null
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    customer: CustomerCreateNestedOneWithoutDistributionsInput
+    items?: DistributionItemCreateNestedManyWithoutDistributionInput
+    dispatches?: DistributionDispatchCreateNestedManyWithoutDistributionInput
+    invoiceItems?: DistributionInvoiceItemCreateNestedManyWithoutDistributionInput
+  }
+
+  export type DistributionUncheckedCreateWithoutRevisionsInput = {
+    id?: string
+    documentNumber: string
+    customerId: string
+    customerName: string
+    status?: string
+    notes?: string | null
+    revision?: number
+    createdBy: string
+    updatedBy?: string | null
+    approvedBy?: string | null
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    items?: DistributionItemUncheckedCreateNestedManyWithoutDistributionInput
+    dispatches?: DistributionDispatchUncheckedCreateNestedManyWithoutDistributionInput
+    invoiceItems?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutDistributionInput
+  }
+
+  export type DistributionCreateOrConnectWithoutRevisionsInput = {
+    where: DistributionWhereUniqueInput
+    create: XOR<DistributionCreateWithoutRevisionsInput, DistributionUncheckedCreateWithoutRevisionsInput>
+  }
+
+  export type DistributionUpsertWithoutRevisionsInput = {
+    update: XOR<DistributionUpdateWithoutRevisionsInput, DistributionUncheckedUpdateWithoutRevisionsInput>
+    create: XOR<DistributionCreateWithoutRevisionsInput, DistributionUncheckedCreateWithoutRevisionsInput>
+    where?: DistributionWhereInput
+  }
+
+  export type DistributionUpdateToOneWithWhereWithoutRevisionsInput = {
+    where?: DistributionWhereInput
+    data: XOR<DistributionUpdateWithoutRevisionsInput, DistributionUncheckedUpdateWithoutRevisionsInput>
+  }
+
+  export type DistributionUpdateWithoutRevisionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customer?: CustomerUpdateOneRequiredWithoutDistributionsNestedInput
+    items?: DistributionItemUpdateManyWithoutDistributionNestedInput
+    dispatches?: DistributionDispatchUpdateManyWithoutDistributionNestedInput
+    invoiceItems?: DistributionInvoiceItemUpdateManyWithoutDistributionNestedInput
+  }
+
+  export type DistributionUncheckedUpdateWithoutRevisionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    items?: DistributionItemUncheckedUpdateManyWithoutDistributionNestedInput
+    dispatches?: DistributionDispatchUncheckedUpdateManyWithoutDistributionNestedInput
+    invoiceItems?: DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionNestedInput
+  }
+
+  export type DistributionCreateWithoutDispatchesInput = {
+    id?: string
+    documentNumber: string
+    customerName: string
+    status?: string
+    notes?: string | null
+    revision?: number
+    createdBy: string
+    updatedBy?: string | null
+    approvedBy?: string | null
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    customer: CustomerCreateNestedOneWithoutDistributionsInput
+    items?: DistributionItemCreateNestedManyWithoutDistributionInput
+    revisions?: DistributionRevisionCreateNestedManyWithoutDistributionInput
+    invoiceItems?: DistributionInvoiceItemCreateNestedManyWithoutDistributionInput
+  }
+
+  export type DistributionUncheckedCreateWithoutDispatchesInput = {
+    id?: string
+    documentNumber: string
+    customerId: string
+    customerName: string
+    status?: string
+    notes?: string | null
+    revision?: number
+    createdBy: string
+    updatedBy?: string | null
+    approvedBy?: string | null
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    items?: DistributionItemUncheckedCreateNestedManyWithoutDistributionInput
+    revisions?: DistributionRevisionUncheckedCreateNestedManyWithoutDistributionInput
+    invoiceItems?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutDistributionInput
+  }
+
+  export type DistributionCreateOrConnectWithoutDispatchesInput = {
+    where: DistributionWhereUniqueInput
+    create: XOR<DistributionCreateWithoutDispatchesInput, DistributionUncheckedCreateWithoutDispatchesInput>
+  }
+
+  export type DistributionDispatchItemCreateWithoutDispatchInput = {
+    id?: string
+    quantity: number
+    distributionItem: DistributionItemCreateNestedOneWithoutDispatchItemsInput
+  }
+
+  export type DistributionDispatchItemUncheckedCreateWithoutDispatchInput = {
+    id?: string
+    distributionItemId: string
+    quantity: number
+  }
+
+  export type DistributionDispatchItemCreateOrConnectWithoutDispatchInput = {
+    where: DistributionDispatchItemWhereUniqueInput
+    create: XOR<DistributionDispatchItemCreateWithoutDispatchInput, DistributionDispatchItemUncheckedCreateWithoutDispatchInput>
+  }
+
+  export type DistributionUpsertWithoutDispatchesInput = {
+    update: XOR<DistributionUpdateWithoutDispatchesInput, DistributionUncheckedUpdateWithoutDispatchesInput>
+    create: XOR<DistributionCreateWithoutDispatchesInput, DistributionUncheckedCreateWithoutDispatchesInput>
+    where?: DistributionWhereInput
+  }
+
+  export type DistributionUpdateToOneWithWhereWithoutDispatchesInput = {
+    where?: DistributionWhereInput
+    data: XOR<DistributionUpdateWithoutDispatchesInput, DistributionUncheckedUpdateWithoutDispatchesInput>
+  }
+
+  export type DistributionUpdateWithoutDispatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customer?: CustomerUpdateOneRequiredWithoutDistributionsNestedInput
+    items?: DistributionItemUpdateManyWithoutDistributionNestedInput
+    revisions?: DistributionRevisionUpdateManyWithoutDistributionNestedInput
+    invoiceItems?: DistributionInvoiceItemUpdateManyWithoutDistributionNestedInput
+  }
+
+  export type DistributionUncheckedUpdateWithoutDispatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    items?: DistributionItemUncheckedUpdateManyWithoutDistributionNestedInput
+    revisions?: DistributionRevisionUncheckedUpdateManyWithoutDistributionNestedInput
+    invoiceItems?: DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionNestedInput
+  }
+
+  export type DistributionDispatchItemUpsertWithWhereUniqueWithoutDispatchInput = {
+    where: DistributionDispatchItemWhereUniqueInput
+    update: XOR<DistributionDispatchItemUpdateWithoutDispatchInput, DistributionDispatchItemUncheckedUpdateWithoutDispatchInput>
+    create: XOR<DistributionDispatchItemCreateWithoutDispatchInput, DistributionDispatchItemUncheckedCreateWithoutDispatchInput>
+  }
+
+  export type DistributionDispatchItemUpdateWithWhereUniqueWithoutDispatchInput = {
+    where: DistributionDispatchItemWhereUniqueInput
+    data: XOR<DistributionDispatchItemUpdateWithoutDispatchInput, DistributionDispatchItemUncheckedUpdateWithoutDispatchInput>
+  }
+
+  export type DistributionDispatchItemUpdateManyWithWhereWithoutDispatchInput = {
+    where: DistributionDispatchItemScalarWhereInput
+    data: XOR<DistributionDispatchItemUpdateManyMutationInput, DistributionDispatchItemUncheckedUpdateManyWithoutDispatchInput>
+  }
+
+  export type DistributionDispatchCreateWithoutItemsInput = {
+    id?: string
+    dispatchNumber: string
+    notes?: string | null
+    createdBy: string
+    dispatchedAt: Date | string
+    createdAt?: Date | string
+    distribution: DistributionCreateNestedOneWithoutDispatchesInput
+  }
+
+  export type DistributionDispatchUncheckedCreateWithoutItemsInput = {
+    id?: string
+    dispatchNumber: string
+    distributionId: string
+    notes?: string | null
+    createdBy: string
+    dispatchedAt: Date | string
+    createdAt?: Date | string
+  }
+
+  export type DistributionDispatchCreateOrConnectWithoutItemsInput = {
+    where: DistributionDispatchWhereUniqueInput
+    create: XOR<DistributionDispatchCreateWithoutItemsInput, DistributionDispatchUncheckedCreateWithoutItemsInput>
+  }
+
+  export type DistributionItemCreateWithoutDispatchItemsInput = {
+    id?: string
+    position: number
+    productLabel: string
+    quantity: number
+    shippedQuantity?: number
+    invoicedQuantity?: number
+    unitPrice: number
+    taxRate: number
+    isCancelled?: boolean
+    distribution: DistributionCreateNestedOneWithoutItemsInput
+    product: ProductCreateNestedOneWithoutDistributionItemsInput
+    invoiceItems?: DistributionInvoiceItemCreateNestedManyWithoutDistributionItemInput
+  }
+
+  export type DistributionItemUncheckedCreateWithoutDispatchItemsInput = {
+    id?: string
+    distributionId: string
+    productId: string
+    position: number
+    productLabel: string
+    quantity: number
+    shippedQuantity?: number
+    invoicedQuantity?: number
+    unitPrice: number
+    taxRate: number
+    isCancelled?: boolean
+    invoiceItems?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutDistributionItemInput
+  }
+
+  export type DistributionItemCreateOrConnectWithoutDispatchItemsInput = {
+    where: DistributionItemWhereUniqueInput
+    create: XOR<DistributionItemCreateWithoutDispatchItemsInput, DistributionItemUncheckedCreateWithoutDispatchItemsInput>
+  }
+
+  export type DistributionDispatchUpsertWithoutItemsInput = {
+    update: XOR<DistributionDispatchUpdateWithoutItemsInput, DistributionDispatchUncheckedUpdateWithoutItemsInput>
+    create: XOR<DistributionDispatchCreateWithoutItemsInput, DistributionDispatchUncheckedCreateWithoutItemsInput>
+    where?: DistributionDispatchWhereInput
+  }
+
+  export type DistributionDispatchUpdateToOneWithWhereWithoutItemsInput = {
+    where?: DistributionDispatchWhereInput
+    data: XOR<DistributionDispatchUpdateWithoutItemsInput, DistributionDispatchUncheckedUpdateWithoutItemsInput>
+  }
+
+  export type DistributionDispatchUpdateWithoutItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dispatchNumber?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    dispatchedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    distribution?: DistributionUpdateOneRequiredWithoutDispatchesNestedInput
+  }
+
+  export type DistributionDispatchUncheckedUpdateWithoutItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dispatchNumber?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    dispatchedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionItemUpsertWithoutDispatchItemsInput = {
+    update: XOR<DistributionItemUpdateWithoutDispatchItemsInput, DistributionItemUncheckedUpdateWithoutDispatchItemsInput>
+    create: XOR<DistributionItemCreateWithoutDispatchItemsInput, DistributionItemUncheckedCreateWithoutDispatchItemsInput>
+    where?: DistributionItemWhereInput
+  }
+
+  export type DistributionItemUpdateToOneWithWhereWithoutDispatchItemsInput = {
+    where?: DistributionItemWhereInput
+    data: XOR<DistributionItemUpdateWithoutDispatchItemsInput, DistributionItemUncheckedUpdateWithoutDispatchItemsInput>
+  }
+
+  export type DistributionItemUpdateWithoutDispatchItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    position?: IntFieldUpdateOperationsInput | number
+    productLabel?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    shippedQuantity?: IntFieldUpdateOperationsInput | number
+    invoicedQuantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    distribution?: DistributionUpdateOneRequiredWithoutItemsNestedInput
+    product?: ProductUpdateOneRequiredWithoutDistributionItemsNestedInput
+    invoiceItems?: DistributionInvoiceItemUpdateManyWithoutDistributionItemNestedInput
+  }
+
+  export type DistributionItemUncheckedUpdateWithoutDispatchItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    productId?: StringFieldUpdateOperationsInput | string
+    position?: IntFieldUpdateOperationsInput | number
+    productLabel?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    shippedQuantity?: IntFieldUpdateOperationsInput | number
+    invoicedQuantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    invoiceItems?: DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionItemNestedInput
+  }
+
+  export type OrderCreateWithoutDistributionInvoiceInput = {
+    id?: string
+    invoiceNumber: string
+    isQuotation?: boolean
+    customerName?: string | null
+    totalAmount: number
+    taxAmount: number
+    netAmount: number
+    qrCode?: string | null
+    siteReceiptNumber?: string | null
+    receiverName?: string | null
+    purchaseOrderNumber?: string | null
+    invoiceType?: string
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    customer?: CustomerCreateNestedOneWithoutOrdersInput
+    user: UserCreateNestedOneWithoutOrdersInput
+    items?: OrderItemCreateNestedManyWithoutOrderInput
+    orderReturns?: OrderReturnCreateNestedManyWithoutOrderInput
+  }
+
+  export type OrderUncheckedCreateWithoutDistributionInvoiceInput = {
+    id?: string
+    invoiceNumber: string
+    isQuotation?: boolean
+    customerName?: string | null
+    customerId?: string | null
+    totalAmount: number
+    taxAmount: number
+    netAmount: number
+    qrCode?: string | null
+    siteReceiptNumber?: string | null
+    receiverName?: string | null
+    purchaseOrderNumber?: string | null
+    invoiceType?: string
+    status?: string
+    userId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
+    orderReturns?: OrderReturnUncheckedCreateNestedManyWithoutOrderInput
+  }
+
+  export type OrderCreateOrConnectWithoutDistributionInvoiceInput = {
+    where: OrderWhereUniqueInput
+    create: XOR<OrderCreateWithoutDistributionInvoiceInput, OrderUncheckedCreateWithoutDistributionInvoiceInput>
+  }
+
+  export type DistributionInvoiceItemCreateWithoutInvoiceInput = {
+    id?: string
+    quantity: number
+    distribution: DistributionCreateNestedOneWithoutInvoiceItemsInput
+    distributionItem: DistributionItemCreateNestedOneWithoutInvoiceItemsInput
+    orderItem: OrderItemCreateNestedOneWithoutDistributionInvoiceItemsInput
+  }
+
+  export type DistributionInvoiceItemUncheckedCreateWithoutInvoiceInput = {
+    id?: string
+    distributionId: string
+    distributionItemId: string
+    orderItemId: string
+    quantity: number
+  }
+
+  export type DistributionInvoiceItemCreateOrConnectWithoutInvoiceInput = {
+    where: DistributionInvoiceItemWhereUniqueInput
+    create: XOR<DistributionInvoiceItemCreateWithoutInvoiceInput, DistributionInvoiceItemUncheckedCreateWithoutInvoiceInput>
+  }
+
+  export type OrderUpsertWithoutDistributionInvoiceInput = {
+    update: XOR<OrderUpdateWithoutDistributionInvoiceInput, OrderUncheckedUpdateWithoutDistributionInvoiceInput>
+    create: XOR<OrderCreateWithoutDistributionInvoiceInput, OrderUncheckedCreateWithoutDistributionInvoiceInput>
+    where?: OrderWhereInput
+  }
+
+  export type OrderUpdateToOneWithWhereWithoutDistributionInvoiceInput = {
+    where?: OrderWhereInput
+    data: XOR<OrderUpdateWithoutDistributionInvoiceInput, OrderUncheckedUpdateWithoutDistributionInvoiceInput>
+  }
+
+  export type OrderUpdateWithoutDistributionInvoiceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    isQuotation?: BoolFieldUpdateOperationsInput | boolean
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    totalAmount?: FloatFieldUpdateOperationsInput | number
+    taxAmount?: FloatFieldUpdateOperationsInput | number
+    netAmount?: FloatFieldUpdateOperationsInput | number
+    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
+    siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceType?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customer?: CustomerUpdateOneWithoutOrdersNestedInput
+    user?: UserUpdateOneRequiredWithoutOrdersNestedInput
+    items?: OrderItemUpdateManyWithoutOrderNestedInput
+    orderReturns?: OrderReturnUpdateManyWithoutOrderNestedInput
+  }
+
+  export type OrderUncheckedUpdateWithoutDistributionInvoiceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    isQuotation?: BoolFieldUpdateOperationsInput | boolean
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    totalAmount?: FloatFieldUpdateOperationsInput | number
+    taxAmount?: FloatFieldUpdateOperationsInput | number
+    netAmount?: FloatFieldUpdateOperationsInput | number
+    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
+    siteReceiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverName?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseOrderNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceType?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
+    orderReturns?: OrderReturnUncheckedUpdateManyWithoutOrderNestedInput
+  }
+
+  export type DistributionInvoiceItemUpsertWithWhereUniqueWithoutInvoiceInput = {
+    where: DistributionInvoiceItemWhereUniqueInput
+    update: XOR<DistributionInvoiceItemUpdateWithoutInvoiceInput, DistributionInvoiceItemUncheckedUpdateWithoutInvoiceInput>
+    create: XOR<DistributionInvoiceItemCreateWithoutInvoiceInput, DistributionInvoiceItemUncheckedCreateWithoutInvoiceInput>
+  }
+
+  export type DistributionInvoiceItemUpdateWithWhereUniqueWithoutInvoiceInput = {
+    where: DistributionInvoiceItemWhereUniqueInput
+    data: XOR<DistributionInvoiceItemUpdateWithoutInvoiceInput, DistributionInvoiceItemUncheckedUpdateWithoutInvoiceInput>
+  }
+
+  export type DistributionInvoiceItemUpdateManyWithWhereWithoutInvoiceInput = {
+    where: DistributionInvoiceItemScalarWhereInput
+    data: XOR<DistributionInvoiceItemUpdateManyMutationInput, DistributionInvoiceItemUncheckedUpdateManyWithoutInvoiceInput>
+  }
+
+  export type DistributionInvoiceCreateWithoutItemsInput = {
+    id?: string
+    requestId: string
+    requestSnapshot: string
+    customerId: string
+    customerName: string
+    createdBy: string
+    createdAt?: Date | string
+    order: OrderCreateNestedOneWithoutDistributionInvoiceInput
+  }
+
+  export type DistributionInvoiceUncheckedCreateWithoutItemsInput = {
+    id?: string
+    requestId: string
+    requestSnapshot: string
+    orderId: string
+    customerId: string
+    customerName: string
+    createdBy: string
+    createdAt?: Date | string
+  }
+
+  export type DistributionInvoiceCreateOrConnectWithoutItemsInput = {
+    where: DistributionInvoiceWhereUniqueInput
+    create: XOR<DistributionInvoiceCreateWithoutItemsInput, DistributionInvoiceUncheckedCreateWithoutItemsInput>
+  }
+
+  export type DistributionCreateWithoutInvoiceItemsInput = {
+    id?: string
+    documentNumber: string
+    customerName: string
+    status?: string
+    notes?: string | null
+    revision?: number
+    createdBy: string
+    updatedBy?: string | null
+    approvedBy?: string | null
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    customer: CustomerCreateNestedOneWithoutDistributionsInput
+    items?: DistributionItemCreateNestedManyWithoutDistributionInput
+    revisions?: DistributionRevisionCreateNestedManyWithoutDistributionInput
+    dispatches?: DistributionDispatchCreateNestedManyWithoutDistributionInput
+  }
+
+  export type DistributionUncheckedCreateWithoutInvoiceItemsInput = {
+    id?: string
+    documentNumber: string
+    customerId: string
+    customerName: string
+    status?: string
+    notes?: string | null
+    revision?: number
+    createdBy: string
+    updatedBy?: string | null
+    approvedBy?: string | null
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    items?: DistributionItemUncheckedCreateNestedManyWithoutDistributionInput
+    revisions?: DistributionRevisionUncheckedCreateNestedManyWithoutDistributionInput
+    dispatches?: DistributionDispatchUncheckedCreateNestedManyWithoutDistributionInput
+  }
+
+  export type DistributionCreateOrConnectWithoutInvoiceItemsInput = {
+    where: DistributionWhereUniqueInput
+    create: XOR<DistributionCreateWithoutInvoiceItemsInput, DistributionUncheckedCreateWithoutInvoiceItemsInput>
+  }
+
+  export type DistributionItemCreateWithoutInvoiceItemsInput = {
+    id?: string
+    position: number
+    productLabel: string
+    quantity: number
+    shippedQuantity?: number
+    invoicedQuantity?: number
+    unitPrice: number
+    taxRate: number
+    isCancelled?: boolean
+    distribution: DistributionCreateNestedOneWithoutItemsInput
+    product: ProductCreateNestedOneWithoutDistributionItemsInput
+    dispatchItems?: DistributionDispatchItemCreateNestedManyWithoutDistributionItemInput
+  }
+
+  export type DistributionItemUncheckedCreateWithoutInvoiceItemsInput = {
+    id?: string
+    distributionId: string
+    productId: string
+    position: number
+    productLabel: string
+    quantity: number
+    shippedQuantity?: number
+    invoicedQuantity?: number
+    unitPrice: number
+    taxRate: number
+    isCancelled?: boolean
+    dispatchItems?: DistributionDispatchItemUncheckedCreateNestedManyWithoutDistributionItemInput
+  }
+
+  export type DistributionItemCreateOrConnectWithoutInvoiceItemsInput = {
+    where: DistributionItemWhereUniqueInput
+    create: XOR<DistributionItemCreateWithoutInvoiceItemsInput, DistributionItemUncheckedCreateWithoutInvoiceItemsInput>
+  }
+
+  export type OrderItemCreateWithoutDistributionInvoiceItemsInput = {
+    id?: string
+    position?: number | null
+    quantity: number
+    unitPrice: number
+    taxAmount: number
+    total: number
+    order: OrderCreateNestedOneWithoutItemsInput
+    product: ProductCreateNestedOneWithoutOrderItemsInput
+    returnItems?: OrderReturnItemCreateNestedManyWithoutOrderItemInput
+  }
+
+  export type OrderItemUncheckedCreateWithoutDistributionInvoiceItemsInput = {
+    id?: string
+    orderId: string
+    productId: string
+    position?: number | null
+    quantity: number
+    unitPrice: number
+    taxAmount: number
+    total: number
+    returnItems?: OrderReturnItemUncheckedCreateNestedManyWithoutOrderItemInput
+  }
+
+  export type OrderItemCreateOrConnectWithoutDistributionInvoiceItemsInput = {
+    where: OrderItemWhereUniqueInput
+    create: XOR<OrderItemCreateWithoutDistributionInvoiceItemsInput, OrderItemUncheckedCreateWithoutDistributionInvoiceItemsInput>
+  }
+
+  export type DistributionInvoiceUpsertWithoutItemsInput = {
+    update: XOR<DistributionInvoiceUpdateWithoutItemsInput, DistributionInvoiceUncheckedUpdateWithoutItemsInput>
+    create: XOR<DistributionInvoiceCreateWithoutItemsInput, DistributionInvoiceUncheckedCreateWithoutItemsInput>
+    where?: DistributionInvoiceWhereInput
+  }
+
+  export type DistributionInvoiceUpdateToOneWithWhereWithoutItemsInput = {
+    where?: DistributionInvoiceWhereInput
+    data: XOR<DistributionInvoiceUpdateWithoutItemsInput, DistributionInvoiceUncheckedUpdateWithoutItemsInput>
+  }
+
+  export type DistributionInvoiceUpdateWithoutItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestId?: StringFieldUpdateOperationsInput | string
+    requestSnapshot?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    order?: OrderUpdateOneRequiredWithoutDistributionInvoiceNestedInput
+  }
+
+  export type DistributionInvoiceUncheckedUpdateWithoutItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestId?: StringFieldUpdateOperationsInput | string
+    requestSnapshot?: StringFieldUpdateOperationsInput | string
+    orderId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionUpsertWithoutInvoiceItemsInput = {
+    update: XOR<DistributionUpdateWithoutInvoiceItemsInput, DistributionUncheckedUpdateWithoutInvoiceItemsInput>
+    create: XOR<DistributionCreateWithoutInvoiceItemsInput, DistributionUncheckedCreateWithoutInvoiceItemsInput>
+    where?: DistributionWhereInput
+  }
+
+  export type DistributionUpdateToOneWithWhereWithoutInvoiceItemsInput = {
+    where?: DistributionWhereInput
+    data: XOR<DistributionUpdateWithoutInvoiceItemsInput, DistributionUncheckedUpdateWithoutInvoiceItemsInput>
+  }
+
+  export type DistributionUpdateWithoutInvoiceItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customer?: CustomerUpdateOneRequiredWithoutDistributionsNestedInput
+    items?: DistributionItemUpdateManyWithoutDistributionNestedInput
+    revisions?: DistributionRevisionUpdateManyWithoutDistributionNestedInput
+    dispatches?: DistributionDispatchUpdateManyWithoutDistributionNestedInput
+  }
+
+  export type DistributionUncheckedUpdateWithoutInvoiceItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    items?: DistributionItemUncheckedUpdateManyWithoutDistributionNestedInput
+    revisions?: DistributionRevisionUncheckedUpdateManyWithoutDistributionNestedInput
+    dispatches?: DistributionDispatchUncheckedUpdateManyWithoutDistributionNestedInput
+  }
+
+  export type DistributionItemUpsertWithoutInvoiceItemsInput = {
+    update: XOR<DistributionItemUpdateWithoutInvoiceItemsInput, DistributionItemUncheckedUpdateWithoutInvoiceItemsInput>
+    create: XOR<DistributionItemCreateWithoutInvoiceItemsInput, DistributionItemUncheckedCreateWithoutInvoiceItemsInput>
+    where?: DistributionItemWhereInput
+  }
+
+  export type DistributionItemUpdateToOneWithWhereWithoutInvoiceItemsInput = {
+    where?: DistributionItemWhereInput
+    data: XOR<DistributionItemUpdateWithoutInvoiceItemsInput, DistributionItemUncheckedUpdateWithoutInvoiceItemsInput>
+  }
+
+  export type DistributionItemUpdateWithoutInvoiceItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    position?: IntFieldUpdateOperationsInput | number
+    productLabel?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    shippedQuantity?: IntFieldUpdateOperationsInput | number
+    invoicedQuantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    distribution?: DistributionUpdateOneRequiredWithoutItemsNestedInput
+    product?: ProductUpdateOneRequiredWithoutDistributionItemsNestedInput
+    dispatchItems?: DistributionDispatchItemUpdateManyWithoutDistributionItemNestedInput
+  }
+
+  export type DistributionItemUncheckedUpdateWithoutInvoiceItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    productId?: StringFieldUpdateOperationsInput | string
+    position?: IntFieldUpdateOperationsInput | number
+    productLabel?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    shippedQuantity?: IntFieldUpdateOperationsInput | number
+    invoicedQuantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    dispatchItems?: DistributionDispatchItemUncheckedUpdateManyWithoutDistributionItemNestedInput
+  }
+
+  export type OrderItemUpsertWithoutDistributionInvoiceItemsInput = {
+    update: XOR<OrderItemUpdateWithoutDistributionInvoiceItemsInput, OrderItemUncheckedUpdateWithoutDistributionInvoiceItemsInput>
+    create: XOR<OrderItemCreateWithoutDistributionInvoiceItemsInput, OrderItemUncheckedCreateWithoutDistributionInvoiceItemsInput>
+    where?: OrderItemWhereInput
+  }
+
+  export type OrderItemUpdateToOneWithWhereWithoutDistributionInvoiceItemsInput = {
+    where?: OrderItemWhereInput
+    data: XOR<OrderItemUpdateWithoutDistributionInvoiceItemsInput, OrderItemUncheckedUpdateWithoutDistributionInvoiceItemsInput>
+  }
+
+  export type OrderItemUpdateWithoutDistributionInvoiceItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    position?: NullableIntFieldUpdateOperationsInput | number | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxAmount?: FloatFieldUpdateOperationsInput | number
+    total?: FloatFieldUpdateOperationsInput | number
+    order?: OrderUpdateOneRequiredWithoutItemsNestedInput
+    product?: ProductUpdateOneRequiredWithoutOrderItemsNestedInput
+    returnItems?: OrderReturnItemUpdateManyWithoutOrderItemNestedInput
+  }
+
+  export type OrderItemUncheckedUpdateWithoutDistributionInvoiceItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    orderId?: StringFieldUpdateOperationsInput | string
+    productId?: StringFieldUpdateOperationsInput | string
+    position?: NullableIntFieldUpdateOperationsInput | number | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxAmount?: FloatFieldUpdateOperationsInput | number
+    total?: FloatFieldUpdateOperationsInput | number
+    returnItems?: OrderReturnItemUncheckedUpdateManyWithoutOrderItemNestedInput
   }
 
   export type OrderCreateWithoutOrderReturnsInput = {
@@ -39052,6 +50796,7 @@ export namespace Prisma {
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     user: UserCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
+    distributionInvoice?: DistributionInvoiceCreateNestedOneWithoutOrderInput
   }
 
   export type OrderUncheckedCreateWithoutOrderReturnsInput = {
@@ -39073,6 +50818,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
+    distributionInvoice?: DistributionInvoiceUncheckedCreateNestedOneWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutOrderReturnsInput = {
@@ -39098,6 +50844,7 @@ export namespace Prisma {
     discounts?: AccountDiscountCreateNestedManyWithoutCustomerInput
     customPrices?: CustomerPriceCreateNestedManyWithoutCustomerInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutCustomerInput
+    distributions?: DistributionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutOrderReturnsInput = {
@@ -39118,6 +50865,7 @@ export namespace Prisma {
     discounts?: AccountDiscountUncheckedCreateNestedManyWithoutCustomerInput
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutCustomerInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutCustomerInput
+    distributions?: DistributionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutOrderReturnsInput = {
@@ -39236,6 +50984,7 @@ export namespace Prisma {
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
+    distributionInvoice?: DistributionInvoiceUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateWithoutOrderReturnsInput = {
@@ -39257,6 +51006,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
+    distributionInvoice?: DistributionInvoiceUncheckedUpdateOneWithoutOrderNestedInput
   }
 
   export type CustomerUpsertWithoutOrderReturnsInput = {
@@ -39288,6 +51038,7 @@ export namespace Prisma {
     discounts?: AccountDiscountUpdateManyWithoutCustomerNestedInput
     customPrices?: CustomerPriceUpdateManyWithoutCustomerNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutCustomerNestedInput
+    distributions?: DistributionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutOrderReturnsInput = {
@@ -39308,6 +51059,7 @@ export namespace Prisma {
     discounts?: AccountDiscountUncheckedUpdateManyWithoutCustomerNestedInput
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutCustomerNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutCustomerNestedInput
+    distributions?: DistributionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type UserUpsertWithoutOrderReturnsInput = {
@@ -39442,6 +51194,7 @@ export namespace Prisma {
     total: number
     order: OrderCreateNestedOneWithoutItemsInput
     product: ProductCreateNestedOneWithoutOrderItemsInput
+    distributionInvoiceItems?: DistributionInvoiceItemCreateNestedManyWithoutOrderItemInput
   }
 
   export type OrderItemUncheckedCreateWithoutReturnItemsInput = {
@@ -39453,6 +51206,7 @@ export namespace Prisma {
     unitPrice: number
     taxAmount: number
     total: number
+    distributionInvoiceItems?: DistributionInvoiceItemUncheckedCreateNestedManyWithoutOrderItemInput
   }
 
   export type OrderItemCreateOrConnectWithoutReturnItemsInput = {
@@ -39477,6 +51231,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     imageUrl?: string | null
@@ -39488,6 +51243,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
 
@@ -39508,6 +51264,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     supplierId?: string | null
@@ -39520,6 +51277,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutOrderReturnItemsInput = {
@@ -39592,6 +51350,7 @@ export namespace Prisma {
     total?: FloatFieldUpdateOperationsInput | number
     order?: OrderUpdateOneRequiredWithoutItemsNestedInput
     product?: ProductUpdateOneRequiredWithoutOrderItemsNestedInput
+    distributionInvoiceItems?: DistributionInvoiceItemUpdateManyWithoutOrderItemNestedInput
   }
 
   export type OrderItemUncheckedUpdateWithoutReturnItemsInput = {
@@ -39603,6 +51362,7 @@ export namespace Prisma {
     unitPrice?: FloatFieldUpdateOperationsInput | number
     taxAmount?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
+    distributionInvoiceItems?: DistributionInvoiceItemUncheckedUpdateManyWithoutOrderItemNestedInput
   }
 
   export type ProductUpsertWithoutOrderReturnItemsInput = {
@@ -39633,6 +51393,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39644,6 +51405,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
 
@@ -39664,6 +51426,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     supplierId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39676,6 +51439,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type ExpensePaymentCreateWithoutBankInput = {
@@ -39958,6 +51722,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     imageUrl?: string | null
@@ -39969,6 +51734,7 @@ export namespace Prisma {
     customPrices?: CustomerPriceCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
 
@@ -39989,6 +51755,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     supplierId?: string | null
@@ -40001,6 +51768,7 @@ export namespace Prisma {
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutProductInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutSupplierPricesInput = {
@@ -40081,6 +51849,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -40092,6 +51861,7 @@ export namespace Prisma {
     customPrices?: CustomerPriceUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
 
@@ -40112,6 +51882,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     supplierId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -40124,6 +51895,7 @@ export namespace Prisma {
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutProductNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type CustomerCreateWithoutCeilingQuotasInput = {
@@ -40144,6 +51916,7 @@ export namespace Prisma {
     payments?: PaymentCreateNestedManyWithoutCustomerInput
     discounts?: AccountDiscountCreateNestedManyWithoutCustomerInput
     customPrices?: CustomerPriceCreateNestedManyWithoutCustomerInput
+    distributions?: DistributionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutCeilingQuotasInput = {
@@ -40164,6 +51937,7 @@ export namespace Prisma {
     payments?: PaymentUncheckedCreateNestedManyWithoutCustomerInput
     discounts?: AccountDiscountUncheckedCreateNestedManyWithoutCustomerInput
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutCustomerInput
+    distributions?: DistributionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutCeilingQuotasInput = {
@@ -40188,6 +51962,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     imageUrl?: string | null
@@ -40199,6 +51974,7 @@ export namespace Prisma {
     customPrices?: CustomerPriceCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
 
@@ -40219,6 +51995,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     supplierId?: string | null
@@ -40231,6 +52008,7 @@ export namespace Prisma {
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutCeilingQuotasInput = {
@@ -40267,6 +52045,7 @@ export namespace Prisma {
     payments?: PaymentUpdateManyWithoutCustomerNestedInput
     discounts?: AccountDiscountUpdateManyWithoutCustomerNestedInput
     customPrices?: CustomerPriceUpdateManyWithoutCustomerNestedInput
+    distributions?: DistributionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutCeilingQuotasInput = {
@@ -40287,6 +52066,7 @@ export namespace Prisma {
     payments?: PaymentUncheckedUpdateManyWithoutCustomerNestedInput
     discounts?: AccountDiscountUncheckedUpdateManyWithoutCustomerNestedInput
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutCustomerNestedInput
+    distributions?: DistributionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type ProductUpsertWithoutCeilingQuotasInput = {
@@ -40317,6 +52097,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -40328,6 +52109,7 @@ export namespace Prisma {
     customPrices?: CustomerPriceUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
 
@@ -40348,6 +52130,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     supplierId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -40360,6 +52143,7 @@ export namespace Prisma {
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type BankCreateWithoutPaymentsInput = {
@@ -40409,6 +52193,7 @@ export namespace Prisma {
     discounts?: AccountDiscountCreateNestedManyWithoutCustomerInput
     customPrices?: CustomerPriceCreateNestedManyWithoutCustomerInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutCustomerInput
+    distributions?: DistributionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutPaymentsInput = {
@@ -40429,6 +52214,7 @@ export namespace Prisma {
     discounts?: AccountDiscountUncheckedCreateNestedManyWithoutCustomerInput
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutCustomerInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutCustomerInput
+    distributions?: DistributionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutPaymentsInput = {
@@ -40500,6 +52286,7 @@ export namespace Prisma {
     discounts?: AccountDiscountUpdateManyWithoutCustomerNestedInput
     customPrices?: CustomerPriceUpdateManyWithoutCustomerNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutCustomerNestedInput
+    distributions?: DistributionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutPaymentsInput = {
@@ -40520,6 +52307,7 @@ export namespace Prisma {
     discounts?: AccountDiscountUncheckedUpdateManyWithoutCustomerNestedInput
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutCustomerNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutCustomerNestedInput
+    distributions?: DistributionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type ExpensePaymentCreateWithoutSupplierInput = {
@@ -40601,6 +52389,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     imageUrl?: string | null
@@ -40613,6 +52402,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemCreateNestedManyWithoutProductInput
   }
 
   export type ProductUncheckedCreateWithoutSupplierInput = {
@@ -40632,6 +52422,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     imageUrl?: string | null
@@ -40644,6 +52435,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutSupplierInput = {
@@ -40788,6 +52580,7 @@ export namespace Prisma {
     price?: FloatFilter<"Product"> | number
     taxRate?: FloatFilter<"Product"> | number
     stockQty?: IntFilter<"Product"> | number
+    reservedQty?: IntFilter<"Product"> | number
     minStockQty?: IntFilter<"Product"> | number
     maxStockQty?: IntFilter<"Product"> | number
     supplierId?: StringNullableFilter<"Product"> | string | null
@@ -40846,6 +52639,7 @@ export namespace Prisma {
     payments?: PaymentCreateNestedManyWithoutCustomerInput
     customPrices?: CustomerPriceCreateNestedManyWithoutCustomerInput
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutCustomerInput
+    distributions?: DistributionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutDiscountsInput = {
@@ -40866,6 +52660,7 @@ export namespace Prisma {
     payments?: PaymentUncheckedCreateNestedManyWithoutCustomerInput
     customPrices?: CustomerPriceUncheckedCreateNestedManyWithoutCustomerInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutCustomerInput
+    distributions?: DistributionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutDiscountsInput = {
@@ -40941,6 +52736,7 @@ export namespace Prisma {
     payments?: PaymentUpdateManyWithoutCustomerNestedInput
     customPrices?: CustomerPriceUpdateManyWithoutCustomerNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutCustomerNestedInput
+    distributions?: DistributionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutDiscountsInput = {
@@ -40961,6 +52757,7 @@ export namespace Prisma {
     payments?: PaymentUncheckedUpdateManyWithoutCustomerNestedInput
     customPrices?: CustomerPriceUncheckedUpdateManyWithoutCustomerNestedInput
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutCustomerNestedInput
+    distributions?: DistributionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type SupplierUpsertWithoutDiscountsInput = {
@@ -41148,6 +52945,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     imageUrl?: string | null
@@ -41159,6 +52957,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemCreateNestedManyWithoutProductInput
     supplier?: SupplierCreateNestedOneWithoutProductsInput
   }
 
@@ -41179,6 +52978,7 @@ export namespace Prisma {
     price: number
     taxRate?: number
     stockQty?: number
+    reservedQty?: number
     minStockQty?: number
     maxStockQty?: number
     supplierId?: string | null
@@ -41191,6 +52991,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUncheckedCreateNestedManyWithoutProductInput
     supplierPrices?: SupplierPriceUncheckedCreateNestedManyWithoutProductInput
     stocktakeItems?: StocktakeItemUncheckedCreateNestedManyWithoutProductInput
+    distributionItems?: DistributionItemUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutPurchaseItemsInput = {
@@ -41259,6 +53060,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41270,6 +53072,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUpdateManyWithoutProductNestedInput
     supplier?: SupplierUpdateOneWithoutProductsNestedInput
   }
 
@@ -41290,6 +53093,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     supplierId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41302,6 +53106,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type PurchaseOrderUpsertWithoutItemsInput = {
@@ -41663,6 +53468,7 @@ export namespace Prisma {
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     orderReturns?: OrderReturnUpdateManyWithoutOrderNestedInput
+    distributionInvoice?: DistributionInvoiceUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateWithoutUserInput = {
@@ -41684,6 +53490,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     orderReturns?: OrderReturnUncheckedUpdateManyWithoutOrderNestedInput
+    distributionInvoice?: DistributionInvoiceUncheckedUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutUserInput = {
@@ -41764,6 +53571,7 @@ export namespace Prisma {
     total?: FloatFieldUpdateOperationsInput | number
     order?: OrderUpdateOneRequiredWithoutItemsNestedInput
     returnItems?: OrderReturnItemUpdateManyWithoutOrderItemNestedInput
+    distributionInvoiceItems?: DistributionInvoiceItemUpdateManyWithoutOrderItemNestedInput
   }
 
   export type OrderItemUncheckedUpdateWithoutProductInput = {
@@ -41775,6 +53583,7 @@ export namespace Prisma {
     taxAmount?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
     returnItems?: OrderReturnItemUncheckedUpdateManyWithoutOrderItemNestedInput
+    distributionInvoiceItems?: DistributionInvoiceItemUncheckedUpdateManyWithoutOrderItemNestedInput
   }
 
   export type OrderItemUncheckedUpdateManyWithoutProductInput = {
@@ -41958,6 +53767,49 @@ export namespace Prisma {
     unitCost?: NullableFloatFieldUpdateOperationsInput | number | null
   }
 
+  export type DistributionItemUpdateWithoutProductInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    position?: IntFieldUpdateOperationsInput | number
+    productLabel?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    shippedQuantity?: IntFieldUpdateOperationsInput | number
+    invoicedQuantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    distribution?: DistributionUpdateOneRequiredWithoutItemsNestedInput
+    dispatchItems?: DistributionDispatchItemUpdateManyWithoutDistributionItemNestedInput
+    invoiceItems?: DistributionInvoiceItemUpdateManyWithoutDistributionItemNestedInput
+  }
+
+  export type DistributionItemUncheckedUpdateWithoutProductInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    position?: IntFieldUpdateOperationsInput | number
+    productLabel?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    shippedQuantity?: IntFieldUpdateOperationsInput | number
+    invoicedQuantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    dispatchItems?: DistributionDispatchItemUncheckedUpdateManyWithoutDistributionItemNestedInput
+    invoiceItems?: DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionItemNestedInput
+  }
+
+  export type DistributionItemUncheckedUpdateManyWithoutProductInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    position?: IntFieldUpdateOperationsInput | number
+    productLabel?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    shippedQuantity?: IntFieldUpdateOperationsInput | number
+    invoicedQuantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+  }
+
   export type StocktakeItemUpdateWithoutStocktakeInput = {
     id?: StringFieldUpdateOperationsInput | string
     position?: IntFieldUpdateOperationsInput | number
@@ -41997,6 +53849,7 @@ export namespace Prisma {
     total?: FloatFieldUpdateOperationsInput | number
     product?: ProductUpdateOneRequiredWithoutOrderItemsNestedInput
     returnItems?: OrderReturnItemUpdateManyWithoutOrderItemNestedInput
+    distributionInvoiceItems?: DistributionInvoiceItemUpdateManyWithoutOrderItemNestedInput
   }
 
   export type OrderItemUncheckedUpdateWithoutOrderInput = {
@@ -42008,6 +53861,7 @@ export namespace Prisma {
     taxAmount?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
     returnItems?: OrderReturnItemUncheckedUpdateManyWithoutOrderItemNestedInput
+    distributionInvoiceItems?: DistributionInvoiceItemUncheckedUpdateManyWithoutOrderItemNestedInput
   }
 
   export type OrderItemUncheckedUpdateManyWithoutOrderInput = {
@@ -42089,6 +53943,7 @@ export namespace Prisma {
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     orderReturns?: OrderReturnUpdateManyWithoutOrderNestedInput
+    distributionInvoice?: DistributionInvoiceUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateWithoutCustomerInput = {
@@ -42110,6 +53965,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     orderReturns?: OrderReturnUncheckedUpdateManyWithoutOrderNestedInput
+    distributionInvoice?: DistributionInvoiceUncheckedUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutCustomerInput = {
@@ -42319,6 +54175,59 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type DistributionUpdateWithoutCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    items?: DistributionItemUpdateManyWithoutDistributionNestedInput
+    revisions?: DistributionRevisionUpdateManyWithoutDistributionNestedInput
+    dispatches?: DistributionDispatchUpdateManyWithoutDistributionNestedInput
+    invoiceItems?: DistributionInvoiceItemUpdateManyWithoutDistributionNestedInput
+  }
+
+  export type DistributionUncheckedUpdateWithoutCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    items?: DistributionItemUncheckedUpdateManyWithoutDistributionNestedInput
+    revisions?: DistributionRevisionUncheckedUpdateManyWithoutDistributionNestedInput
+    dispatches?: DistributionDispatchUncheckedUpdateManyWithoutDistributionNestedInput
+    invoiceItems?: DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionNestedInput
+  }
+
+  export type DistributionUncheckedUpdateManyWithoutCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentNumber?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    revision?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type OrderReturnItemUpdateWithoutOrderItemInput = {
     id?: StringFieldUpdateOperationsInput | string
     quantity?: IntFieldUpdateOperationsInput | number
@@ -42347,6 +54256,240 @@ export namespace Prisma {
     unitPrice?: FloatFieldUpdateOperationsInput | number
     taxAmount?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionInvoiceItemUpdateWithoutOrderItemInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    invoice?: DistributionInvoiceUpdateOneRequiredWithoutItemsNestedInput
+    distribution?: DistributionUpdateOneRequiredWithoutInvoiceItemsNestedInput
+    distributionItem?: DistributionItemUpdateOneRequiredWithoutInvoiceItemsNestedInput
+  }
+
+  export type DistributionInvoiceItemUncheckedUpdateWithoutOrderItemInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionInvoiceId?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    distributionItemId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionInvoiceItemUncheckedUpdateManyWithoutOrderItemInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionInvoiceId?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    distributionItemId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionItemUpdateWithoutDistributionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    position?: IntFieldUpdateOperationsInput | number
+    productLabel?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    shippedQuantity?: IntFieldUpdateOperationsInput | number
+    invoicedQuantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    product?: ProductUpdateOneRequiredWithoutDistributionItemsNestedInput
+    dispatchItems?: DistributionDispatchItemUpdateManyWithoutDistributionItemNestedInput
+    invoiceItems?: DistributionInvoiceItemUpdateManyWithoutDistributionItemNestedInput
+  }
+
+  export type DistributionItemUncheckedUpdateWithoutDistributionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    productId?: StringFieldUpdateOperationsInput | string
+    position?: IntFieldUpdateOperationsInput | number
+    productLabel?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    shippedQuantity?: IntFieldUpdateOperationsInput | number
+    invoicedQuantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    dispatchItems?: DistributionDispatchItemUncheckedUpdateManyWithoutDistributionItemNestedInput
+    invoiceItems?: DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionItemNestedInput
+  }
+
+  export type DistributionItemUncheckedUpdateManyWithoutDistributionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    productId?: StringFieldUpdateOperationsInput | string
+    position?: IntFieldUpdateOperationsInput | number
+    productLabel?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    shippedQuantity?: IntFieldUpdateOperationsInput | number
+    invoicedQuantity?: IntFieldUpdateOperationsInput | number
+    unitPrice?: FloatFieldUpdateOperationsInput | number
+    taxRate?: FloatFieldUpdateOperationsInput | number
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type DistributionRevisionUpdateWithoutDistributionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    revision?: IntFieldUpdateOperationsInput | number
+    action?: StringFieldUpdateOperationsInput | string
+    performedBy?: StringFieldUpdateOperationsInput | string
+    beforeSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
+    afterSnapshot?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionRevisionUncheckedUpdateWithoutDistributionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    revision?: IntFieldUpdateOperationsInput | number
+    action?: StringFieldUpdateOperationsInput | string
+    performedBy?: StringFieldUpdateOperationsInput | string
+    beforeSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
+    afterSnapshot?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionRevisionUncheckedUpdateManyWithoutDistributionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    revision?: IntFieldUpdateOperationsInput | number
+    action?: StringFieldUpdateOperationsInput | string
+    performedBy?: StringFieldUpdateOperationsInput | string
+    beforeSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
+    afterSnapshot?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionDispatchUpdateWithoutDistributionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dispatchNumber?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    dispatchedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    items?: DistributionDispatchItemUpdateManyWithoutDispatchNestedInput
+  }
+
+  export type DistributionDispatchUncheckedUpdateWithoutDistributionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dispatchNumber?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    dispatchedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    items?: DistributionDispatchItemUncheckedUpdateManyWithoutDispatchNestedInput
+  }
+
+  export type DistributionDispatchUncheckedUpdateManyWithoutDistributionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dispatchNumber?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    dispatchedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DistributionInvoiceItemUpdateWithoutDistributionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    invoice?: DistributionInvoiceUpdateOneRequiredWithoutItemsNestedInput
+    distributionItem?: DistributionItemUpdateOneRequiredWithoutInvoiceItemsNestedInput
+    orderItem?: OrderItemUpdateOneRequiredWithoutDistributionInvoiceItemsNestedInput
+  }
+
+  export type DistributionInvoiceItemUncheckedUpdateWithoutDistributionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionInvoiceId?: StringFieldUpdateOperationsInput | string
+    distributionItemId?: StringFieldUpdateOperationsInput | string
+    orderItemId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionInvoiceId?: StringFieldUpdateOperationsInput | string
+    distributionItemId?: StringFieldUpdateOperationsInput | string
+    orderItemId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionDispatchItemUpdateWithoutDistributionItemInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    dispatch?: DistributionDispatchUpdateOneRequiredWithoutItemsNestedInput
+  }
+
+  export type DistributionDispatchItemUncheckedUpdateWithoutDistributionItemInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dispatchId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionDispatchItemUncheckedUpdateManyWithoutDistributionItemInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dispatchId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionInvoiceItemUpdateWithoutDistributionItemInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    invoice?: DistributionInvoiceUpdateOneRequiredWithoutItemsNestedInput
+    distribution?: DistributionUpdateOneRequiredWithoutInvoiceItemsNestedInput
+    orderItem?: OrderItemUpdateOneRequiredWithoutDistributionInvoiceItemsNestedInput
+  }
+
+  export type DistributionInvoiceItemUncheckedUpdateWithoutDistributionItemInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionInvoiceId?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    orderItemId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionInvoiceItemUncheckedUpdateManyWithoutDistributionItemInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionInvoiceId?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    orderItemId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionDispatchItemUpdateWithoutDispatchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    distributionItem?: DistributionItemUpdateOneRequiredWithoutDispatchItemsNestedInput
+  }
+
+  export type DistributionDispatchItemUncheckedUpdateWithoutDispatchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionItemId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionDispatchItemUncheckedUpdateManyWithoutDispatchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionItemId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionInvoiceItemUpdateWithoutInvoiceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    distribution?: DistributionUpdateOneRequiredWithoutInvoiceItemsNestedInput
+    distributionItem?: DistributionItemUpdateOneRequiredWithoutInvoiceItemsNestedInput
+    orderItem?: OrderItemUpdateOneRequiredWithoutDistributionInvoiceItemsNestedInput
+  }
+
+  export type DistributionInvoiceItemUncheckedUpdateWithoutInvoiceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    distributionItemId?: StringFieldUpdateOperationsInput | string
+    orderItemId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type DistributionInvoiceItemUncheckedUpdateManyWithoutInvoiceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    distributionId?: StringFieldUpdateOperationsInput | string
+    distributionItemId?: StringFieldUpdateOperationsInput | string
+    orderItemId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
   }
 
   export type OrderReturnItemUpdateWithoutOrderReturnInput = {
@@ -42634,6 +54777,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -42646,6 +54790,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateWithoutSupplierInput = {
@@ -42665,6 +54810,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -42677,6 +54823,7 @@ export namespace Prisma {
     ceilingQuotas?: CustomerCeilingQuotaUncheckedUpdateManyWithoutProductNestedInput
     supplierPrices?: SupplierPriceUncheckedUpdateManyWithoutProductNestedInput
     stocktakeItems?: StocktakeItemUncheckedUpdateManyWithoutProductNestedInput
+    distributionItems?: DistributionItemUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateManyWithoutSupplierInput = {
@@ -42696,6 +54843,7 @@ export namespace Prisma {
     price?: FloatFieldUpdateOperationsInput | number
     taxRate?: FloatFieldUpdateOperationsInput | number
     stockQty?: IntFieldUpdateOperationsInput | number
+    reservedQty?: IntFieldUpdateOperationsInput | number
     minStockQty?: IntFieldUpdateOperationsInput | number
     maxStockQty?: IntFieldUpdateOperationsInput | number
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null

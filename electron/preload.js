@@ -56,6 +56,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   stocktakeOperation: (data) => ipcRenderer.invoke('stocktake-operation', data),
   productOptionOperation: (data) => ipcRenderer.invoke('product-option-operation', data),
   bankTransferOperation: (data) => ipcRenderer.invoke('bank-transfer-operation', data),
+  distributionOperation: (data) => ipcRenderer.invoke('distribution-operation', data),
   logout: () => ipcRenderer.invoke('logout'),
   getUsers: () => ipcRenderer.invoke('get-users'),
   changePassword: (data) => ipcRenderer.invoke('change-password', data),

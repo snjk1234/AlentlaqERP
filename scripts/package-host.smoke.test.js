@@ -8,7 +8,7 @@ const { spawn, spawnSync } = require('node:child_process');
 const { once } = require('node:events');
 const { test } = require('node:test');
 
-test('extracted host ZIP runs independently and authenticates production reset', {
+test('extracted host ZIP repairs a stale ODBC junction, runs independently, and authenticates production reset', {
   skip: !process.env.HOST_RELEASE_ZIP || !process.env.ACCESS_TEST_SOURCE_DB,
   timeout: 180000
 }, async () => {
@@ -23,6 +23,13 @@ test('extracted host ZIP runs independently and authenticates production reset',
     });
     assert.equal(extracted.status, 0, extracted.stderr);
     const root = path.join(directory, fs.readdirSync(directory)[0]);
+    const links = JSON.parse(fs.readFileSync(path.join(root, 'runtime-links.json'), 'utf8'));
+    const odbcLink = links.find(link => link.path.startsWith(`.next-host${path.sep}`) &&
+      path.basename(link.path).startsWith('odbc-'));
+    assert.ok(odbcLink, 'The package must include the Next.js ODBC alias.');
+    const odbcAlias = path.join(root, odbcLink.path);
+    fs.mkdirSync(path.dirname(odbcAlias), { recursive: true });
+    fs.symlinkSync(path.join(directory, 'missing-old-release', odbcLink.target), odbcAlias, 'junction');
     const database = path.join(directory, 'smoke.accdb');
     fs.copyFileSync(process.env.ACCESS_TEST_SOURCE_DB, database);
     const probe = net.createServer();
@@ -53,6 +60,7 @@ test('extracted host ZIP runs independently and authenticates production reset',
       await new Promise(resolve => setTimeout(resolve, 250));
     }
     assert.ok(ready, output);
+    assert.equal(fs.realpathSync(odbcAlias), fs.realpathSync(path.join(root, odbcLink.target)));
     const duplicate = spawnSync(path.join(root, 'runtime', 'node.exe'), [path.join(root, 'start-host.js')], {
       cwd: directory, env, encoding: 'utf8', timeout: 15000
     });
@@ -77,6 +85,24 @@ test('extracted host ZIP runs independently and authenticates production reset',
     assert.equal(login.status, 200, output);
     const admin = await login.json();
     assert.ok(admin.sessionToken);
+    const remote = require('../src/lib/remote-client').createRemoteClient(() => ({ serverUrl: base, apiToken: token }));
+    const user = await remote.user.findFirst({ where: { username: 'admin' } });
+    const product = await remote.product.create({ data: {
+      code: 'SMOKE-QR', name: 'Test', type: 'Test', size: 'test', price: 100, stockQty: 5
+    } });
+    const qrCode = require('../src/lib/invoice-qr').invoiceQrText({
+      invoiceNumber: 'INV-SMOKE-QR', issuedAt: '2026-11-17T12:00:00.000Z',
+      totalAmount: '114.00', taxAmount: '14.00'
+    });
+    const invoice = await remote.$transaction(tx => tx.order.create({ data: {
+      invoiceNumber: 'INV-SMOKE-QR', customerName: 'عميل نقدي', totalAmount: 100,
+      taxAmount: 14, netAmount: 114, qrCode, invoiceType: 'فاتورة ضريبية',
+      userId: user.id, status: 'COMPLETED', purchaseOrderNumber: 'PO-123',
+      items: { create: [{ productId: product.id, quantity: 1, unitPrice: 100, taxAmount: 14, total: 114 }] }
+    }, include: { items: true } }));
+    assert.equal(invoice.qrCode, qrCode);
+    assert.equal(invoice.items.length, 1);
+    assert.equal(invoice.purchaseOrderNumber, 'PO-123');
     const preview = await post('/api/production-reset', { action: 'preview' }, admin.sessionToken);
     assert.equal(preview.status, 200, output);
     const data = (await preview.json()).data;

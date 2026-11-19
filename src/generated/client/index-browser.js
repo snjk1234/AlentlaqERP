@@ -129,6 +129,7 @@ exports.Prisma.ProductScalarFieldEnum = {
   price: 'price',
   taxRate: 'taxRate',
   stockQty: 'stockQty',
+  reservedQty: 'reservedQty',
   minStockQty: 'minStockQty',
   maxStockQty: 'maxStockQty',
   supplierId: 'supplierId',
@@ -261,6 +262,84 @@ exports.Prisma.OrderItemScalarFieldEnum = {
   unitPrice: 'unitPrice',
   taxAmount: 'taxAmount',
   total: 'total'
+};
+
+exports.Prisma.DistributionScalarFieldEnum = {
+  id: 'id',
+  documentNumber: 'documentNumber',
+  customerId: 'customerId',
+  customerName: 'customerName',
+  status: 'status',
+  notes: 'notes',
+  revision: 'revision',
+  createdBy: 'createdBy',
+  updatedBy: 'updatedBy',
+  approvedBy: 'approvedBy',
+  approvedAt: 'approvedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.DistributionItemScalarFieldEnum = {
+  id: 'id',
+  distributionId: 'distributionId',
+  productId: 'productId',
+  position: 'position',
+  productLabel: 'productLabel',
+  quantity: 'quantity',
+  shippedQuantity: 'shippedQuantity',
+  invoicedQuantity: 'invoicedQuantity',
+  unitPrice: 'unitPrice',
+  taxRate: 'taxRate',
+  isCancelled: 'isCancelled'
+};
+
+exports.Prisma.DistributionRevisionScalarFieldEnum = {
+  id: 'id',
+  distributionId: 'distributionId',
+  revision: 'revision',
+  action: 'action',
+  performedBy: 'performedBy',
+  beforeSnapshot: 'beforeSnapshot',
+  afterSnapshot: 'afterSnapshot',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.DistributionDispatchScalarFieldEnum = {
+  id: 'id',
+  dispatchNumber: 'dispatchNumber',
+  distributionId: 'distributionId',
+  notes: 'notes',
+  createdBy: 'createdBy',
+  dispatchedAt: 'dispatchedAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.DistributionDispatchItemScalarFieldEnum = {
+  id: 'id',
+  dispatchId: 'dispatchId',
+  distributionItemId: 'distributionItemId',
+  quantity: 'quantity'
+};
+
+exports.Prisma.DistributionInvoiceScalarFieldEnum = {
+  id: 'id',
+  requestId: 'requestId',
+  requestSnapshot: 'requestSnapshot',
+  orderId: 'orderId',
+  customerId: 'customerId',
+  customerName: 'customerName',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.DistributionInvoiceItemScalarFieldEnum = {
+  id: 'id',
+  distributionInvoiceId: 'distributionInvoiceId',
+  distributionId: 'distributionId',
+  distributionItemId: 'distributionItemId',
+  orderItemId: 'orderItemId',
+  quantity: 'quantity'
 };
 
 exports.Prisma.OrderReturnScalarFieldEnum = {
@@ -444,6 +523,13 @@ exports.Prisma.ModelName = {
   Customer: 'Customer',
   CustomerPrice: 'CustomerPrice',
   OrderItem: 'OrderItem',
+  Distribution: 'Distribution',
+  DistributionItem: 'DistributionItem',
+  DistributionRevision: 'DistributionRevision',
+  DistributionDispatch: 'DistributionDispatch',
+  DistributionDispatchItem: 'DistributionDispatchItem',
+  DistributionInvoice: 'DistributionInvoice',
+  DistributionInvoiceItem: 'DistributionInvoiceItem',
   OrderReturn: 'OrderReturn',
   OrderReturnItem: 'OrderReturnItem',
   Bank: 'Bank',

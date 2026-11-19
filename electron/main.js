@@ -184,6 +184,12 @@ ipcMain.handle('update-product', async (event, productData) => {
         }
       }
     }
+    if (data.stockQty !== undefined) {
+      const currentProduct = await prisma.product.findUnique({ where: { id }, select: { reservedQty: true } });
+      if (currentProduct && Number(data.stockQty) < Number(currentProduct.reservedQty || 0)) {
+        throw new Error(`لا يمكن جعل المخزون أقل من الكمية المحجوزة (${currentProduct.reservedQty}).`);
+      }
+    }
 
     return await prisma.product.update({
       where: { id },
@@ -405,8 +411,9 @@ ipcMain.handle('create-order', async (event, orderData) => {
         for (const item of items) {
           // Re-read stock inside the transaction to block concurrent overselling.
           const product = await tx.product.findUnique({ where: { id: item.productId } });
-          if (!product || Number(product.stockQty) < Number(item.quantity)) {
-            throw new Error(`المخزون المتاح من الصنف ${product?.name || item.productId} لا يكفي (المتاح ${Number(product?.stockQty) || 0}). يمكن حفظ عرض سعر أو تعديل الكمية.`);
+          const available = product ? Number(product.stockQty) - Number(product.reservedQty || 0) : 0;
+          if (!product || available < Number(item.quantity)) {
+            throw new Error(`المخزون المتاح من الصنف ${product?.name || item.productId} لا يكفي (المتاح ${Math.max(0, available)}). يمكن حفظ عرض سعر أو تعديل الكمية.`);
           }
         }
         for (const item of items) {
@@ -1027,6 +1034,19 @@ ipcMain.handle('bank-transfer-operation', async (event, data) => {
   } catch (error) {
     console.error('Bank transfer operation failed:', error);
     return { error: error.message, statusCode: error.statusCode || 500 };
+  }
+});
+
+ipcMain.handle('distribution-operation', async (event, data) => {
+  try {
+    const user = authenticatedUsers.get(event.sender.id);
+    if (!user || !['ADMIN', 'CASHIER', 'STOREKEEPER'].includes(user.role)) {
+      throw new Error('التوزيعات متاحة للمدير والمحاسب وأمين المخزن فقط. سجّل الدخول مجددًا.');
+    }
+    return await prisma.distributionOperation(data, user.sessionToken);
+  } catch (error) {
+    console.error('Distribution operation failed:', error);
+    throw error;
   }
 });
 

@@ -367,43 +367,59 @@ test('checkout uses quotation-only proposed prices, rechecks current profit and 
     ts.forEachChild(node, visit);
   };
   visit(tree);
-  for (const desktop of [false, true]) for (const mode of ['success', 'cancel', 'fail', 'invoice', 'cashier']) {
+  for (const desktop of [false, true]) for (const mode of ['success', 'cancel', 'fail', 'invoice', 'cashier', 'convert', 'shortage', 'wrong-document', 'qr-fail']) {
     const calls = [];
     const checks = [];
     const errors = [];
     let cleared = false;
+    let previewOpened = false;
+    const converting = ['convert', 'shortage', 'wrong-document', 'qr-fail'].includes(mode);
+    const isQuotation = mode !== 'invoice' && !converting;
     const cart = [{ id: 'a', qty: 2, price: 120, originalPrice: 120 }, { id: 'b', qty: 3, price: 250, originalPrice: 250 }];
     const before = structuredClone(cart);
     const send = async data => {
       calls.push(data);
       if (mode === 'fail') throw new Error('Unable to save');
-      return { id: 'saved', items: data.items };
+      return {
+        id: 'saved', invoiceNumber: 'saved-number', items: data.items,
+        isQuotation: data.isQuotation || mode === 'wrong-document',
+        status: data.isQuotation ? 'PENDING' : 'COMPLETED', qrCode: mode === 'qr-fail' ? 'QR' : null
+      };
     };
     const exports = {};
     vm.runInNewContext(compile(`const ${declaration}; exports.checkout = handleCheckout;`), {
-      exports, Error, cart, products: [{ id: 'a', stockQty: 100 }, { id: 'b', stockQty: 100 }],
+      exports, Error, cart, products: [{ id: 'a', stockQty: mode === 'shortage' ? 0 : 100 }, { id: 'b', stockQty: 100 }],
       submitting: false, currentUser: { role: mode === 'cashier' ? 'CASHIER' : 'ADMIN' },
-      selectedCustomer: { id: 'customer', name: 'Customer' }, siteReceiptNumber: '', receiverName: '', purchaseOrderNumber: ' PO-123 ', invoiceType: 'فاتورة ضريبية', linkedQuotationId: null,
-      setSubmitting() {}, setInvoice() {}, setQrCodeUrl() {}, setShowModal() {}, setShowQuotationPricing() {}, clearCart: () => { cleared = true; },
-      fetchProducts() {}, fetchInvoices() {}, fetchCustomers() {}, alert: message => errors.push(message),
+      selectedCustomer: { id: 'customer', name: 'Customer' }, siteReceiptNumber: '', receiverName: '', purchaseOrderNumber: ' PO-123 ', invoiceType: 'فاتورة ضريبية', linkedQuotationId: converting ? 'quote-id' : null,
+      setSubmitting() {}, setInvoice() {}, setQrCodeUrl() {}, setShowModal: open => { previewOpened = open; }, setShowQuotationPricing() {}, clearCart: () => { cleared = true; },
+      fetchProducts() {}, fetchInvoices() {}, fetchCustomers() {}, setCheckoutError: message => errors.push(message),
+      console: { error() {} },
+      invoiceQrTextFromDocument: () => 'QR',
+      QRCode: { toDataURL: async () => { throw new Error('QR unavailable'); } },
       confirmQuotationProfit: async (_, items) => { checks.push(items); return mode !== 'cancel'; },
       window: desktop ? { electronAPI: { createOrder: send } } : {},
       fetch: async (_, options) => Response.json(await send(JSON.parse(options.body)))
     });
     const proposed = priceQuotation(lines, costs, new Set(), '30', 'markup');
-    await exports.checkout(mode !== 'invoice', mode === 'invoice' ? undefined : proposed);
+    await exports.checkout(isQuotation, isQuotation ? proposed : undefined);
     assert.deepEqual(cart, before);
-    if (mode === 'cancel') {
+    if (mode === 'cancel' || mode === 'shortage') {
       assert.equal(calls.length, 0);
       assert.equal(cleared, false);
     } else {
       assert.equal(calls.length, 1);
       assert.equal(calls[0].purchaseOrderNumber, 'PO-123');
-      assert.deepEqual(plain(calls[0].items.map(line => line.unitPrice)), mode === 'invoice' ? [120, 250] : [130, 260]);
-      assert.equal(cleared, mode !== 'fail');
+      assert.equal(calls[0].isQuotation, isQuotation);
+      assert.equal(calls[0].linkedQuotationId, converting ? 'quote-id' : null);
+      assert.deepEqual(plain(calls[0].items.map(line => line.unitPrice)), isQuotation ? [130, 260] : [120, 250]);
+      assert.equal(cleared, !['fail', 'wrong-document'].includes(mode));
       if (mode === 'fail') assert.ok(errors.some(message => message.includes('Unable to save')));
     }
-    assert.equal(checks.length, mode === 'invoice' || mode === 'cashier' ? 0 : 1);
+    if (mode === 'shortage') assert.match(errors.at(-1), /نقص المخزون/);
+    if (mode === 'wrong-document') assert.match(errors.at(-1), /لم يؤكد الخادم/);
+    if (mode === 'qr-fail') assert.match(errors.at(-1), /تم إصدار الفاتورة/);
+    assert.equal(previewOpened, cleared);
+    assert.equal(checks.length, isQuotation && mode !== 'cashier' ? 1 : 0);
   }
 });
 

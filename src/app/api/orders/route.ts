@@ -113,8 +113,9 @@ export async function POST(request: Request) {
         for (const item of items) {
           // Re-read stock inside the transaction to block concurrent overselling.
           const product = await tx.product.findUnique({ where: { id: item.productId } });
-          if (!product || Number(product.stockQty) < Number(item.quantity)) {
-            throw new Error(`المخزون المتاح من الصنف ${product?.name || item.productId} لا يكفي (المتاح ${Number(product?.stockQty) || 0}). يمكن حفظ عرض سعر أو تعديل الكمية.`);
+          const available = product ? Number(product.stockQty) - Number(product.reservedQty || 0) : 0;
+          if (!product || available < Number(item.quantity)) {
+            throw new Error(`المخزون المتاح من الصنف ${product?.name || item.productId} لا يكفي (المتاح ${Math.max(0, available)}). يمكن حفظ عرض سعر أو تعديل الكمية.`);
           }
         }
         for (const item of items) {

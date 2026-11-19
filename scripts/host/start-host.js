@@ -21,10 +21,21 @@ async function start() {
     for (const value of [location, target]) {
       if (!value.startsWith(root + path.sep)) throw new Error('Invalid runtime link manifest.');
     }
-    if (!fs.existsSync(location)) {
-      fs.mkdirSync(path.dirname(location), { recursive: true });
-      fs.symlinkSync(target, location, 'junction');
+    const existing = fs.lstatSync(location, { throwIfNoEntry: false });
+    if (existing && !existing.isSymbolicLink()) {
+      throw new Error(`Runtime link path is occupied: ${location}. Extract the ZIP into a new folder.`);
     }
+    if (!fs.statSync(target, { throwIfNoEntry: false })?.isDirectory()) {
+      throw new Error(`Runtime dependency folder is missing: ${target}. Extract the complete ZIP into a new folder.`);
+    }
+    if (existing) {
+      const currentTarget = path.resolve(path.dirname(location), fs.readlinkSync(location));
+      if (path.relative(currentTarget, target) === '') continue;
+      // Remove only the stale junction, not the directory it points to.
+      fs.rmdirSync(location);
+    }
+    fs.mkdirSync(path.dirname(location), { recursive: true });
+    fs.symlinkSync(target, location, 'junction');
   }
   const parsed = require('dotenv').parse(fs.readFileSync(configPath));
   for (const key of ['ACCESS_DB_PATH', 'POS_API_TOKEN', 'POS_PORT']) {

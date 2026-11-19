@@ -9,7 +9,7 @@ export function proxy(request: NextRequest) {
   }
   if ((request.method === 'POST' && request.nextUrl.pathname === '/api/expense-categories')
     || (request.method === 'PUT' && ['/api/purchases', '/api/expenses', '/api/general-expenses', '/api/quotations', '/api/invoice-details', '/api/invoice-items'].includes(request.nextUrl.pathname))
-    || ['/api/stocktakes', '/api/bank-transfers', '/api/quotation-costs', '/api/product-options', '/api/production-reset', '/api/discounts'].includes(request.nextUrl.pathname)) {
+    || ['/api/stocktakes', '/api/bank-transfers', '/api/distributions', '/api/quotation-costs', '/api/product-options', '/api/production-reset', '/api/discounts'].includes(request.nextUrl.pathname)) {
     const authorization = request.headers.get('authorization') || '';
     const session = verifyUserSessionToken(authorization.startsWith('Bearer ') ? authorization.slice(7) : '');
     if (!session) return NextResponse.json({ error: 'انتهت الجلسة. سجّل الدخول مجددًا.' }, { status: 401 });

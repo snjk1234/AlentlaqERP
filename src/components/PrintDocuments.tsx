@@ -39,6 +39,10 @@ export type PrintAccountDiscount = {
 export type PrintTableData = {
   title: string; headers: string[]; rows: ReactNode[][]; footer?: ReactNode[];
   period?: { from: string; to: string };
+  metadata?: { label: string; value: ReactNode }[];
+  totals?: { label: string; value: ReactNode }[];
+  notes?: string;
+  issuedAt?: string | Date;
 };
 export type PrintStocktake = {
   documentNumber: string; status: string; notes: string | null; createdBy: string; createdAt: string | Date;
@@ -452,11 +456,15 @@ export function TablePrint({ report, onClose }: { report: PrintTableData; onClos
       <table className={`statement-ledger document-table document-report-table${report.headers.length > 8 ? ' document-report-dense' : ''}`}>
         <thead>
           <tr className="statement-document-heading"><th colSpan={report.headers.length}>
-            <DocumentHeader title={report.title} issuedAt={new Date()}>
+            <DocumentHeader title={report.title} issuedAt={report.issuedAt || new Date()}>
               <div className="statement-account-row">
+                {report.metadata ? report.metadata.map(({ label, value }) => (
+                  <div key={label}><span>{label}</span><strong>{value}</strong></div>
+                )) : <>
                 <div><span>الفترة</span><strong><bdi>{report.period?.from || report.period?.to ? `${report.period.from || 'البداية'} — ${report.period.to || 'اليوم'}` : 'جميع البيانات'}</bdi></strong></div>
                 <div><span>عدد السجلات</span><strong>{report.rows.length}</strong></div>
                 <div><span>العملة</span><strong>جنيه مصري · EGP</strong></div>
+                </>}
               </div>
             </DocumentHeader>
           </th></tr>
@@ -470,6 +478,10 @@ export function TablePrint({ report, onClose }: { report: PrintTableData; onClos
           {report.footer.map((cell, index) => <td key={index}>{printCell(cell)}</td>)}
         </tr></tbody>}
       </table>
+      {report.totals && <div className="document-meta">
+        {report.totals.map(({ label, value }) => <p key={label}>{label}: <bdi>{value}</bdi></p>)}
+      </div>}
+      {report.notes && <p className="document-meta" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>ملاحظات: {report.notes}</p>}
       <DocumentFooter />
     </DocumentFrame>
   );

@@ -110,6 +110,12 @@ export async function PUT(request: Request) {
       }
     }
 
+    const currentProduct = await prisma.product.findUnique({ where: { id: body.id }, select: { reservedQty: true } });
+    const requestedStock = isNaN(Number(body.stockQty)) ? 0 : Number(body.stockQty);
+    if (currentProduct && requestedStock < Number(currentProduct.reservedQty || 0)) {
+      return NextResponse.json({ error: `لا يمكن جعل المخزون أقل من الكمية المحجوزة (${currentProduct.reservedQty}).` }, { status: 409 });
+    }
+
     const product = await prisma.product.update({
       where: { id: body.id },
       data: {
@@ -128,7 +134,7 @@ export async function PUT(request: Request) {
         markup: isNaN(Number(body.markup)) ? 1.3 : Number(body.markup),
         price: isNaN(Number(body.price)) ? 0 : Number(body.price),
         taxRate: (body.taxRate !== undefined && body.taxRate !== null && !isNaN(Number(body.taxRate))) ? Number(body.taxRate) : 0.14,
-        stockQty: isNaN(Number(body.stockQty)) ? 0 : Number(body.stockQty),
+        stockQty: requestedStock,
         minStockQty: isNaN(Number(body.minStockQty)) ? 10 : Number(body.minStockQty),
         maxStockQty: isNaN(Number(body.maxStockQty)) ? 1000 : Number(body.maxStockQty),
         imageUrl: body.imageUrl !== undefined ? body.imageUrl : undefined,

@@ -38,6 +38,7 @@ model Product {
   price         Float
   taxRate       Float               @default(0.14)
   stockQty      Int                 @default(0)
+  reservedQty   Int                 @default(0)
   minStockQty   Int                 @default(10)
   maxStockQty   Int                 @default(1000)
   supplierId    String?
@@ -51,6 +52,7 @@ model Product {
   ceilingQuotas CustomerCeilingQuota[]
   supplierPrices SupplierPrice[]
   stocktakeItems StocktakeItem[]
+  distributionItems DistributionItem[]
   supplier Supplier?           @relation(fields: [supplierId], references: [id])
 }
 
@@ -153,6 +155,7 @@ model Order {
   user          User        @relation(fields: [userId], references: [id])
   items         OrderItem[]
   orderReturns  OrderReturn[]
+  distributionInvoice DistributionInvoice?
 }
 
 model Customer {
@@ -174,6 +177,7 @@ model Customer {
   discounts      AccountDiscount[]
   customPrices   CustomerPrice[]
   ceilingQuotas  CustomerCeilingQuota[]
+  distributions Distribution[]
 }
 
 model CustomerPrice {
@@ -201,6 +205,107 @@ model OrderItem {
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   returnItems OrderReturnItem[]
+  distributionInvoiceItems DistributionInvoiceItem[]
+}
+
+model Distribution {
+  id          String   @id @default(cuid())
+  documentNumber String @unique
+  customerId  String
+  customerName String
+  status      String   @default("DRAFT")
+  notes       String?
+  revision    Int      @default(1)
+  createdBy   String
+  updatedBy   String?
+  approvedBy  String?
+  approvedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  customer    Customer @relation(fields: [customerId], references: [id])
+  items       DistributionItem[]
+  revisions   DistributionRevision[]
+  dispatches  DistributionDispatch[]
+  invoiceItems DistributionInvoiceItem[]
+}
+
+model DistributionItem {
+  id             String   @id @default(cuid())
+  distributionId String
+  productId      String
+  position       Int
+  productLabel   String
+  quantity       Int
+  shippedQuantity Int    @default(0)
+  invoicedQuantity Int   @default(0)
+  unitPrice      Float
+  taxRate        Float
+  isCancelled    Boolean @default(false)
+  distribution   Distribution @relation(fields: [distributionId], references: [id])
+  product        Product @relation(fields: [productId], references: [id])
+  dispatchItems  DistributionDispatchItem[]
+  invoiceItems   DistributionInvoiceItem[]
+  @@unique([distributionId, productId])
+}
+
+model DistributionRevision {
+  id             String   @id @default(cuid())
+  distributionId String
+  revision       Int
+  action         String
+  performedBy    String
+  beforeSnapshot String?
+  afterSnapshot  String
+  createdAt      DateTime @default(now())
+  distribution   Distribution @relation(fields: [distributionId], references: [id])
+  @@unique([distributionId, revision])
+}
+
+model DistributionDispatch {
+  id             String   @id @default(cuid())
+  dispatchNumber String   @unique
+  distributionId String
+  notes          String?
+  createdBy      String
+  dispatchedAt   DateTime
+  createdAt      DateTime @default(now())
+  distribution   Distribution @relation(fields: [distributionId], references: [id])
+  items          DistributionDispatchItem[]
+}
+
+model DistributionDispatchItem {
+  id                    String   @id @default(cuid())
+  dispatchId            String
+  distributionItemId    String
+  quantity              Int
+  dispatch              DistributionDispatch @relation(fields: [dispatchId], references: [id])
+  distributionItem      DistributionItem @relation(fields: [distributionItemId], references: [id])
+}
+
+model DistributionInvoice {
+  id          String   @id @default(cuid())
+  requestId   String   @unique
+  requestSnapshot String
+  orderId     String   @unique
+  customerId  String
+  customerName String
+  createdBy   String
+  createdAt   DateTime @default(now())
+  order       Order @relation(fields: [orderId], references: [id])
+  items       DistributionInvoiceItem[]
+}
+
+model DistributionInvoiceItem {
+  id                    String   @id @default(cuid())
+  distributionInvoiceId String
+  distributionId        String
+  distributionItemId    String
+  orderItemId           String   @unique
+  quantity              Int
+  invoice               DistributionInvoice @relation(fields: [distributionInvoiceId], references: [id])
+  distribution          Distribution @relation(fields: [distributionId], references: [id])
+  distributionItem      DistributionItem @relation(fields: [distributionItemId], references: [id])
+  orderItem             OrderItem @relation(fields: [orderItemId], references: [id])
 }
 
 model OrderReturn {
