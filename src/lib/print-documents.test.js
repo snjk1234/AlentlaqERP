@@ -14,6 +14,7 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync(componentPath, 'utf8'), {
 }).outputText, { exports: exportsPrint, require });
 const { InvoicePrint, ReceiptPrint, TablePrint, StocktakePrint } = exportsPrint;
 const render = (component, props) => renderToStaticMarkup(React.createElement(component, { onClose() {}, ...props }));
+const printStyles = fs.readFileSync(path.join(__dirname, '..', 'app', 'globals.css'), 'utf8');
 const invoice = {
   createdAt: '2026-10-01T14:35:00', invoiceNumber: 'INV-123', billNumber: 'PUR-123',
   invoiceType: 'فاتورة ضريبية', totalAmount: 100, taxAmount: 14, netAmount: 114,
@@ -23,6 +24,16 @@ const invoice = {
   items: [{ id: 'item', product: { name: 'Product', code: 'P-123', size: '20', color: 'Blue' },
     quantity: 2, unitCost: 50, unitPrice: 50, taxAmount: 14, total: 114 }]
 };
+
+test('all document data, headings, numeric cells, empty cells and signatures align right in preview and print', () => {
+  assert.match(printStyles, /\.account-statement\s*\{[^}]*text-align:\s*right;/);
+  assert.match(printStyles, /\.statement-document-label\s*\{\s*text-align:\s*right;\s*\}/);
+  assert.match(printStyles, /\.statement-ledger \.statement-number\s*\{[^}]*text-align:\s*right;/);
+  assert.match(printStyles, /\.statement-ledger \.statement-empty\s*\{\s*text-align:\s*right;/);
+  assert.match(printStyles, /\.document-signatures > div\s*\{[^}]*text-align:\s*right;/);
+  const printRules = printStyles.slice(printStyles.indexOf('@media print'));
+  assert.match(printRules, /\.account-statement,\s*\.account-statement \*\s*\{\s*text-align:\s*right\s*!important;/);
+});
 
 test('draft and approved stocktake printouts retain saved notes, status, item order, blank counts and cost-valued totals', () => {
   const document = {

@@ -161,6 +161,7 @@ body {
   font-size: 13px;
   font-weight: 400;
   line-height: 1.7;
+  text-align: right;
   padding: 28px 30px 20px;
   min-width: 760px;
 }
@@ -180,7 +181,7 @@ body {
 .statement-eyebrow { display: block; font-size: 9px; letter-spacing: 1.4px; color: var(--statement-teal); font-weight: 500; }
 .statement-brand h1 { font-size: 28px; font-weight: 500; line-height: 1.4; margin: 3px 0; color: #0f172a; }
 .statement-brand p, .statement-document-label p { font-size: 11px; color: var(--statement-muted); font-weight: 400; }
-.statement-document-label { text-align: left; }
+.statement-document-label { text-align: right; }
 .statement-document-label h2 { font-size: 22px; font-weight: 400; margin: 4px 0 6px; color: var(--statement-teal); }
 .statement-account-row { display: flex; gap: 26px; padding: 16px 18px; background: #f3f8f9; border-radius: 8px; border-inline-start: 3px solid #14b8a6; }
 .statement-account-row div:first-child { flex: 1; }
@@ -203,13 +204,13 @@ body {
 .statement-print-reference { display: none; }
 .statement-date { font-size: 10px; color: var(--statement-muted); }
 .statement-description { font-size: 11px; color: #52667a; line-height: 1.8; }
-.statement-ledger .statement-number { direction: ltr; text-align: left; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 12px; }
+.statement-ledger .statement-number { direction: ltr; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 12px; }
 .statement-ledger.sales-document-table,
 .statement-ledger.sales-document-table th,
 .statement-ledger.sales-document-table td { text-align: right; }
 .statement-ledger.sales-document-table .statement-number { text-align: right; }
 .statement-payment .statement-number { color: var(--statement-teal); }
-.statement-ledger .statement-empty { text-align: center; color: var(--statement-muted); padding-block: 24px; }
+.statement-ledger .statement-empty { text-align: right; color: var(--statement-muted); padding-block: 24px; }
 .statement-ledger .statement-total th, .statement-ledger .statement-total td { padding-block: 10px; background: #f8fafc; font-size: 12px; color: #000; }
 .statement-ledger .statement-total th { font-weight: 400; }
 .statement-ledger .statement-closing th, .statement-ledger .statement-closing td { padding-block: 15px; background: #e9f6f3; color: #000; border-bottom: 2px solid #0d9488; font-weight: 500; }
@@ -253,7 +254,7 @@ body {
   font-weight: 600;
 }
 .document-signatures { display: flex; justify-content: space-between; gap: 30px; padding: 16px 6px 8px; color: var(--statement-muted); font-size: 11px; break-inside: avoid; }
-.document-signatures > div { min-width: 160px; text-align: center; }
+.document-signatures > div { min-width: 160px; text-align: right; }
 .document-signatures p { margin-top: 22px; border-top: 1px solid var(--statement-line); padding-top: 4px; }
 .document-stub { border-top: 1px dashed #94a3b8; margin-top: 16px; padding-top: 12px; break-inside: avoid; }
 .document-stub-heading { display: flex; justify-content: space-between; gap: 18px; color: var(--statement-teal); font-size: 12px; padding-bottom: 10px; }
@@ -333,6 +334,8 @@ body {
   .account-statement .statement-ledger thead { display: table-header-group; }
   .account-statement .statement-ledger tr { break-inside: avoid; page-break-inside: avoid; }
   .account-statement .statement-totals { break-inside: avoid; page-break-inside: avoid; }
+  .account-statement,
+  .account-statement * { text-align: right !important; }
   .account-statement .statement-ledger td,
   .account-statement .statement-column-heading th,
   .account-statement .statement-total th,

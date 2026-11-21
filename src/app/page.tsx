@@ -2916,6 +2916,22 @@ export default function POSDashboard() {
       ? edit.originalDate : new Date(`${edit.date}T00:00:00`)
   });
 
+  const purchaseItems = purchaseForm.items.filter((item: any) => item.productId);
+
+  const updatePurchaseLine = (index: number, patch: Record<string, string>) => {
+    setPurchaseForm((previous: typeof purchaseForm) => {
+      const items = previous.items.map((item: any, itemIndex: number) =>
+        itemIndex === index ? { ...item, ...patch } : item);
+      const updatedLine = items[index];
+      const hasInput = !!(updatedLine.productId || updatedLine.productDisplay?.trim()
+        || updatedLine.quantity || updatedLine.unitCost);
+      if (!editingPurchase && index === previous.items.length - 1 && hasInput) {
+        items.push({ productId: '', productDisplay: '', quantity: '', unitCost: '' });
+      }
+      return { ...previous, items };
+    });
+  };
+
   const handleSaveGeneralExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
@@ -2963,7 +2979,8 @@ export default function POSDashboard() {
       return;
     }
 
-    if (!purchaseForm.billNumber || !purchaseForm.supplierId || purchaseForm.items.length === 0) {
+    if (!purchaseForm.billNumber || !purchaseForm.supplierId || purchaseItems.length === 0
+      || purchaseItems.some((item: any) => !item.quantity || Number(item.quantity) <= 0)) {
 
       alert("يرجى ملء جميع الحقول وإضافة منتج واحد على الأقل!");
 
@@ -2977,6 +2994,7 @@ export default function POSDashboard() {
 
       const data = {
         ...purchaseForm,
+        items: purchaseItems,
         ...(editingPurchase ? documentEditData(editingPurchase) : {})
       };
       if (typeof window !== 'undefined' && (window as any).electronAPI) {
@@ -3781,7 +3799,7 @@ export default function POSDashboard() {
 
         <div className="py-2 text-[9px] text-indigo-400/50 text-center font-mono shrink-0 bg-slate-950">
 
-          <span>الإصدار 2.5.0</span>
+          <span>الإصدار 2.6.0</span>
 
         </div>
 
@@ -6244,7 +6262,10 @@ export default function POSDashboard() {
                 onClick={() => {
 
                   setEditingPurchase(null);
-                  setPurchaseForm({ billNumber: generateBillNumber(), supplierId: '', invoiceType: 'فاتورة ضريبية', items: [] });
+                  setPurchaseForm({
+                    billNumber: generateBillNumber(), supplierId: '', invoiceType: 'فاتورة ضريبية',
+                    items: [{ productId: '', productDisplay: '', quantity: '', unitCost: '' }]
+                  });
 
                   setShowPurchaseModal(true);
 
@@ -9600,39 +9621,22 @@ export default function POSDashboard() {
 
                     <h4 className="text-sm font-bold text-slate-300">أصناف الفاتورة</h4>
 
-                    <button
-
-                      type="button"
-
-                      onClick={() => setPurchaseForm((prev: any) => ({
-
-                        ...prev,
-
-                        items: [...prev.items, { productId: '', productDisplay: '', quantity: '1', unitCost: '' }]
-
-                      }))}
-
-                      className="text-xs bg-orange-500/20 text-orange-400 border border-orange-500/30 px-3 py-1 rounded-sm hover:bg-orange-500/30 transition-all cursor-pointer flex items-center gap-1 font-bold"
-
-                    >
-
-                      <PlusIcon size={12} /> إضافة صنف
-
-                    </button>
-
                   </div>
 
-                  <div className="p-3 space-y-2">
-
-                    {purchaseForm.items.length === 0 && (
-
-                      <p className="text-center text-slate-500 text-xs py-2">اضغط على "إضافة صنف" لبدء إدخال أصناف الفاتورة</p>
-
-                    )}
+                  <div className="overflow-x-auto">
+                    <div className="min-w-[700px]">
+                      <div className={`grid ${currentUser?.role === 'ADMIN' ? 'grid-cols-[minmax(280px,1fr)_100px_90px_120px_40px]' : 'grid-cols-[minmax(280px,1fr)_100px_90px_40px]'} gap-2 items-center bg-slate-950/60 px-3 py-2 text-[11px] font-bold text-slate-400`}>
+                        <span>الصنف</span>
+                        <span className="text-center">الرصيد الحالي</span>
+                        <span className="text-center">الكمية</span>
+                        {currentUser?.role === 'ADMIN' && <span>سعر التكلفة</span>}
+                        <span className="text-center">إزالة</span>
+                      </div>
+                      <div className="p-3 space-y-2">
 
                     {purchaseForm.items.map((item: any, idx: number) => (
 
-                      <div key={idx} className={`grid ${currentUser?.role === 'ADMIN' ? 'grid-cols-[1fr_100px_120px_40px]' : 'grid-cols-[1fr_100px_40px]'} gap-2 items-center`}>
+                      <div key={idx} className={`grid ${currentUser?.role === 'ADMIN' ? 'grid-cols-[minmax(280px,1fr)_100px_90px_120px_40px]' : 'grid-cols-[minmax(280px,1fr)_100px_90px_40px]'} gap-2 items-center`}>
 
                         <input
 
@@ -9644,8 +9648,6 @@ export default function POSDashboard() {
 
                             const val = e.target.value;
 
-                            const newItems = [...purchaseForm.items];
-
                             const prod = products.find((p: any) => [p.code, '-', p.name, p.type, p.size, p.gauge, p.color ? `(${p.color})` : '', p.length, p.weight].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim() === val.trim());
 
                             if (prod) {
@@ -9654,21 +9656,20 @@ export default function POSDashboard() {
 
                                 alert(`⚠️ لا يمكنك إضافة الصنف "${prod.name}" لأن الإدارة لم تحدد له سعر تكلفة بعد.\n\nالرجاء مراجعة المدير لتحديث بيانات الصنف.`);
 
-                                newItems[idx] = { ...newItems[idx], productId: '', productDisplay: '', unitCost: '' };
+                                updatePurchaseLine(idx, { productId: '', productDisplay: '', unitCost: '' });
 
                               } else {
 
-                                newItems[idx] = { ...newItems[idx], productId: prod.id, productDisplay: val, unitCost: prod?.costPrice?.toString() || '' };
+                                updatePurchaseLine(idx, { productId: prod.id, productDisplay: val,
+                                  unitCost: prod.costPrice?.toString() || '', quantity: item.quantity || '1' });
 
                               }
 
                             } else {
 
-                              newItems[idx] = { ...newItems[idx], productId: '', productDisplay: val, unitCost: '' };
+                              updatePurchaseLine(idx, { productId: '', productDisplay: val, unitCost: '' });
 
                             }
-
-                            setPurchaseForm((prev: any) => ({ ...prev, items: newItems }));
 
                           }}
 
@@ -9688,6 +9689,10 @@ export default function POSDashboard() {
 
                         </datalist>
 
+                        <span className="whitespace-nowrap text-center font-mono font-bold text-emerald-300">
+                          {item.productId ? products.find((product: any) => product.id === item.productId)?.stockQty ?? '—' : '—'}
+                        </span>
+
                         <input
 
                           type="number"
@@ -9698,11 +9703,7 @@ export default function POSDashboard() {
 
                           onChange={(e) => {
 
-                            const newItems = [...purchaseForm.items];
-
-                            newItems[idx] = { ...newItems[idx], quantity: e.target.value };
-
-                            setPurchaseForm((prev: any) => ({ ...prev, items: newItems }));
+                            updatePurchaseLine(idx, { quantity: e.target.value });
 
                           }}
 
@@ -9721,11 +9722,7 @@ export default function POSDashboard() {
 
                             onValueChange={(value) => {
 
-                              const newItems = [...purchaseForm.items];
-
-                              newItems[idx] = { ...newItems[idx], unitCost: value };
-
-                              setPurchaseForm((prev: any) => ({ ...prev, items: newItems }));
+                              updatePurchaseLine(idx, { unitCost: value });
 
                             }}
 
@@ -9743,9 +9740,13 @@ export default function POSDashboard() {
 
                           onClick={() => {
 
-                            const newItems = purchaseForm.items.filter((_: any, i: number) => i !== idx);
-
-                            setPurchaseForm((prev: any) => ({ ...prev, items: newItems }));
+                            setPurchaseForm((prev: any) => {
+                              const items = prev.items.filter((_: any, i: number) => i !== idx);
+                              if (!editingPurchase && !items.length) {
+                                items.push({ productId: '', productDisplay: '', quantity: '', unitCost: '' });
+                              }
+                              return { ...prev, items };
+                            });
 
                           }}
 
@@ -9761,6 +9762,8 @@ export default function POSDashboard() {
 
                     ))}
 
+                      </div>
+                    </div>
                   </div>
 
                 </div>
@@ -9769,7 +9772,7 @@ export default function POSDashboard() {
 
                 {/* Summary */}
 
-                {purchaseForm.items.length > 0 && (
+                {purchaseItems.length > 0 && (
 
                   <div className="bg-slate-950 border border-white/10 rounded-sm p-3 text-sm font-mono">
 
@@ -9777,7 +9780,7 @@ export default function POSDashboard() {
 
                       <span>عدد الأصناف:</span>
 
-                      <span className="text-white font-bold">{purchaseForm.items.length} صنف</span>
+                      <span className="text-white font-bold">{purchaseItems.length} صنف</span>
 
                     </div>
 
@@ -9787,7 +9790,7 @@ export default function POSDashboard() {
 
                       <span className="text-white font-bold">
 
-                        {purchaseForm.items.reduce((sum: number, i: any) => sum + (Number(i.quantity) || 0), 0)} وحدة
+                        {purchaseItems.reduce((sum: number, i: any) => sum + (Number(i.quantity) || 0), 0)} وحدة
 
                       </span>
 
@@ -9797,9 +9800,8 @@ export default function POSDashboard() {
 
                       const isVat = purchaseForm.invoiceType !== 'فاتورة';
 
-                      const subtotal = purchaseForm.items.reduce((sum: number, i: any) => sum + ((Number(i.quantity) || 0) * (Number(i.unitCost) || 0)), 0);
-
-                      const taxTotal = isVat ? purchaseForm.items.reduce((sum: number, i: any) => {
+                      const subtotal = purchaseItems.reduce((sum: number, i: any) => sum + ((Number(i.quantity) || 0) * (Number(i.unitCost) || 0)), 0);
+                      const taxTotal = isVat ? purchaseItems.reduce((sum: number, i: any) => {
 
                         const p = products.find((pr: any) => pr.id === i.productId);
 
